@@ -1,0 +1,64 @@
+package nexusmarket.domain.models;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+import nexusmarket.domain.valueobjects.SystemRole;
+import nexusmarket.domain.valueobjects.UserStatus;
+
+/**
+ * Seller.
+ *
+ * <p>Represents the entity responsible for commercializing products within the
+ * Marketplace.</p>
+ *
+ * <p>Business rule: sellers cannot self-register; they are onboarded
+ * exclusively by an Administrator, who registers the seller together with its
+ * first warehouse (enforced at service level, not by this class).</p>
+ */
+public class Seller extends User {
+
+    /** Own warehouses associated with the seller. At least one upon onboarding. */
+    private final List<Warehouse> warehouses = new ArrayList<>();
+
+    /** Products published by the seller. Empty by default. */
+    private final List<Product> products = new ArrayList<>();
+
+    public Seller(String id, String fullName, String email, UserStatus status) {
+        super(id, fullName, email, SystemRole.SELLER, status);
+    }
+
+    public List<Warehouse> getWarehouses() {
+        return Collections.unmodifiableList(warehouses);
+    }
+
+    /** Associates one of the seller's own warehouses. */
+    public void addWarehouse(Warehouse warehouse) {
+        Objects.requireNonNull(warehouse, "Warehouse is required.");
+        if (warehouse.getSeller() != this) {
+            throw new IllegalArgumentException("The warehouse does not belong to this seller.");
+        }
+        warehouses.add(warehouse);
+    }
+
+    public List<Product> getProducts() {
+        return Collections.unmodifiableList(products);
+    }
+
+    /** Registers a product published by this seller. */
+    public void addProduct(Product product) {
+        Objects.requireNonNull(product, "Product is required.");
+        if (product.getSeller() != this) {
+            throw new IllegalArgumentException("The product does not belong to this seller.");
+        }
+        products.add(product);
+    }
+
+    @Override
+    public String toString() {
+        return "Seller{id='" + getId() + "', fullName='" + getFullName() + "', email='" + getEmail()
+                + "', warehouses=" + warehouses.size() + ", products=" + products.size() + "}";
+    }
+}

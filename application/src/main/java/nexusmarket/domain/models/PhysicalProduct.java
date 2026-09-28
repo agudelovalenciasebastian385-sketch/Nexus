@@ -1,11 +1,14 @@
 package nexusmarket.domain.models;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
+import nexusmarket.domain.exceptions.InvalidInventoryException;
 import nexusmarket.domain.valueobjects.ProductStatus;
+import nexusmarket.domain.valueobjects.ProductType;
+import nexusmarket.domain.valueobjects.Variant;
 
 /**
  * PhysicalProduct.
@@ -19,9 +22,14 @@ public class PhysicalProduct extends Product {
     /** Distributed stock of the product per warehouse. Empty by default. */
     private final List<Inventory> inventories = new ArrayList<>();
 
-    public PhysicalProduct(String id, String name, String description, Seller seller,
-                           List<String> variants, ProductStatus status) {
-        super(id, name, description, seller, variants, status);
+    public PhysicalProduct(String id, String name, String description, BigDecimal price, Seller seller,
+                           List<Variant> variants, ProductStatus status) {
+        super(id, name, description, price, seller, variants, status);
+    }
+
+    @Override
+    public ProductType getType() {
+        return ProductType.PHYSICAL;
     }
 
     public List<Inventory> getInventories() {
@@ -30,9 +38,11 @@ public class PhysicalProduct extends Product {
 
     /** Links a new inventory record of this product. */
     public void addInventory(Inventory inventory) {
-        Objects.requireNonNull(inventory, "Inventory is required.");
+        if (inventory == null) {
+            throw new InvalidInventoryException("Inventory is required.");
+        }
         if (inventory.getProduct() != this) {
-            throw new IllegalArgumentException("The inventory does not belong to this product.");
+            throw new InvalidInventoryException("The inventory does not belong to this product.");
         }
         inventories.add(inventory);
     }

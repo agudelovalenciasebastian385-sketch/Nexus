@@ -1,5 +1,7 @@
 package nexusmarket.domain.valueobjects;
 
+import nexusmarket.domain.exceptions.InvalidCatalogCodeException;
+
 /**
  * ProductStatus (business catalog).
  *
@@ -7,6 +9,7 @@ package nexusmarket.domain.valueobjects;
  */
 public enum ProductStatus implements DomainCatalog {
 
+    DRAFT("DRAFT", "Draft", "The product is registered but not yet visible in the public catalog."),
     PUBLISHED("PUBLISHED", "Published", "The product is visible in the public catalog."),
     SUSPENDED("SUSPENDED", "Suspended", "The product is temporarily unavailable."),
     DISCONTINUED("DISCONTINUED", "Discontinued",
@@ -44,6 +47,6 @@ public enum ProductStatus implements DomainCatalog {
                 return value;
             }
         }
-        throw new IllegalArgumentException("Unknown ProductStatus code: " + code);
+        throw new InvalidCatalogCodeException("ProductStatus", code);
     }
 }

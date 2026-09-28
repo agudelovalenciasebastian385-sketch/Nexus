@@ -2,7 +2,8 @@ package nexusmarket.domain.models;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Objects;
+
+import nexusmarket.domain.exceptions.InvalidInvoiceException;
 
 /**
  * Invoice.
@@ -20,20 +21,33 @@ public class Invoice {
 
     public Invoice(String id, Order order, BigDecimal totalAmount, LocalDateTime issuedAt) {
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("Invoice id cannot be empty.");
+            throw new InvalidInvoiceException("Invoice id cannot be empty.");
         }
         if (totalAmount == null || totalAmount.signum() < 0) {
-            throw new IllegalArgumentException("Invoice total amount must be zero or positive.");
+            throw new InvalidInvoiceException("Invoice total amount must be zero or positive.");
         }
         this.id = id;
-        this.order = Objects.requireNonNull(order, "Invoice order is required.");
+        if (order == null) {
+            throw new InvalidInvoiceException("Invoice order is required.");
+        }
+        this.order = order;
         this.totalAmount = totalAmount;
-        this.issuedAt = Objects.requireNonNull(issuedAt, "Invoice issuedAt is required.");
+        if (issuedAt == null) {
+            throw new InvalidInvoiceException("Invoice issuedAt is required.");
+        }
+        this.issuedAt = issuedAt;
     }
 
     /** Creates the invoice computing the total from the order items. */
     public Invoice(String id, Order order, LocalDateTime issuedAt) {
-        this(id, order, order.totalAmount(), issuedAt);
+        this(id, order, totalOf(order), issuedAt);
+    }
+
+    private static BigDecimal totalOf(Order order) {
+        if (order == null) {
+            throw new InvalidInvoiceException("Invoice order is required.");
+        }
+        return order.totalAmount();
     }
 
     public String getId() {

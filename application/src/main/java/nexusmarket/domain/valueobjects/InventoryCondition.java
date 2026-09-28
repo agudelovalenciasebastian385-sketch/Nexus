@@ -1,5 +1,7 @@
 package nexusmarket.domain.valueobjects;
 
+import nexusmarket.domain.exceptions.InvalidCatalogCodeException;
+
 /**
  * InventoryCondition (business catalog).
  *
@@ -12,7 +14,8 @@ public enum InventoryCondition implements DomainCatalog {
 
     AVAILABLE("AVAILABLE", "Available", "The stock of the record can be sold and dispatched normally."),
     RESERVED("RESERVED", "Reserved", "The stock of the record is temporarily held for orders in progress."),
-    OUT_OF_STOCK("OUT_OF_STOCK", "Out of Stock", "The record has no available stock at the moment.");
+    OUT_OF_STOCK("OUT_OF_STOCK", "Out of Stock", "The record has no available stock at the moment."),
+    DAMAGED("DAMAGED", "Damaged", "The stock of the record is damaged and can never be reserved or sold.");
 
     private final String code;
     private final String name;
@@ -46,6 +49,6 @@ public enum InventoryCondition implements DomainCatalog {
                 return value;
             }
         }
-        throw new IllegalArgumentException("Unknown InventoryCondition code: " + code);
+        throw new InvalidCatalogCodeException("InventoryCondition", code);
     }
 }

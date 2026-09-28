@@ -1,5 +1,7 @@
 package nexusmarket.domain.valueobjects;
 
+import nexusmarket.domain.exceptions.InvalidCatalogCodeException;
+
 /**
  * RefundStatus (business catalog).
  *
@@ -44,6 +46,6 @@ public enum RefundStatus implements DomainCatalog {
                 return value;
             }
         }
-        throw new IllegalArgumentException("Unknown RefundStatus code: " + code);
+        throw new InvalidCatalogCodeException("RefundStatus", code);
     }
 }

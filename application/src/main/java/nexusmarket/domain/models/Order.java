@@ -5,8 +5,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
+import nexusmarket.domain.exceptions.InvalidInvoiceException;
+import nexusmarket.domain.exceptions.InvalidOrderException;
+import nexusmarket.domain.exceptions.InvalidOrderStatusTransitionException;
+import nexusmarket.domain.exceptions.InvalidShipmentException;
+import nexusmarket.domain.exceptions.OrderAlreadyFinalizedException;
 import nexusmarket.domain.valueobjects.OrderStatus;
 
 /**
@@ -44,25 +48,35 @@ public class Order {
     public Order(String id, Buyer buyer, List<OrderItem> items, OrderStatus status,
                 LocalDateTime createdAt, Invoice invoice, List<Shipment> shipments) {
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("Order id cannot be empty.");
+            throw new InvalidOrderException("Order id cannot be empty.");
         }
         if (items == null || items.isEmpty()) {
-            throw new IllegalArgumentException("An order contains one or more order items.");
+            throw new InvalidOrderException("An order contains one or more order items.");
         }
         this.id = id;
-        this.buyer = Objects.requireNonNull(buyer, "Order buyer is required.");
+        if (buyer == null) {
+            throw new InvalidOrderException("Order buyer is required.");
+        }
+        this.buyer = buyer;
         this.items = new ArrayList<>(items);
-        this.status = Objects.requireNonNull(status, "Order status is required.");
-        this.createdAt = Objects.requireNonNull(createdAt, "Order createdAt is required.");
+        if (status == null) {
+            throw new InvalidOrderException("Order status is required.");
+        }
+        this.status = status;
+        if (createdAt == null) {
+            throw new InvalidOrderException("Order createdAt is required.");
+        }
+        this.createdAt = createdAt;
         if (invoice != null) {
             if (invoice.getOrder() != this) {
-                throw new IllegalArgumentException("The invoice does not belong to this order.");
+                throw new InvalidInvoiceException("The invoice does not belong to this order.");
             }
             this.invoice = invoice;
         }
         if (shipments != null) {
             for (Shipment shipment : shipments) {
-                addShipment(shipment);
+                requireOwnShipment(shipment);
+                this.shipments.add(shipment);
             }
         }
     }
@@ -97,14 +111,14 @@ public class Order {
 
     private void requireModifiable() {
         if (status == OrderStatus.DELIVERED) {
-            throw new IllegalStateException("Order " + id + " is finalized and can never be modified.");
+            throw new OrderAlreadyFinalizedException(id);
         }
     }
 
     public void markPaid() {
         requireModifiable();
         if (status != OrderStatus.PENDING_PAYMENT) {
-            throw new IllegalStateException("Only a pending payment order can be marked as paid.");
+            throw new InvalidOrderStatusTransitionException(status.getCode(), OrderStatus.PAID.getCode());
         }
         status = OrderStatus.PAID;
     }
@@ -112,15 +126,20 @@ public class Order {
     public void markShipped() {
         requireModifiable();
         if (status != OrderStatus.PAID) {
-            throw new IllegalStateException("Only a paid order can be marked as shipped.");
+            throw new InvalidOrderStatusTransitionException(status.getCode(), OrderStatus.SHIPPED.getCode());
         }
         status = OrderStatus.SHIPPED;
     }
 
+    /**
+     * Finalizes the order: {@code SHIPPED} → {@code DELIVERED}, or {@code PAID} → {@code DELIVERED} when the
+     * order has no physical items (digital products are delivered immediately after payment).
+     */
     public void markDelivered() {
         requireModifiable();
-        if (status != OrderStatus.SHIPPED) {
-            throw new IllegalStateException("Only a shipped order can be marked as delivered.");
+        boolean digitalOnlyPaid = status == OrderStatus.PAID && !hasPhysicalItems();
+        if (status != OrderStatus.SHIPPED && !digitalOnlyPaid) {
+            throw new InvalidOrderStatusTransitionException(status.getCode(), OrderStatus.DELIVERED.getCode());
         }
         status = OrderStatus.DELIVERED;
     }
@@ -128,13 +147,15 @@ public class Order {
     /** Attaches the unique invoice of the order, generated once payment is validated. */
     public void attachInvoice(Invoice invoice) {
         requireModifiable();
-        Objects.requireNonNull(invoice, "Invoice is required.");
+        if (invoice == null) {
+            throw new InvalidInvoiceException("Invoice is required.");
+        }
         if (this.invoice != null) {
-            throw new IllegalStateException(
+            throw new InvalidOrderException(
                     "Order " + id + " already has an invoice. An order generates exactly one invoice.");
         }
         if (invoice.getOrder() != this) {
-            throw new IllegalArgumentException("The invoice does not belong to this order.");
+            throw new InvalidInvoiceException("The invoice does not belong to this order.");
         }
         this.invoice = invoice;
     }
@@ -142,11 +163,27 @@ public class Order {
     /** Registers a shipment of the order (one per origin warehouse). */
     public void addShipment(Shipment shipment) {
         requireModifiable();
-        Objects.requireNonNull(shipment, "Shipment is required.");
-        if (shipment.getOrder() != this) {
-            throw new IllegalArgumentException("The shipment does not belong to this order.");
-        }
+        requireOwnShipment(shipment);
         shipments.add(shipment);
+    }
+
+    private void requireOwnShipment(Shipment shipment) {
+        if (shipment == null) {
+            throw new InvalidShipmentException("Shipment is required.");
+        }
+        if (!shipment.getOrder().getId().equals(id)) {
+            throw new InvalidShipmentException("The shipment does not belong to this order.");
+        }
+    }
+
+    /** Indicates whether at least one item is a physical product. */
+    public boolean hasPhysicalItems() {
+        for (OrderItem item : items) {
+            if (item.isPhysical()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Sum of all order item subtotals. */

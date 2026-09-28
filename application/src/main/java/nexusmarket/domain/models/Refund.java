@@ -1,8 +1,9 @@
 package nexusmarket.domain.models;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 
+import nexusmarket.domain.exceptions.InvalidRefundException;
+import nexusmarket.domain.exceptions.InvalidStatusTransitionException;
 import nexusmarket.domain.valueobjects.RefundStatus;
 
 /**
@@ -26,15 +27,21 @@ public class Refund {
     /** Rehydration constructor used to rebuild a persisted refund. */
     public Refund(String id, ReturnRequest returnRequest, BigDecimal amount, RefundStatus status) {
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("Refund id cannot be empty.");
+            throw new InvalidRefundException("Refund id cannot be empty.");
         }
         if (amount == null || amount.signum() <= 0) {
-            throw new IllegalArgumentException("Refund amount must be positive.");
+            throw new InvalidRefundException("Refund amount must be positive.");
         }
         this.id = id;
-        this.returnRequest = Objects.requireNonNull(returnRequest, "Refund return request is required.");
+        if (returnRequest == null) {
+            throw new InvalidRefundException("Refund return request is required.");
+        }
+        this.returnRequest = returnRequest;
         this.amount = amount;
-        this.status = Objects.requireNonNull(status, "Refund status is required.");
+        if (status == null) {
+            throw new InvalidRefundException("Refund status is required.");
+        }
+        this.status = status;
     }
 
     public String getId() {
@@ -56,7 +63,8 @@ public class Refund {
     /** The amount was restituted to the buyer. */
     public void markProcessed() {
         if (status != RefundStatus.PENDING) {
-            throw new IllegalStateException("Only a pending refund can be processed.");
+            throw new InvalidStatusTransitionException("refund", status.getCode(),
+                    RefundStatus.PROCESSED.getCode());
         }
         status = RefundStatus.PROCESSED;
     }
@@ -64,7 +72,8 @@ public class Refund {
     /** The refund did not proceed. */
     public void reject() {
         if (status != RefundStatus.PENDING) {
-            throw new IllegalStateException("Only a pending refund can be rejected.");
+            throw new InvalidStatusTransitionException("refund", status.getCode(),
+                    RefundStatus.REJECTED.getCode());
         }
         status = RefundStatus.REJECTED;
     }

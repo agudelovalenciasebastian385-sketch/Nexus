@@ -1,5 +1,7 @@
 package nexusmarket.domain.valueobjects;
 
+import nexusmarket.domain.exceptions.InvalidCatalogCodeException;
+
 /**
  * UserStatus (business catalog).
  *
@@ -43,6 +45,6 @@ public enum UserStatus implements DomainCatalog {
                 return value;
             }
         }
-        throw new IllegalArgumentException("Unknown UserStatus code: " + code);
+        throw new InvalidCatalogCodeException("UserStatus", code);
     }
 }

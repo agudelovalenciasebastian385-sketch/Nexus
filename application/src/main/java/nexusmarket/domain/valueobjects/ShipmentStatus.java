@@ -1,5 +1,7 @@
 package nexusmarket.domain.valueobjects;
 
+import nexusmarket.domain.exceptions.InvalidCatalogCodeException;
+
 /**
  * ShipmentStatus (business catalog).
  *
@@ -9,6 +11,7 @@ package nexusmarket.domain.valueobjects;
 public enum ShipmentStatus implements DomainCatalog {
 
     PREPARING("PREPARING", "Preparing", "The shipment is being packed at the origin warehouse."),
+    PACKED("PACKED", "Packed", "The shipment is packed and ready to be dispatched."),
     IN_TRANSIT("IN_TRANSIT", "In Transit", "The shipment is in transport toward its destination."),
     DELIVERED("DELIVERED", "Delivered", "The shipment was successfully delivered.");
 
@@ -44,6 +47,6 @@ public enum ShipmentStatus implements DomainCatalog {
                 return value;
             }
         }
-        throw new IllegalArgumentException("Unknown ShipmentStatus code: " + code);
+        throw new InvalidCatalogCodeException("ShipmentStatus", code);
     }
 }

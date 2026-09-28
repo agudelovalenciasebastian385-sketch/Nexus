@@ -1,5 +1,7 @@
 package nexusmarket.domain.valueobjects;
 
+import nexusmarket.domain.exceptions.InvalidCatalogCodeException;
+
 /**
  * OrderStatus (business catalog).
  *
@@ -48,6 +50,6 @@ public enum OrderStatus implements DomainCatalog {
                 return value;
             }
         }
-        throw new IllegalArgumentException("Unknown OrderStatus code: " + code);
+        throw new InvalidCatalogCodeException("OrderStatus", code);
     }
 }

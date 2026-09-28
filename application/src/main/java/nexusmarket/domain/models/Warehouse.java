@@ -3,7 +3,11 @@ package nexusmarket.domain.models;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+
+import nexusmarket.domain.exceptions.InvalidInventoryException;
+import nexusmarket.domain.exceptions.InvalidWarehouseException;
+import nexusmarket.domain.valueobjects.Address;
+import nexusmarket.domain.valueobjects.WarehouseType;
 
 /**
  * Warehouse.
@@ -14,43 +18,35 @@ import java.util.Objects;
  * <p>Relationships: a Seller-type warehouse belongs to exactly one
  * {@link Seller}; a Marketplace-type warehouse is registered and managed by an
  * Administrator; a warehouse holds zero or more {@link Inventory} instances.</p>
- *
- * <p>The {@code WarehouseType} value object of the Domain Model is modeled as
- * a validated {@code String} in this delivery (the catalog class is out of
- * scope); only the constants {@link #TYPE_MARKETPLACE} and
- * {@link #TYPE_SELLER} are accepted.</p>
  */
 public class Warehouse {
 
-    public static final String TYPE_MARKETPLACE = "MARKETPLACE";
-    public static final String TYPE_SELLER = "SELLER";
-
     private final String id;
     private String name;
-    /** Physical location of the warehouse (modeled as String in this delivery). */
-    private String location;
-    private final String type;
+    /** Physical location of the warehouse. */
+    private Address location;
+    private final WarehouseType type;
     private final Seller seller;
     private final List<Inventory> inventories = new ArrayList<>();
 
-    public Warehouse(String id, String name, String location, String type, Seller seller) {
+    public Warehouse(String id, String name, Address location, WarehouseType type, Seller seller) {
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("Warehouse id cannot be empty.");
+            throw new InvalidWarehouseException("Warehouse id cannot be empty.");
         }
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Warehouse name cannot be empty.");
+            throw new InvalidWarehouseException("Warehouse name cannot be empty.");
         }
-        if (location == null || location.isBlank()) {
-            throw new IllegalArgumentException("Warehouse location cannot be empty.");
+        if (location == null) {
+            throw new InvalidWarehouseException("Warehouse location is required.");
         }
-        if (!TYPE_MARKETPLACE.equals(type) && !TYPE_SELLER.equals(type)) {
-            throw new IllegalArgumentException("Warehouse type must be " + TYPE_MARKETPLACE + " or " + TYPE_SELLER + ".");
+        if (type == null) {
+            throw new InvalidWarehouseException("Warehouse type is required.");
         }
-        if (TYPE_SELLER.equals(type) && seller == null) {
-            throw new IllegalArgumentException("A Seller-type warehouse must belong to exactly one seller.");
+        if (type == WarehouseType.SELLER && seller == null) {
+            throw new InvalidWarehouseException("A Seller-type warehouse must belong to exactly one seller.");
         }
-        if (TYPE_MARKETPLACE.equals(type) && seller != null) {
-            throw new IllegalArgumentException("A Marketplace-type warehouse cannot belong to a seller.");
+        if (type == WarehouseType.MARKETPLACE && seller != null) {
+            throw new InvalidWarehouseException("A Marketplace-type warehouse cannot belong to a seller.");
         }
         this.id = id;
         this.name = name;
@@ -69,23 +65,23 @@ public class Warehouse {
 
     public void setName(String name) {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Warehouse name cannot be empty.");
+            throw new InvalidWarehouseException("Warehouse name cannot be empty.");
         }
         this.name = name;
     }
 
-    public String getLocation() {
+    public Address getLocation() {
         return location;
     }
 
-    public void setLocation(String location) {
-        if (location == null || location.isBlank()) {
-            throw new IllegalArgumentException("Warehouse location cannot be empty.");
+    public void setLocation(Address location) {
+        if (location == null) {
+            throw new InvalidWarehouseException("Warehouse location is required.");
         }
         this.location = location;
     }
 
-    public String getType() {
+    public WarehouseType getType() {
         return type;
     }
 
@@ -99,19 +95,21 @@ public class Warehouse {
 
     /** Holds a new inventory record in this warehouse. */
     public void addInventory(Inventory inventory) {
-        Objects.requireNonNull(inventory, "Inventory is required.");
+        if (inventory == null) {
+            throw new InvalidInventoryException("Inventory is required.");
+        }
         if (inventory.getWarehouse() != this) {
-            throw new IllegalArgumentException("The inventory does not belong to this warehouse.");
+            throw new InvalidInventoryException("The inventory does not belong to this warehouse.");
         }
         inventories.add(inventory);
     }
 
     public boolean isMarketplace() {
-        return TYPE_MARKETPLACE.equals(type);
+        return type == WarehouseType.MARKETPLACE;
     }
 
     public boolean isSellerOwned() {
-        return TYPE_SELLER.equals(type);
+        return type == WarehouseType.SELLER;
     }
 
     @Override
@@ -132,6 +130,6 @@ public class Warehouse {
 
     @Override
     public String toString() {
-        return "Warehouse{id='" + id + "', name='" + name + "', type=" + type + ", location='" + location + "'}";
+        return "Warehouse{id='" + id + "', name='" + name + "', type=" + type + ", location=" + location + "}";
     }
 }

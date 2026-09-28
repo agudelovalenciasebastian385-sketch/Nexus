@@ -1,5 +1,7 @@
 package nexusmarket.domain.valueobjects;
 
+import nexusmarket.domain.exceptions.InvalidCatalogCodeException;
+
 /**
  * CommercialStatus (business catalog).
  *
@@ -44,6 +46,6 @@ public enum CommercialStatus implements DomainCatalog {
                 return value;
             }
         }
-        throw new IllegalArgumentException("Unknown CommercialStatus code: " + code);
+        throw new InvalidCatalogCodeException("CommercialStatus", code);
     }
 }

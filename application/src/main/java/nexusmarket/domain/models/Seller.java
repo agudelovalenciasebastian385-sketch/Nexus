@@ -3,8 +3,9 @@ package nexusmarket.domain.models;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
+import nexusmarket.domain.exceptions.InvalidProductException;
+import nexusmarket.domain.exceptions.InvalidWarehouseException;
 import nexusmarket.domain.valueobjects.SystemRole;
 import nexusmarket.domain.valueobjects.UserStatus;
 
@@ -26,8 +27,9 @@ public class Seller extends User {
     /** Products published by the seller. Empty by default. */
     private final List<Product> products = new ArrayList<>();
 
-    public Seller(String id, String fullName, String email, UserStatus status) {
-        super(id, fullName, email, SystemRole.SELLER, status);
+    public Seller(String id, String identificationNumber, String fullName, String email, String password,
+                  UserStatus status) {
+        super(id, identificationNumber, fullName, email, password, SystemRole.SELLER, status);
     }
 
     public List<Warehouse> getWarehouses() {
@@ -36,9 +38,11 @@ public class Seller extends User {
 
     /** Associates one of the seller's own warehouses. */
     public void addWarehouse(Warehouse warehouse) {
-        Objects.requireNonNull(warehouse, "Warehouse is required.");
+        if (warehouse == null) {
+            throw new InvalidWarehouseException("Warehouse is required.");
+        }
         if (warehouse.getSeller() != this) {
-            throw new IllegalArgumentException("The warehouse does not belong to this seller.");
+            throw new InvalidWarehouseException("The warehouse does not belong to this seller.");
         }
         warehouses.add(warehouse);
     }
@@ -49,9 +53,11 @@ public class Seller extends User {
 
     /** Registers a product published by this seller. */
     public void addProduct(Product product) {
-        Objects.requireNonNull(product, "Product is required.");
+        if (product == null) {
+            throw new InvalidProductException("Product is required.");
+        }
         if (product.getSeller() != this) {
-            throw new IllegalArgumentException("The product does not belong to this seller.");
+            throw new InvalidProductException("The product does not belong to this seller.");
         }
         products.add(product);
     }

@@ -12,16 +12,15 @@ spring:
       minimum-idle: 2
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     open-in-view: false
     properties:
       hibernate:
         format_sql: true
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:database/schema.sql
-      data-locations: classpath:database/data.sql
+  mongodb:
+    host: ${MONGO_HOST:localhost}
+    port: ${MONGO_PORT:27017}
+    database: ${MONGO_DATABASE:nexusmarket}
 
 server:
   port: 8080

@@ -1,7 +1,7 @@
 package nexusmarket.domain.models;
 
-import java.util.Objects;
-
+import nexusmarket.domain.exceptions.InvalidReturnRequestException;
+import nexusmarket.domain.exceptions.InvalidStatusTransitionException;
 import nexusmarket.domain.valueobjects.ReturnStatus;
 
 /**
@@ -28,15 +28,21 @@ public class ReturnRequest {
     /** Rehydration constructor used to rebuild a persisted return request. */
     public ReturnRequest(String id, Order order, String reason, ReturnStatus status) {
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("ReturnRequest id cannot be empty.");
+            throw new InvalidReturnRequestException("ReturnRequest id cannot be empty.");
         }
         if (reason == null || reason.isBlank()) {
-            throw new IllegalArgumentException("ReturnRequest reason cannot be empty.");
+            throw new InvalidReturnRequestException("ReturnRequest reason cannot be empty.");
         }
         this.id = id;
-        this.order = Objects.requireNonNull(order, "ReturnRequest order is required.");
+        if (order == null) {
+            throw new InvalidReturnRequestException("ReturnRequest order is required.");
+        }
+        this.order = order;
         this.reason = reason;
-        this.status = Objects.requireNonNull(status, "ReturnRequest status is required.");
+        if (status == null) {
+            throw new InvalidReturnRequestException("ReturnRequest status is required.");
+        }
+        this.status = status;
     }
 
     public String getId() {
@@ -58,7 +64,8 @@ public class ReturnRequest {
     /** The return was validated and triggers inventory re-entry. */
     public void approve() {
         if (status != ReturnStatus.REQUESTED) {
-            throw new IllegalStateException("Only a requested return can be approved.");
+            throw new InvalidStatusTransitionException("return request", status.getCode(),
+                    ReturnStatus.APPROVED.getCode());
         }
         status = ReturnStatus.APPROVED;
     }
@@ -66,7 +73,8 @@ public class ReturnRequest {
     /** The return did not meet the required conditions. */
     public void reject() {
         if (status != ReturnStatus.REQUESTED) {
-            throw new IllegalStateException("Only a requested return can be rejected.");
+            throw new InvalidStatusTransitionException("return request", status.getCode(),
+                    ReturnStatus.REJECTED.getCode());
         }
         status = ReturnStatus.REJECTED;
     }

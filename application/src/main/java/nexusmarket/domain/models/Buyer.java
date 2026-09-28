@@ -3,8 +3,11 @@ package nexusmarket.domain.models;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
+import nexusmarket.domain.exceptions.InvalidCartException;
+import nexusmarket.domain.exceptions.InvalidOrderException;
+import nexusmarket.domain.exceptions.InvalidUserException;
+import nexusmarket.domain.valueobjects.Address;
 import nexusmarket.domain.valueobjects.CommercialStatus;
 import nexusmarket.domain.valueobjects.SystemRole;
 import nexusmarket.domain.valueobjects.UserStatus;
@@ -20,32 +23,38 @@ import nexusmarket.domain.valueobjects.UserStatus;
  */
 public class Buyer extends User {
 
-    /** Usual delivery location (modeled as String in this delivery). */
-    private String primaryAddress;
+    /** Usual delivery location. */
+    private Address primaryAddress;
 
     /** Secondary delivery locations. Empty by default. */
-    private final List<String> additionalAddresses = new ArrayList<>();
+    private final List<Address> additionalAddresses = new ArrayList<>();
 
     /** Buyer's condition for making purchases. */
     private CommercialStatus commercialStatus;
 
+    /** Buyer's active shopping cart. A buyer owns exactly one cart. */
+    private Cart cart;
+
     /** Buyer's historical and active orders. Empty by default; loaded on demand. */
     private final List<Order> orders = new ArrayList<>();
 
-    public Buyer(String id, String fullName, String email, UserStatus status,
-                String primaryAddress, CommercialStatus commercialStatus) {
-        super(id, fullName, email, SystemRole.BUYER, status);
-        this.primaryAddress = requireAddress(primaryAddress, "Buyer primary address cannot be empty.");
-        this.commercialStatus = Objects.requireNonNull(commercialStatus, "Buyer commercial status is required.");
+    public Buyer(String id, String identificationNumber, String fullName, String email, String password,
+                UserStatus status, Address primaryAddress, CommercialStatus commercialStatus) {
+        super(id, identificationNumber, fullName, email, password, SystemRole.BUYER, status);
+        this.primaryAddress = requireAddress(primaryAddress, "Buyer primary address is required.");
+        if (commercialStatus == null) {
+            throw new InvalidUserException("Buyer commercial status is required.");
+        }
+        this.commercialStatus = commercialStatus;
     }
 
     /** Rehydration constructor used to rebuild a persisted buyer. */
-    public Buyer(String id, String fullName, String email, UserStatus status,
-                String primaryAddress, List<String> additionalAddresses,
+    public Buyer(String id, String identificationNumber, String fullName, String email, String password,
+                UserStatus status, Address primaryAddress, List<Address> additionalAddresses,
                 CommercialStatus commercialStatus, List<Order> orders) {
-        this(id, fullName, email, status, primaryAddress, commercialStatus);
+        this(id, identificationNumber, fullName, email, password, status, primaryAddress, commercialStatus);
         if (additionalAddresses != null) {
-            for (String address : additionalAddresses) {
+            for (Address address : additionalAddresses) {
                 addAdditionalAddress(address);
             }
         }
@@ -56,24 +65,31 @@ public class Buyer extends User {
         }
     }
 
-    public String getPrimaryAddress() {
+    public Address getPrimaryAddress() {
         return primaryAddress;
     }
 
-    public void setPrimaryAddress(String primaryAddress) {
-        this.primaryAddress = requireAddress(primaryAddress, "Buyer primary address cannot be empty.");
+    public void setPrimaryAddress(Address primaryAddress) {
+        this.primaryAddress = requireAddress(primaryAddress, "Buyer primary address is required.");
     }
 
-    public List<String> getAdditionalAddresses() {
+    public List<Address> getAdditionalAddresses() {
         return Collections.unmodifiableList(additionalAddresses);
     }
 
-    public void addAdditionalAddress(String address) {
-        String value = requireAddress(address, "Buyer additional address cannot be empty.");
+    public void addAdditionalAddress(Address address) {
+        Address value = requireAddress(address, "Buyer additional address is required.");
         if (additionalAddresses.contains(value)) {
-            throw new IllegalArgumentException("The additional address is already registered for this buyer.");
+            throw new InvalidUserException("The additional address is already registered for this buyer.");
         }
         additionalAddresses.add(value);
+    }
+
+    /** Removes a registered secondary delivery location. */
+    public void removeAdditionalAddress(Address address) {
+        if (!additionalAddresses.remove(address)) {
+            throw new InvalidUserException("The additional address is not registered for this buyer.");
+        }
     }
 
     public CommercialStatus getCommercialStatus() {
@@ -81,7 +97,28 @@ public class Buyer extends User {
     }
 
     public void setCommercialStatus(CommercialStatus commercialStatus) {
-        this.commercialStatus = Objects.requireNonNull(commercialStatus, "Buyer commercial status is required.");
+        if (commercialStatus == null) {
+            throw new InvalidUserException("Buyer commercial status is required.");
+        }
+        this.commercialStatus = commercialStatus;
+    }
+
+    public Cart getCart() {
+        return cart;
+    }
+
+    /** Assigns the buyer's unique shopping cart. */
+    public void assignCart(Cart cart) {
+        if (cart == null) {
+            throw new InvalidCartException("Cart is required.");
+        }
+        if (cart.getBuyer() != this) {
+            throw new InvalidCartException("The cart does not belong to this buyer.");
+        }
+        if (this.cart != null) {
+            throw new InvalidCartException("The buyer already has a cart. A buyer owns exactly one cart.");
+        }
+        this.cart = cart;
     }
 
     public List<Order> getOrders() {
@@ -90,9 +127,11 @@ public class Buyer extends User {
 
     /** Registers an order placed by this buyer. */
     public void addOrder(Order order) {
-        Objects.requireNonNull(order, "Order is required.");
+        if (order == null) {
+            throw new InvalidOrderException("Order is required.");
+        }
         if (order.getBuyer() != this) {
-            throw new IllegalArgumentException("The order does not belong to this buyer.");
+            throw new InvalidOrderException("The order does not belong to this buyer.");
         }
         orders.add(order);
     }
@@ -102,9 +141,9 @@ public class Buyer extends User {
         return isActive() && commercialStatus == CommercialStatus.ENABLED;
     }
 
-    private String requireAddress(String address, String message) {
-        if (address == null || address.isBlank()) {
-            throw new IllegalArgumentException(message);
+    private Address requireAddress(Address address, String message) {
+        if (address == null) {
+            throw new InvalidUserException(message);
         }
         return address;
     }

@@ -4,21 +4,25 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
+import nexusmarket.domain.exceptions.InsufficientInventoryException;
+import nexusmarket.domain.exceptions.InvalidInventoryException;
 import nexusmarket.domain.valueobjects.InventoryCondition;
 import nexusmarket.domain.valueobjects.MovementType;
 
 /**
  * Inventory.
  *
- * <p>Represents the available stock of a {@link PhysicalProduct} in a specific
+ * <p>Represents the stock of a {@link PhysicalProduct} in a specific
  * {@link Warehouse}. Inventory is distributed and must be mandatorily linked
  * to a product and a warehouse.</p>
  *
+ * <p>The stock is split into the available {@code quantity} (which can be
+ * reserved) and the {@code reservedQuantity} held for orders in progress.</p>
+ *
  * <p><b>Constraint:</b> negative stock is never allowed under any
  * circumstance; every operation that would produce a negative quantity is
- * rejected.</p>
+ * rejected. Damaged inventory can never be reserved.</p>
  *
  * <p>It has no id of its own: its identity is the pair (product, warehouse),
  * so equality is determined by that pair.</p>
@@ -27,23 +31,37 @@ public class Inventory {
 
     private final PhysicalProduct product;
     private final Warehouse warehouse;
+    /** Available stock. */
     private int quantity;
+    /** Stock held for orders in progress. */
+    private int reservedQuantity;
     private InventoryCondition condition;
     private final List<InventoryMovement> movements = new ArrayList<>();
 
     public Inventory(PhysicalProduct product, Warehouse warehouse, int initialQuantity) {
-        this(product, warehouse, initialQuantity, InventoryCondition.AVAILABLE);
+        this(product, warehouse, initialQuantity, 0, InventoryCondition.AVAILABLE, null);
     }
 
-    public Inventory(PhysicalProduct product, Warehouse warehouse, int initialQuantity,
-                     InventoryCondition condition) {
-        this.product = Objects.requireNonNull(product, "Inventory product is required.");
-        this.warehouse = Objects.requireNonNull(warehouse, "Inventory warehouse is required.");
-        if (initialQuantity < 0) {
-            throw new IllegalArgumentException("Inventory quantity can never be negative.");
+    /** Rehydration constructor used to rebuild a persisted inventory record. */
+    public Inventory(PhysicalProduct product, Warehouse warehouse, int quantity, int reservedQuantity,
+                     InventoryCondition condition, List<InventoryMovement> movements) {
+        if (product == null) {
+            throw new InvalidInventoryException("Inventory product is required.");
         }
-        this.quantity = initialQuantity;
+        if (warehouse == null) {
+            throw new InvalidInventoryException("Inventory warehouse is required.");
+        }
+        if (quantity < 0 || reservedQuantity < 0) {
+            throw new InvalidInventoryException("Inventory quantities can never be negative.");
+        }
+        this.product = product;
+        this.warehouse = warehouse;
+        this.quantity = quantity;
+        this.reservedQuantity = reservedQuantity;
         this.condition = condition == null ? InventoryCondition.AVAILABLE : condition;
+        if (movements != null) {
+            this.movements.addAll(movements);
+        }
     }
 
     public PhysicalProduct getProduct() {
@@ -58,50 +76,73 @@ public class Inventory {
         return quantity;
     }
 
+    public int getReservedQuantity() {
+        return reservedQuantity;
+    }
+
     public InventoryCondition getCondition() {
         return condition;
     }
 
     public void setCondition(InventoryCondition condition) {
-        this.condition = Objects.requireNonNull(condition, "Inventory condition is required.");
+        if (condition == null) {
+            throw new InvalidInventoryException("Inventory condition is required.");
+        }
+        this.condition = condition;
     }
 
     public List<InventoryMovement> getMovements() {
         return Collections.unmodifiableList(movements);
     }
 
+    /** Indicates whether the record can be reserved for the given quantity. */
+    public boolean canReserve(int quantity) {
+        return condition == InventoryCondition.AVAILABLE && this.quantity >= quantity;
+    }
+
     /**
-     * Records a stock movement and applies its effect to the current quantity:
+     * Records a stock movement and applies its effect:
      * <ul>
-     *   <li>{@code INBOUND} and {@code RETURN} increase the stock.</li>
-     *   <li>{@code RESERVATION} and {@code SALE_OUTBOUND} decrease the stock
-     *       (rejected if there is not enough available stock).</li>
-     *   <li>{@code ADJUSTMENT} applies a signed manual correction.</li>
+     *   <li>{@code INBOUND} and {@code RETURN}: available + quantity.</li>
+     *   <li>{@code RESERVATION}: available → reserved (never on damaged stock).</li>
+     *   <li>{@code RESERVATION_RELEASE}: reserved → available.</li>
+     *   <li>{@code SALE_OUTBOUND}: consumes reserved stock.</li>
+     *   <li>{@code ADJUSTMENT}: signed manual correction of the available stock.</li>
      * </ul>
      *
      * @return the recorded movement
-     * @throws IllegalStateException if the movement would produce negative stock
+     * @throws InsufficientInventoryException if the available stock would become negative
+     * @throws InvalidInventoryException if the reserved stock would become negative or the stock is damaged
      */
     public InventoryMovement registerMovement(MovementType type, int quantity, LocalDateTime date) {
-        Objects.requireNonNull(type, "Movement type is required.");
-        Objects.requireNonNull(date, "Movement date is required.");
-        if (type != MovementType.ADJUSTMENT && quantity <= 0) {
-            throw new IllegalArgumentException("Movement quantity must be positive for " + type + ".");
-        }
-        if (type == MovementType.ADJUSTMENT && quantity == 0) {
-            throw new IllegalArgumentException("Adjustment quantity cannot be zero.");
-        }
-        int effective = switch (type) {
-            case INBOUND, RETURN -> this.quantity + quantity;
-            case RESERVATION, SALE_OUTBOUND -> this.quantity - quantity;
-            case ADJUSTMENT -> this.quantity + quantity;
-        };
-        if (effective < 0) {
-            throw new IllegalStateException("Insufficient inventory: requested " + quantity
-                    + ", available " + this.quantity + ". Negative stock is never allowed.");
-        }
-        this.quantity = effective;
         InventoryMovement movement = new InventoryMovement(type, quantity, date);
+        int available = this.quantity;
+        int reserved = this.reservedQuantity;
+        switch (type) {
+            case INBOUND, RETURN -> available += quantity;
+            case ADJUSTMENT -> available += quantity;
+            case RESERVATION -> {
+                if (condition == InventoryCondition.DAMAGED) {
+                    throw new InvalidInventoryException("Damaged inventory can never be reserved.");
+                }
+                available -= quantity;
+                reserved += quantity;
+            }
+            case RESERVATION_RELEASE -> {
+                reserved -= quantity;
+                available += quantity;
+            }
+            case SALE_OUTBOUND -> reserved -= quantity;
+        }
+        if (available < 0) {
+            throw new InsufficientInventoryException(Math.abs(quantity), this.quantity);
+        }
+        if (reserved < 0) {
+            throw new InvalidInventoryException("Not enough reserved stock: requested " + quantity
+                    + ", reserved " + this.reservedQuantity + ".");
+        }
+        this.quantity = available;
+        this.reservedQuantity = reserved;
         movements.add(movement);
         return movement;
     }
@@ -127,6 +168,7 @@ public class Inventory {
     @Override
     public String toString() {
         return "Inventory{product=" + product.getId() + ", warehouse=" + warehouse.getId()
-                + ", quantity=" + quantity + ", condition=" + condition + ", movements=" + movements.size() + "}";
+                + ", quantity=" + quantity + ", reservedQuantity=" + reservedQuantity
+                + ", condition=" + condition + ", movements=" + movements.size() + "}";
     }
 }

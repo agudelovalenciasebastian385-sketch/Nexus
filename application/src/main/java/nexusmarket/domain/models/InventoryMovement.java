@@ -1,8 +1,8 @@
 package nexusmarket.domain.models;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
+import nexusmarket.domain.exceptions.InvalidInventoryException;
 import nexusmarket.domain.valueobjects.MovementType;
 
 /**
@@ -19,16 +19,22 @@ public class InventoryMovement {
     private final LocalDateTime date;
 
     public InventoryMovement(MovementType type, int quantity, LocalDateTime date) {
-        this.type = Objects.requireNonNull(type, "Movement type is required.");
+        if (type == null) {
+            throw new InvalidInventoryException("Movement type is required.");
+        }
+        this.type = type;
         if (type == MovementType.ADJUSTMENT) {
             if (quantity == 0) {
-                throw new IllegalArgumentException("Adjustment quantity cannot be zero.");
+                throw new InvalidInventoryException("Adjustment quantity cannot be zero.");
             }
         } else if (quantity <= 0) {
-            throw new IllegalArgumentException("Movement quantity must be positive for " + type + ".");
+            throw new InvalidInventoryException("Movement quantity must be positive for " + type + ".");
         }
         this.quantity = quantity;
-        this.date = Objects.requireNonNull(date, "Movement date is required.");
+        if (date == null) {
+            throw new InvalidInventoryException("Movement date is required.");
+        }
+        this.date = date;
     }
 
     public MovementType getType() {

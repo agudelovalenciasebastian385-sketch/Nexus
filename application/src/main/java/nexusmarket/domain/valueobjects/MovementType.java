@@ -1,5 +1,7 @@
 package nexusmarket.domain.valueobjects;
 
+import nexusmarket.domain.exceptions.InvalidCatalogCodeException;
+
 /**
  * MovementType (business catalog "InventoryMovementType" in the Domain Model).
  *
@@ -9,6 +11,8 @@ public enum MovementType implements DomainCatalog {
 
     INBOUND("INBOUND", "Inbound", "Stock addition to the warehouse."),
     RESERVATION("RESERVATION", "Reservation", "Temporary stock hold for an order in progress."),
+    RESERVATION_RELEASE("RESERVATION_RELEASE", "Reservation Release",
+            "Return of reserved stock to the available stock when a reservation is cancelled."),
     SALE_OUTBOUND("SALE_OUTBOUND", "Sale Outbound", "Stock deduction upon confirming a sale."),
     ADJUSTMENT("ADJUSTMENT", "Adjustment", "Manual correction of stock."),
     RETURN("RETURN", "Return", "Stock re-entry resulting from an approved return.");
@@ -45,6 +49,6 @@ public enum MovementType implements DomainCatalog {
                 return value;
             }
         }
-        throw new IllegalArgumentException("Unknown MovementType code: " + code);
+        throw new InvalidCatalogCodeException("MovementType", code);
     }
 }

@@ -1,10 +1,14 @@
 package nexusmarket.domain.models;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
+import nexusmarket.domain.exceptions.InvalidProductException;
+import nexusmarket.domain.exceptions.InvalidProductStatusException;
 import nexusmarket.domain.valueobjects.ProductStatus;
+import nexusmarket.domain.valueobjects.ProductType;
+import nexusmarket.domain.valueobjects.Variant;
 
 /**
  * Product (abstract).
@@ -15,38 +19,44 @@ import nexusmarket.domain.valueobjects.ProductStatus;
  *
  * <p>This class cannot be instantiated directly. A product is published by
  * exactly one {@link Seller}.</p>
- *
- * <p>The {@code Variant} value objects of the Domain Model are modeled as
- * Strings in this delivery (the value object class is out of scope).</p>
  */
 public abstract class Product {
 
     private final String id;
     private String name;
     private String description;
+    /** Current unit price; copied to the cart item when the product is added to a cart. */
+    private BigDecimal price;
     private final Seller seller;
     /** Differences such as color, size, model, etc. Empty by default. */
-    private final List<String> variants = new ArrayList<>();
+    private final List<Variant> variants = new ArrayList<>();
     private ProductStatus status;
 
-    protected Product(String id, String name, String description, Seller seller,
-                    List<String> variants, ProductStatus status) {
+    protected Product(String id, String name, String description, BigDecimal price, Seller seller,
+                    List<Variant> variants, ProductStatus status) {
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("Product id cannot be empty.");
+            throw new InvalidProductException("Product id cannot be empty.");
         }
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Product name cannot be empty.");
+            throw new InvalidProductException("Product name cannot be empty.");
         }
         if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("Product description cannot be empty.");
+            throw new InvalidProductException("Product description cannot be empty.");
         }
         this.id = id;
         this.name = name;
         this.description = description;
-        this.seller = Objects.requireNonNull(seller, "Product seller is required.");
-        this.status = Objects.requireNonNull(status, "Product status is required.");
+        this.price = requirePrice(price);
+        if (seller == null) {
+            throw new InvalidProductException("Product seller is required.");
+        }
+        this.seller = seller;
+        if (status == null) {
+            throw new InvalidProductException("Product status is required.");
+        }
+        this.status = status;
         if (variants != null) {
-            for (String variant : variants) {
+            for (Variant variant : variants) {
                 addVariant(variant);
             }
         }
@@ -64,11 +74,15 @@ public abstract class Product {
         return description;
     }
 
+    public BigDecimal getPrice() {
+        return price;
+    }
+
     public Seller getSeller() {
         return seller;
     }
 
-    public List<String> getVariants() {
+    public List<Variant> getVariants() {
         return List.copyOf(variants);
     }
 
@@ -76,50 +90,74 @@ public abstract class Product {
         return status;
     }
 
+    /** Type of the product, determined by its specialization (physical or digital). */
+    public abstract ProductType getType();
+
     /** Updates the commercial information of the product. */
-    public void updateInfo(String name, String description, List<String> variants) {
+    public void updateInfo(String name, String description, BigDecimal price, List<Variant> variants) {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Product name cannot be empty.");
+            throw new InvalidProductException("Product name cannot be empty.");
         }
         if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("Product description cannot be empty.");
+            throw new InvalidProductException("Product description cannot be empty.");
         }
         this.name = name;
         this.description = description;
+        this.price = requirePrice(price);
         this.variants.clear();
         if (variants != null) {
-            for (String variant : variants) {
+            for (Variant variant : variants) {
                 addVariant(variant);
             }
         }
     }
 
-    public void addVariant(String variant) {
-        if (variant == null || variant.isBlank()) {
-            throw new IllegalArgumentException("Product variant cannot be empty.");
+    public void addVariant(Variant variant) {
+        if (variant == null) {
+            throw new InvalidProductException("Product variant is required.");
         }
         if (variants.contains(variant)) {
-            throw new IllegalArgumentException("The variant is already registered for this product.");
+            throw new InvalidProductException("The variant is already registered for this product.");
         }
         variants.add(variant);
     }
 
-    /** Temporarily unavailable in the catalog. */
+    private static BigDecimal requirePrice(BigDecimal price) {
+        if (price == null || price.signum() < 0) {
+            throw new InvalidProductException("Product price must be zero or positive.");
+        }
+        return price;
+    }
+
+    /** Makes a draft or suspended product visible in the public catalog. */
+    public void publish() {
+        if (status != ProductStatus.DRAFT && status != ProductStatus.SUSPENDED) {
+            throw new InvalidProductStatusException("Only a draft or suspended product can be published; current status is "
+                    + status.getCode() + ".");
+        }
+        this.status = ProductStatus.PUBLISHED;
+    }
+
+    /** Temporarily unavailable in the catalog. Only a published product can be suspended. */
     public void suspend() {
+        if (status != ProductStatus.PUBLISHED) {
+            throw new InvalidProductStatusException("Only a published product can be suspended; current status is "
+                    + status.getCode() + ".");
+        }
         this.status = ProductStatus.SUSPENDED;
     }
 
-    /** Permanently withdrawn from the catalog. */
+    /** Permanently withdrawn from the catalog. A discontinued product cannot change status again. */
     public void discontinue() {
+        if (status == ProductStatus.DISCONTINUED) {
+            throw new InvalidProductStatusException("The product is already discontinued.");
+        }
         this.status = ProductStatus.DISCONTINUED;
     }
 
-    /** Makes the product visible again in the public catalog. */
-    public void republish() {
-        if (status == ProductStatus.DISCONTINUED) {
-            throw new IllegalStateException("A discontinued product cannot be republished.");
-        }
-        this.status = ProductStatus.PUBLISHED;
+    /** Indicates whether the given variant is offered by this product. */
+    public boolean hasVariant(Variant variant) {
+        return variants.contains(variant);
     }
 
     public boolean isPublished() {

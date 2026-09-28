@@ -1,5 +1,7 @@
 package nexusmarket.domain.valueobjects;
 
+import nexusmarket.domain.exceptions.InvalidCatalogCodeException;
+
 /**
  * SystemRole (business catalog "UserRole" in the Domain Model).
  *
@@ -51,6 +53,6 @@ public enum SystemRole implements DomainCatalog {
                 return value;
             }
         }
-        throw new IllegalArgumentException("Unknown SystemRole code: " + code);
+        throw new InvalidCatalogCodeException("SystemRole", code);
     }
 }

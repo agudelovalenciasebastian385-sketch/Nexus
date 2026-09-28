@@ -18,7 +18,7 @@ All services live in the package `nexusmarket.domain.services.warehouse`. They o
 
 ---
 
-# 1. RegisterWarehouse
+# 1. RegisterWarehouseService
 
 ## Description
 
@@ -85,7 +85,7 @@ Exposed in: `AdministratorPort`, `SellerPort`.
 
 ---
 
-# 2. ConsultWarehouse
+# 2. ConsultWarehouseService
 
 ## Description
 
@@ -138,11 +138,12 @@ Exposed in: `AdministratorPort`, `LogisticsOperatorPort`, `SellerPort`, `Supervi
 | Exception | Raised when |
 | --- | --- |
 | `UnauthorizedOperationException` | Role not allowed or another seller's warehouse. |
-| `EntityNotFoundException` | The warehouse does not exist. |
+| `EntityNotFoundException` | The warehouse or the requesting seller does not exist. |
 
 ## Output Ports Used
 
 * `WarehouseRepositoryPort`
+* `SellerRepositoryPort`
 
 ## Collaborating Services
 
@@ -155,7 +156,7 @@ Not audited (read-only or authentication check).
 
 ---
 
-# 3. UpdateWarehouse
+# 3. UpdateWarehouseService
 
 ## Description
 

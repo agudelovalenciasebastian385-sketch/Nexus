@@ -20,7 +20,7 @@ All services live in the package `nexusmarket.domain.services.cart`. They operat
 
 ---
 
-# 1. AddItemToCart
+# 1. AddItemToCartService
 
 ## Description
 
@@ -90,7 +90,7 @@ Exposed in: `BuyerPort`.
 
 ---
 
-# 2. RemoveItemFromCart
+# 2. RemoveItemFromCartService
 
 ## Description
 
@@ -155,7 +155,7 @@ Exposed in: `BuyerPort`.
 
 ---
 
-# 3. UpdateCartItemQuantity
+# 3. UpdateCartItemQuantityService
 
 ## Description
 
@@ -222,7 +222,7 @@ Exposed in: `BuyerPort`.
 
 ---
 
-# 4. ConsultCart
+# 4. ConsultCartService
 
 ## Description
 
@@ -284,7 +284,7 @@ Not audited (read-only or authentication check).
 
 ---
 
-# 5. ClearCart
+# 5. ClearCartService
 
 ## Description
 

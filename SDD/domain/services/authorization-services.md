@@ -19,7 +19,7 @@ All services live in the package `nexusmarket.domain.services.authorization`. Th
 
 ---
 
-# 1. ValidateUserStatus
+# 1. ValidateUserStatusService
 
 ## Description
 
@@ -70,7 +70,7 @@ Not audited (read-only or authentication check).
 
 ---
 
-# 2. ValidateRoleAuthorization
+# 2. ValidateRoleAuthorizationService
 
 ## Description
 
@@ -127,7 +127,7 @@ Not audited (read-only or authentication check).
 
 ---
 
-# 3. ValidateSellerOwnership
+# 3. ValidateSellerOwnershipService
 
 ## Description
 
@@ -199,7 +199,7 @@ Not audited (read-only or authentication check).
 
 ---
 
-# 4. ValidateBuyerOwnership
+# 4. ValidateBuyerOwnershipService
 
 ## Description
 

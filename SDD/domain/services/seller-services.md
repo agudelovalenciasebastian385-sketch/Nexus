@@ -18,7 +18,7 @@ All services live in the package `nexusmarket.domain.services.seller`. They oper
 
 ---
 
-# 1. RegisterSeller
+# 1. RegisterSellerService
 
 ## Description
 
@@ -94,7 +94,7 @@ Exposed in: `AdministratorPort`.
 
 ---
 
-# 2. ConsultSeller
+# 2. ConsultSellerService
 
 ## Description
 
@@ -155,7 +155,7 @@ Not audited (read-only or authentication check).
 
 ---
 
-# 3. UpdateSeller
+# 3. UpdateSellerService
 
 ## Description
 

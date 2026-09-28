@@ -22,7 +22,7 @@ All services live in the package `nexusmarket.domain.services.product`. They ope
 
 ---
 
-# 1. RegisterProduct
+# 1. RegisterProductService
 
 ## Description
 
@@ -91,7 +91,7 @@ Exposed in: `SellerPort`.
 
 ---
 
-# 2. UpdateProduct
+# 2. UpdateProductService
 
 ## Description
 
@@ -160,7 +160,7 @@ Exposed in: `SellerPort`.
 
 ---
 
-# 3. PublishProduct
+# 3. PublishProductService
 
 ## Description
 
@@ -223,7 +223,7 @@ Exposed in: `SellerPort`.
 
 ---
 
-# 4. SuspendProduct
+# 4. SuspendProductService
 
 ## Description
 
@@ -286,7 +286,7 @@ Exposed in: `SellerPort`.
 
 ---
 
-# 5. DiscontinueProduct
+# 5. DiscontinueProductService
 
 ## Description
 
@@ -349,7 +349,7 @@ Exposed in: `SellerPort`.
 
 ---
 
-# 6. ConsultCatalog
+# 6. ConsultCatalogService
 
 ## Description
 
@@ -409,7 +409,7 @@ Not audited (read-only or authentication check).
 
 ---
 
-# 7. ConsultSellerProducts
+# 7. ConsultSellerProductsService
 
 ## Description
 

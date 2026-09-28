@@ -18,7 +18,7 @@ All services live in the package `nexusmarket.domain.services.buyer`. They opera
 
 ---
 
-# 1. ConsultBuyer
+# 1. ConsultBuyerService
 
 ## Description
 
@@ -79,7 +79,7 @@ Not audited (read-only or authentication check).
 
 ---
 
-# 2. UpdateBuyerProfile
+# 2. UpdateBuyerProfileService
 
 ## Description
 
@@ -145,7 +145,7 @@ Exposed in: `BuyerPort`.
 
 ---
 
-# 3. ChangeBuyerCommercialStatus
+# 3. ChangeBuyerCommercialStatusService
 
 ## Description
 

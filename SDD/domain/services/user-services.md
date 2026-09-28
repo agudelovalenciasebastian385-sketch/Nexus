@@ -21,7 +21,7 @@ All services live in the package `nexusmarket.domain.services.user`. They operat
 
 ---
 
-# 1. RegisterBuyerUser
+# 1. RegisterBuyerUserService
 
 ## Description
 
@@ -92,7 +92,7 @@ Exposed in: `PublicAccessPort`.
 
 ---
 
-# 2. RegisterStaffUser
+# 2. RegisterStaffUserService
 
 ## Description
 
@@ -129,7 +129,7 @@ Exposed in: `AdministratorPort`.
 ## Business Rules
 
 * The user is created with `UserStatus.ACTIVE` as a `LogisticsOperator` or a `Supervisor` according to `role`.
-* Sellers are not registered here: they are onboarded with `RegisterSeller`.
+* Sellers are not registered here: they are onboarded with `RegisterSellerService`.
 * The password is encrypted through `PasswordServicePort`.
 
 ## Validations
@@ -163,7 +163,7 @@ Exposed in: `AdministratorPort`.
 
 ---
 
-# 3. Login
+# 3. LoginService
 
 ## Description
 
@@ -226,7 +226,7 @@ Exposed in: `PublicAccessPort`.
 
 ---
 
-# 4. ConsultUser
+# 4. ConsultUserService
 
 ## Description
 
@@ -286,7 +286,7 @@ Not audited (read-only or authentication check).
 
 ---
 
-# 5. ChangeUserStatus
+# 5. ChangeUserStatusService
 
 ## Description
 
@@ -350,7 +350,7 @@ Exposed in: `AdministratorPort`.
 
 ---
 
-# 6. ChangeUserPassword
+# 6. ChangeUserPasswordService
 
 ## Description
 

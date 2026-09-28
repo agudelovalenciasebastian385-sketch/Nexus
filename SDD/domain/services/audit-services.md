@@ -17,7 +17,7 @@ All services live in the package `nexusmarket.domain.services.audit`. They opera
 
 ---
 
-# 1. RegisterAuditLog
+# 1. RegisterAuditLogService
 
 ## Description
 
@@ -52,6 +52,7 @@ Internal (used by every service that changes information).
 
 * The record gets a generated id and the current date-time; the role is taken from `performedBy`.
 * Audit records are append-only: they are never updated or deleted.
+* Inventory records have no id of their own: their `entityId` is `<productId>:<warehouseId>`.
 
 ## Validations
 
@@ -73,7 +74,7 @@ Not applicable.
 
 ---
 
-# 2. ConsultAuditLogs
+# 2. ConsultAuditLogsService
 
 ## Description
 

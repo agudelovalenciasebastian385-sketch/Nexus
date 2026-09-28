@@ -12,12 +12,12 @@ All services live in the package `nexusmarket.domain.services.invoice`. They ope
 
 | # | Service | Use case (input port) | Authorized roles |
 | --- | --- | --- | --- |
-| 1 | `GenerateInvoiceService` | `GenerateInvoiceUseCase` | Internal (executed within `ValidatePayment`). |
+| 1 | `GenerateInvoiceService` | `GenerateInvoiceUseCase` | Internal (executed within `ValidatePaymentService`). |
 | 2 | `ConsultInvoiceService` | `ConsultInvoiceUseCase` | `BUYER` (own orders); `ADMINISTRATOR` and `SUPERVISOR`. |
 
 ---
 
-# 1. GenerateInvoice
+# 1. GenerateInvoiceService
 
 ## Description
 
@@ -34,7 +34,7 @@ Invoice generateInvoice(Order order, User performedBy);
 
 ## Authorized Roles
 
-Internal (executed within `ValidatePayment`).
+Internal (executed within `ValidatePaymentService`).
 
 ## Input
 
@@ -76,7 +76,7 @@ Internal (executed within `ValidatePayment`).
 
 ---
 
-# 2. ConsultInvoice
+# 2. ConsultInvoiceService
 
 ## Description
 

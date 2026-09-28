@@ -6,7 +6,23 @@ NexusMarket follows a **Hexagonal Architecture (Ports and Adapters)** combined w
 
 The primary objective of this architecture is to isolate the Marketplace business domain from external technologies, ensuring that business rules remain independent from frameworks, databases, communication protocols, and infrastructure concerns.
 
-This approach promotes maintainability, scalability, testability, and technology independence — which is especially relevant given that the functional specification explicitly excludes graphical interfaces, technical authentication mechanisms, and implementation technologies, leaving those decisions to the infrastructure layer.
+This approach promotes maintainability, scalability, testability, and technology independence — which is especially relevant given that the functional specification explicitly excludes graphical interfaces, technical authentication mechanisms, and implementation technologies, leaving those decisions to the adapter and infrastructure layers.
+
+## Implementation Status
+
+| Component | Status |
+| --- | --- |
+| Domain models, value objects and domain exceptions | Implemented |
+| Domain services (54, organized in 13 subdomains) | Implemented |
+| Input ports: 49 use case interfaces and 6 role ports | Implemented |
+| Output ports (16 interfaces) | Implemented (interfaces only) |
+| Use case adapters (`adapters/useCases`, 6 classes) | Implemented |
+| REST input adapters (controllers, DTOs, mappers) | **Next phase** |
+| Persistence output adapters (MySQL / JPA, MongoDB) | **Next phase** |
+| Password hashing, JWT and payment gateway adapters | **Next phase** |
+| Security configuration (authentication filters, token validation) | **Next phase** |
+
+Until the output adapters exist, the application compiles but the Spring context cannot start, because no bean implements the output ports.
 
 ---
 
@@ -28,402 +44,279 @@ The domain contains all business rules and never depends on external technologie
 
 # Architecture Layers
 
-The application is organized into four major components:
+The application is organized into the following components:
 
-```
-Application
+```text
+nexusmarket
 │
-├── Adapters
+├── App.java          (entry point)
 │
-├── Domain
+├── adapters          (use case adapters; REST and output adapters in the next phase)
 │
-└── Infrastructure
+└── domain            (models, value objects, exceptions, services, ports)
 ```
 
-Each component has a clearly defined responsibility.
+An `infrastructure` component (technical configuration) is planned for the next phase; it does not exist yet.
 
 ---
 
 # Package Structure
 
+## Current Structure
+
 ```text
-src/
-└── main/
-    └── java/
-        └── nexusmarket/
-            │
-            ├── App.java
-            │
-            ├── adapters/
-            │   │
-            │   ├── in/
-            │   │   └── rest/
-            │   │       ├── controllers/
-            │   │       ├── requests/
-            │   │       ├── responses/
-            │   │       └── mappers/
-            │   │
-            │   └── out/
-            │       └── persistence/
-            │           └── mysql/
-            │               ├── adapters/
-            │               ├── entities/
-            │               ├── repositories/
-            │               └── mappers/
-            │
-            ├── domain/
-            │   ├── models/
-            │   ├── valueobjects/
-            │   ├── enums/
-            │   ├── services/
-            │   ├── exceptions/
-            │   └── ports/
-            │       ├── in/
-            │       └── out/
-            │
-            └── infrastructure/
-                ├── config/
-                ├── database/
-                └── security/
+application/src/main/java/
+└── nexusmarket/
+    │
+    ├── App.java
+    │
+    ├── adapters/
+    │   └── useCases/                 6 role port implementations
+    │
+    └── domain/
+        ├── models/                   entities (21 classes)
+        ├── valueobjects/             catalogs (enums implementing DomainCatalog), Address, Variant
+        ├── exceptions/               DomainException and its subclasses (25 classes)
+        ├── services/
+        │   ├── user/
+        │   ├── seller/
+        │   ├── buyer/
+        │   ├── warehouse/
+        │   ├── product/
+        │   ├── inventory/
+        │   ├── cart/
+        │   ├── order/
+        │   ├── invoice/
+        │   ├── shipment/
+        │   ├── returns/
+        │   ├── authorization/
+        │   └── audit/
+        └── ports/
+            ├── in/                   49 <Name>UseCase interfaces and 6 role ports
+            └── out/                  16 output ports
+```
+
+Configuration lives in `application/src/main/resources/application.yml` (MySQL datasource, MongoDB connection, JWT properties). The root `docker-compose.yml` starts MySQL 8 (port 3306, database `nexusmarket`) and MongoDB 6 (port 27017).
+
+## Planned Structure (Next Phase)
+
+```text
+nexusmarket/
+├── adapters/
+│   ├── in/
+│   │   └── rest/
+│   │       ├── controllers/
+│   │       ├── requests/
+│   │       ├── responses/
+│   │       └── mappers/
+│   └── out/
+│       ├── persistence/
+│       │   ├── mysql/                entities, repositories, mappers, adapters
+│       │   └── mongodb/              audit log documents, repositories, mappers, adapters
+│       ├── security/                 PasswordServicePort and JwtServicePort implementations
+│       └── payment/                  simulated PaymentGatewayPort implementation
+│
+└── infrastructure/
+    ├── config/
+    ├── database/
+    └── security/
 ```
 
 ---
 
 # Layer Responsibilities
 
-## Application
-
-The `application` package (represented by `nexusmarket` above) is the root of the project.
-
-It contains the application entry point and organizes all architectural components.
-
-### Responsibilities
-
-- Application bootstrap.
-- Component organization.
-- Dependency composition.
-
----
-
 ## App.java
 
-### Description
-
-`App.java` is the application's entry point.
+`App.java` is the application's entry point (`@SpringBootApplication`).
 
 ### Responsibilities
 
 - Initialize the application.
-- Load the infrastructure.
-- Configure dependency injection.
-- Start the REST server.
-
----
-
-# Adapters
-
-Adapters connect external technologies with the NexusMarket business domain.
-
-Adapters translate external requests into domain operations and transform domain objects into technology-specific representations.
-
-The domain never communicates directly with external systems.
-
----
-
-## Input Adapters
-
-Input adapters expose the application to external clients (buyers, sellers, logistics operators, administrators, and supervisors).
-
-Current implementation:
-
-```
-adapters/in/rest
-```
-
-### Responsibilities
-
-- Receive HTTP requests.
-- Validate incoming data.
-- Convert Request DTOs into Domain Models.
-- Execute application use cases.
-- Convert domain results into Response DTOs.
-
----
-
-### Controllers
-
-Controllers expose REST endpoints organized by business domain (users, sellers, buyers, warehouses, catalog, inventory, cart, orders, invoicing, shipments, returns, and refunds).
-
-Responsibilities:
-
-- Receive HTTP requests.
-- Delegate execution to the domain.
-- Return HTTP responses.
-
-Controllers must never implement business rules.
-
----
-
-### Requests
-
-Request DTOs represent incoming HTTP payloads.
-
-Responsibilities:
-
-- Receive client data.
-- Validate input.
-- Transport data into the application.
-
-These objects must not contain business logic.
-
----
-
-### Responses
-
-Response DTOs represent outgoing HTTP responses.
-
-Responsibilities:
-
-- Return processed information.
-- Hide internal domain implementation.
-- Standardize API responses.
-
----
-
-### Mappers
-
-Responsible for converting between:
-
-- Request DTO ↔ Domain Model
-- Domain Model ↔ Response DTO
-
-This prevents the domain from depending on transport objects.
-
----
-
-# Output Adapters
-
-Output adapters connect the domain with external resources.
-
-Examples:
-
-- Relational database (MySQL)
-- Notification services (order confirmation, shipment status)
-- Payment gateways
-
-Current implementation:
-
-```
-Persistence
-└── MySQL
-```
-
-NexusMarket uses a single relational store for all persistence needs, including transactional data (users, sellers, buyers, warehouses, catalog, cart, orders, invoicing) and traceability data (inventory movements, order status history). A single persistence technology was chosen to keep the initial implementation simple; the Output Ports abstraction still allows a different or additional adapter (e.g. a document store for large-scale audit logs) to be introduced later without changing the domain.
-
----
-
-## MySQL Adapter
-
-Responsible for all relational persistence.
-
-### Components
-
-#### Entities
-
-Represent relational database tables.
-
-#### Repositories
-
-Implement persistence operations.
-
-#### Mappers
-
-Convert Domain Models into database entities.
-
-#### Adapters
-
-Implement Domain Output Ports.
+- Configure dependency injection (component scanning of services and adapters).
+- Start the web server (REST controllers will be added in the next phase).
 
 ---
 
 # Domain
 
-The Domain layer is the core of the application.
-
-It contains all business rules described in the NexusMarket Business Functional Specification and must remain independent from any external technology.
+The Domain layer is the core of the application. It contains all business rules described in the NexusMarket Business Functional Specification and must remain independent from any external technology.
 
 No class inside the domain may depend on:
 
-- Spring (or any web framework)
 - JPA / ORM
 - HTTP
 - REST
 - JSON
 - SQL
+- MongoDB
+- JWT or password hashing libraries
+
+The only framework elements used in the domain are the Spring `@Service` stereotype and Lombok `@RequiredArgsConstructor` on domain services, used for dependency injection. Entities and value objects do not use any framework.
 
 ---
 
 ## Models
 
-Contain the business entities.
+Package `nexusmarket.domain.models`. Contains the business entities (see [Domain Model](../domain/Domain%20Model.md)):
 
-Examples:
-
-- User, Buyer, Seller, LogisticsOperator, Administrator, Supervisor
-- Warehouse
-- Product, PhysicalProduct, DigitalProduct
-- Inventory, InventoryMovement
-- ShoppingCart, CartItem
-- Order, OrderItem
-- Invoice
-- Shipment
-- Return, Refund
-
-These objects represent the Marketplace business.
+- `User` (abstract), `Buyer`, `Seller`, `LogisticsOperator`, `Administrator`, `Supervisor`
+- `Warehouse`
+- `Product` (abstract), `PhysicalProduct`, `DigitalProduct`
+- `Inventory`, `InventoryMovement`
+- `Cart`, `CartItem`
+- `Order`, `OrderItem`
+- `Invoice`
+- `Shipment`
+- `ReturnRequest`, `Refund`
+- `AuditLog`
 
 ---
 
 ## Value Objects
 
-Represent immutable business concepts.
+Package `nexusmarket.domain.valueobjects` (see [Domain Value Objects](../domain/Domain%20Value%20Objects.md)).
 
-Examples:
+- Business catalogs: Java enums implementing the `DomainCatalog` interface (`code`, `name`, `description`, `fromCode`):
+  `SystemRole`, `UserStatus`, `CommercialStatus`, `WarehouseType`, `ProductType`, `ProductStatus`, `InventoryCondition`, `MovementType`, `OrderStatus`, `ShipmentStatus`, `ReturnStatus`, `RefundStatus`, `PaymentResult`, `AuditAction`, `AuditEntityType`.
+- Compound value objects: `Address`, `Variant`.
 
-- UserRole, UserStatus, CommercialStatus
-- WarehouseType
-- ProductStatus
-- InventoryMovementType
-- OrderStatus, ShipmentStatus, ReturnStatus, RefundStatus
-- Address, Variant
-
-Value Objects are compared by value instead of identity.
-
----
-
-## Enums
-
-Contain technical enumerations that do not require business behavior.
+Value objects are immutable and compared by value. There is no separate `enums` package: every bounded value of the domain is a catalog value object.
 
 ---
 
 ## Services
 
-Contain business logic that does not naturally belong to a single entity.
+Package `nexusmarket.domain.services.<subdomain>`. Each service implements exactly one business capability (see [Domain Services](../domain/Domain%20Services.md)).
 
-Examples organized by subdomain:
+- Class `<Name>Service`, annotated with `@Service` and `@RequiredArgsConstructor`.
+- Implements the input port `<Name>UseCase`, except the 5 internal services (`ValidateUserStatusService`, `ValidateRoleAuthorizationService`, `ValidateSellerOwnershipService`, `ValidateBuyerOwnershipService`, `RegisterAuditLogService`).
+- Receives the requesting `User` as first parameter, validates RG-01/RG-02/RG-03 through the authorization services, reads and stores exclusively through output ports, delegates rules to the entities and registers audit records.
 
-- **Users:** RegisterUserService, ChangeUserStatusService
-- **Sellers:** OnboardSellerService, QuerySellerService
-- **Buyers:** RegisterBuyerService, UpdateBuyerService
-- **Warehouses:** RegisterWarehouseService, QueryWarehouseService
-- **Catalog:** PublishProductService, UpdateCatalogService
-- **Inventory:** RegisterInventoryMovementService, QueryInventoryService
-- **Cart:** AddCartItemService, ConfirmCartService
-- **Orders:** CreateOrderService, ValidatePaymentService, ShipOrderService, FinalizeOrderService
-- **Invoicing:** GenerateInvoiceService
-- **Shipments:** GenerateShipmentService, UpdateShipmentStatusService
-- **Returns and Refunds:** RequestReturnService, ApproveReturnService, ProcessRefundService
-- **Reports:** ConsolidateAdministrativeReportService
+| Subdomain | Services |
+| --- | --- |
+| `user` | `RegisterBuyerUserService`, `RegisterStaffUserService`, `LoginService`, `ConsultUserService`, `ChangeUserStatusService`, `ChangeUserPasswordService` |
+| `seller` | `RegisterSellerService`, `ConsultSellerService`, `UpdateSellerService` |
+| `buyer` | `ConsultBuyerService`, `UpdateBuyerProfileService`, `ChangeBuyerCommercialStatusService` |
+| `warehouse` | `RegisterWarehouseService`, `ConsultWarehouseService`, `UpdateWarehouseService` |
+| `product` | `RegisterProductService`, `UpdateProductService`, `PublishProductService`, `SuspendProductService`, `DiscontinueProductService`, `ConsultCatalogService`, `ConsultSellerProductsService` |
+| `inventory` | `RegisterInitialStockService`, `RegisterInventoryInboundService`, `RegisterInventoryAdjustmentService`, `ReserveInventoryService`, `ReleaseInventoryReservationService`, `ConsultInventoryService` |
+| `cart` | `AddItemToCartService`, `RemoveItemFromCartService`, `UpdateCartItemQuantityService`, `ConsultCartService`, `ClearCartService` |
+| `order` | `ConfirmOrderService`, `ValidatePaymentService`, `ConsultOrderService`, `ConsultBuyerOrdersService` |
+| `invoice` | `GenerateInvoiceService`, `ConsultInvoiceService` |
+| `shipment` | `CreateShipmentsService`, `PackShipmentService`, `DispatchShipmentService`, `ConfirmDeliveryService` |
+| `returns` | `RequestReturnService`, `ApproveReturnService`, `RejectReturnService`, `ProcessRefundService`, `ConsultReturnService` |
+| `authorization` | `ValidateUserStatusService`, `ValidateRoleAuthorizationService`, `ValidateSellerOwnershipService`, `ValidateBuyerOwnershipService` |
+| `audit` | `RegisterAuditLogService`, `ConsultAuditLogsService` |
 
-Services coordinate business operations while preserving domain integrity.
+Total: **54 services** (49 with a use case interface, 5 internal).
 
 ---
 
 ## Ports
 
-Ports define communication contracts between the domain and external technologies.
-
-The domain owns all interfaces.
-
----
+Ports define communication contracts between the domain and external technologies. The domain owns all interfaces.
 
 ### Input Ports
 
-Represent application use cases.
+Package `nexusmarket.domain.ports.in` (see [Input Ports](../domain/Input-ports.md)). Two levels:
 
-Examples:
+- **Use case interfaces** — one `<Name>UseCase` per domain service (49), e.g. `ConfirmOrderUseCase`, `PublishProductUseCase`, `RegisterInventoryAdjustmentUseCase`, `ApproveReturnUseCase`.
+- **Role ports** — the operations each role is allowed to execute:
 
-- CreateOrderUseCase
-- PublishProductUseCase
-- RegisterInventoryMovementUseCase
-- ApproveReturnUseCase
-
-Input ports define what the system can do.
-
----
+| Role port | Role | Operations |
+| --- | --- | --- |
+| `PublicAccessPort` | public (no authentication) | 4 |
+| `BuyerPort` | `BUYER` | 17 |
+| `SellerPort` | `SELLER` | 19 |
+| `LogisticsOperatorPort` | `LOGISTICS_OPERATOR` | 16 |
+| `AdministratorPort` | `ADMINISTRATOR` | 23 |
+| `SupervisorPort` | `SUPERVISOR` (read-only) | 18 |
 
 ### Output Ports
 
-Represent dependencies required by the domain.
+Package `nexusmarket.domain.ports.out` (see [Output Ports](../domain/Output-ports.md)). Interfaces only in this phase:
 
-Examples:
-
-- UserRepositoryPort
-- ProductRepositoryPort
-- InventoryRepositoryPort
-- OrderRepositoryPort
-- InvoiceRepositoryPort
-- NotificationPort
-
-Output ports define what the domain needs from external systems. All current implementations of these ports are backed by MySQL, but the ports themselves make no assumption about the persistence technology.
+| Output port | Responsibility | Planned adapter (next phase) |
+| --- | --- | --- |
+| `UserRepositoryPort` | Users of any role; email and identification uniqueness | MySQL |
+| `BuyerRepositoryPort` | Buyers | MySQL |
+| `SellerRepositoryPort` | Sellers | MySQL |
+| `WarehouseRepositoryPort` | Warehouses | MySQL |
+| `ProductRepositoryPort` | Physical and digital products | MySQL |
+| `InventoryRepositoryPort` | Inventory records and movements | MySQL |
+| `CartRepositoryPort` | Carts and cart items | MySQL |
+| `OrderRepositoryPort` | Orders and order items | MySQL |
+| `InvoiceRepositoryPort` | Invoices | MySQL |
+| `ShipmentRepositoryPort` | Shipments | MySQL |
+| `ReturnRequestRepositoryPort` | Return requests | MySQL |
+| `RefundRepositoryPort` | Refunds | MySQL |
+| `AuditLogRepositoryPort` | Append-only audit records | MongoDB |
+| `PasswordServicePort` | Password encryption and verification | Hashing library |
+| `JwtServicePort` | Token generation, validation and `User` reconstruction | JWT library |
+| `PaymentGatewayPort` | Order payment processing (`PaymentResult`) | Simulated gateway |
 
 ---
 
 ## Exceptions
 
-Contains business exceptions.
+Package `nexusmarket.domain.exceptions`. Every business error extends `DomainException` (unchecked). The complete list and when each one is raised is documented in [Domain Model — Domain Exceptions](../domain/Domain%20Model.md#domain-exceptions). Examples:
 
-Examples:
-
-- InsufficientInventoryException
-- FinalizedOrderCannotBeModifiedException
-- DuplicateEmailException
-- UnauthorizedSellerOperationException
+- `InsufficientInventoryException`
+- `OrderAlreadyFinalizedException`
+- `UserAlreadyExistsException`
+- `UnauthorizedOperationException`
+- `PaymentRejectedException`
 
 Business exceptions belong exclusively to the domain.
 
 ---
 
-# Infrastructure
+# Adapters
 
-Infrastructure contains technical configuration required by the application.
+Adapters connect external technologies with the NexusMarket business domain. The domain never communicates directly with external systems.
 
-It does not contain business logic.
+## Use Case Adapters (implemented)
+
+Package `nexusmarket.adapters.useCases` (see [Use Cases Adapters](../Adapters/Use-cases-adapters.md)). Each class implements one role port and delegates every call to the domain services; they contain no business rules.
+
+| Role port | Use case adapter |
+| --- | --- |
+| `PublicAccessPort` | `PublicAccessUseCaseImpl` |
+| `BuyerPort` | `BuyerUseCaseImpl` |
+| `SellerPort` | `SellerUseCaseImpl` |
+| `LogisticsOperatorPort` | `LogisticsOperatorUseCaseImpl` |
+| `AdministratorPort` | `AdministratorUseCaseImpl` |
+| `SupervisorPort` | `SupervisorUseCaseImpl` |
+
+## Input Adapters — REST (next phase)
+
+Will expose the role ports to external clients (buyers, sellers, logistics operators, administrators and supervisors).
+
+- **Controllers:** receive HTTP requests, obtain the `User` reconstructed from the token and call the corresponding role port. They must never implement business rules.
+- **Requests / Responses:** DTOs for incoming and outgoing payloads; they never enter the domain.
+- **Mappers:** Request DTO ↔ domain data, domain model ↔ Response DTO.
+
+## Output Adapters (next phase)
+
+Will implement the output ports:
+
+- **MySQL (Spring Data JPA):** persistence entities, repositories, mappers and adapters for every repository port except the audit log. A single relational store keeps the transactional data.
+- **MongoDB (Spring Data MongoDB):** documents, repository, mapper and adapter for `AuditLogRepositoryPort`.
+- **Security:** implementations of `PasswordServicePort` and `JwtServicePort`.
+- **Payment:** simulated implementation of `PaymentGatewayPort` returning `PaymentResult.APPROVED` or `PaymentResult.REJECTED`.
+
+Persistence adapters are also responsible for transactional boundaries: domain services perform several port calls per operation and do not declare transactions themselves.
 
 ---
 
-## Config
+# Infrastructure (next phase)
 
-Responsible for application configuration.
+Will contain technical configuration without business logic:
 
-Examples:
-
-- REST configuration
-- Serialization
-- Environment configuration
-
----
-
-## Database
-
-Contains MySQL initialization and connection configuration.
-
-Examples:
-
-- Connection pool settings
-- Schema migration configuration
-
----
-
-## Security
-
-Contains authentication and authorization configuration, aligned with the RG-01 constraint (every operation must be executed by an authenticated user).
-
-Examples:
-
-- Token configuration
-- Password encoder
-- Authentication filters
+- **Config:** REST configuration, serialization, environment configuration.
+- **Database:** connection pool and schema configuration (today `spring.jpa.hibernate.ddl-auto: update` in `application.yml`).
+- **Security:** authentication filters and token validation, aligned with RG-01 (every operation must be executed by an authenticated user).
 
 ---
 
@@ -431,23 +324,20 @@ Examples:
 
 Dependencies always point toward the domain.
 
-```
-REST Controller
+```text
+REST Controller (next phase)
         │
         ▼
-Input Port
-        │
-        ▼
-Domain Service
-        │
-        ▼
-Output Port
-        │
-        ▼
-MySQL Adapter
-        │
-        ▼
-MySQL Database
+Role Port (domain/ports/in)  ◄── implemented by ── Use Case Adapter (adapters/useCases)
+        │                                                   │
+        │                                                   ▼ delegates to
+        │                                   Domain Service (domain/services) — implements <Name>UseCase
+        │                                                   │
+        │                                                   ▼
+        └────────────────────────────────── Output Port (domain/ports/out)
+                                                            ▲
+                                                            │ implemented by
+                                            Output Adapter (next phase: MySQL, MongoDB, security, payment)
 ```
 
 The domain never depends on adapters or infrastructure.
@@ -483,5 +373,5 @@ The following rules must always be respected:
 7. Infrastructure depends on the Domain, never the opposite.
 8. Every dependency must point toward the Domain.
 9. Business entities must remain framework-independent.
-10. The Domain must be fully testable without requiring infrastructure components, including without a running MySQL instance.
-11. Each participant (Buyer, Seller, Logistics Operator, Administrator, Supervisor) may only interact with the information corresponding to their role — a rule that must be reflected in the Security layer and enforced at the Input Ports.
+10. The Domain must be fully testable without requiring infrastructure components, including without a running MySQL or MongoDB instance.
+11. Each participant (Buyer, Seller, Logistics Operator, Administrator, Supervisor) may only interact with the information corresponding to their role (RG-03): the role ports expose only the allowed operations and every service validates the role again through `ValidateRoleAuthorizationService`.

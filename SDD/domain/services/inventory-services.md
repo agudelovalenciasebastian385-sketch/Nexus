@@ -15,13 +15,13 @@ All services live in the package `nexusmarket.domain.services.inventory`. They o
 | 1 | `RegisterInitialStockService` | `RegisterInitialStockUseCase` | `SELLER` (own products in own warehouses); `LOGISTICS_OPERATOR` (any product and warehouse). |
 | 2 | `RegisterInventoryInboundService` | `RegisterInventoryInboundUseCase` | `SELLER` (own products in own warehouses); `LOGISTICS_OPERATOR`. |
 | 3 | `RegisterInventoryAdjustmentService` | `RegisterInventoryAdjustmentUseCase` | `LOGISTICS_OPERATOR`. |
-| 4 | `ReserveInventoryService` | `ReserveInventoryUseCase` | `LOGISTICS_OPERATOR` (use case); internally used by `ConfirmOrder`. |
+| 4 | `ReserveInventoryService` | `ReserveInventoryUseCase` | `LOGISTICS_OPERATOR` (use case); internally used by `ConfirmOrderService`. |
 | 5 | `ReleaseInventoryReservationService` | `ReleaseInventoryReservationUseCase` | `LOGISTICS_OPERATOR`. |
 | 6 | `ConsultInventoryService` | `ConsultInventoryUseCase` | `SELLER` (own products / own warehouses); `LOGISTICS_OPERATOR` and `SUPERVISOR`. |
 
 ---
 
-# 1. RegisterInitialStock
+# 1. RegisterInitialStockService
 
 ## Description
 
@@ -92,7 +92,7 @@ Exposed in: `LogisticsOperatorPort`, `SellerPort`.
 
 ---
 
-# 2. RegisterInventoryInbound
+# 2. RegisterInventoryInboundService
 
 ## Description
 
@@ -161,7 +161,7 @@ Exposed in: `LogisticsOperatorPort`, `SellerPort`.
 
 ---
 
-# 3. RegisterInventoryAdjustment
+# 3. RegisterInventoryAdjustmentService
 
 ## Description
 
@@ -231,7 +231,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 ---
 
-# 4. ReserveInventory
+# 4. ReserveInventoryService
 
 ## Description
 
@@ -248,7 +248,7 @@ Inventory reserveInventory(User requestingUser, String productId, String warehou
 
 ## Authorized Roles
 
-`LOGISTICS_OPERATOR` (use case); internally used by `ConfirmOrder`.
+`LOGISTICS_OPERATOR` (use case); internally used by `ConfirmOrderService`.
 
 Exposed in: `LogisticsOperatorPort`.
 
@@ -266,7 +266,7 @@ Exposed in: `LogisticsOperatorPort`.
 ## Business Rules
 
 * Inventory that does not exist or is `DAMAGED` can never be reserved.
-* `ConfirmOrderService` selects the warehouse of each order item and reserves it through the internal method `execute(Inventory inventory, int quantity, User performedBy)`, which applies the movement, stores the record and audits it without a role check (the buyer is authorized by `ConfirmOrder`).
+* `ConfirmOrderService` selects the warehouse of each order item and reserves it through the internal method `execute(Inventory inventory, int quantity, User performedBy)`, which applies the movement, stores the record and audits it without a role check (the buyer is authorized by `ConfirmOrderService`).
 
 ## Validations
 
@@ -300,7 +300,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 ---
 
-# 5. ReleaseInventoryReservation
+# 5. ReleaseInventoryReservationService
 
 ## Description
 
@@ -367,7 +367,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 ---
 
-# 6. ConsultInventory
+# 6. ConsultInventoryService
 
 ## Description
 

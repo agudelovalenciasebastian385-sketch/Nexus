@@ -55,7 +55,6 @@ public interface UserRepositoryPort {
 * `ChangeUserStatusService`
 * `ConsultAuditLogsService`
 * `ConsultUserService`
-* `CreateShipmentsService`
 * `LoginService`
 * `RegisterBuyerUserService`
 * `RegisterSellerService`
@@ -118,6 +117,7 @@ public interface SellerRepositoryPort {
 
 * `ConsultSellerProductsService`
 * `ConsultSellerService`
+* `ConsultWarehouseService`
 * `RegisterProductService`
 * `RegisterSellerService`
 * `RegisterWarehouseService`

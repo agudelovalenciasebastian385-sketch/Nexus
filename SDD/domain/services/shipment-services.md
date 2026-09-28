@@ -19,7 +19,7 @@ All services live in the package `nexusmarket.domain.services.shipment`. They op
 
 ---
 
-# 1. CreateShipments
+# 1. CreateShipmentsService
 
 ## Description
 
@@ -72,7 +72,6 @@ Exposed in: `LogisticsOperatorPort`.
 
 ## Output Ports Used
 
-* `UserRepositoryPort`
 * `OrderRepositoryPort`
 * `ShipmentRepositoryPort`
 
@@ -87,7 +86,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 ---
 
-# 2. PackShipment
+# 2. PackShipmentService
 
 ## Description
 
@@ -149,7 +148,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 ---
 
-# 3. DispatchShipment
+# 3. DispatchShipmentService
 
 ## Description
 
@@ -217,7 +216,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 ---
 
-# 4. ConfirmDelivery
+# 4. ConfirmDeliveryService
 
 ## Description
 

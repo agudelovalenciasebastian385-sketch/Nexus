@@ -27,7 +27,7 @@ An order may generate one invoice, one or more shipments, and, eventually, assoc
 # General Conventions
 
 * **Identity:** entities with an `id` attribute compare equality by `id`. `Inventory` has no `id`: its identity is the pair (`product`, `warehouse`).
-* **Collections** are never exposed for direct modification: getters return unmodifiable views and changes go through domain methods (`addX`, `removeX`, ...).
+* **Collections** are never exposed for direct modification: getters return unmodifiable views and changes go through domain methods (for example `Cart.addItem`, `Cart.removeItem`, `Seller.addWarehouse`).
 * **Rehydration constructors:** entities with a lifecycle provide a second constructor that receives the current status (and collections) to rebuild a persisted object.
 * **Validation:** every rule violation raises a subclass of `DomainException` (see [Domain Exceptions](#domain-exceptions)). Required references that are `null` and required texts that are blank are rejected.
 
@@ -687,7 +687,7 @@ Represents the commercial information associated with the sale of an order, gene
 | ----------- | ------------- | --------------------------------------------------------------- |
 | id          | String        | Uniquely identifies the invoice. Cannot be empty.               |
 | order       | Order         | Invoiced order. Required.                                       |
-| totalAmount | BigDecimal    | Total invoiced value. Zero or positive; by default computed from `order.totalAmount()`. |
+| totalAmount | BigDecimal    | Total invoiced value. Zero or positive; by default computed from `Order.totalAmount()`. |
 | issuedAt    | LocalDateTime | Invoice issuance moment. Required.                              |
 
 ## Business Rules

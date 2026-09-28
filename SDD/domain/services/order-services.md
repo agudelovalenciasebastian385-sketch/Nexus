@@ -19,7 +19,7 @@ All services live in the package `nexusmarket.domain.services.order`. They opera
 
 ---
 
-# 1. ConfirmOrder
+# 1. ConfirmOrderService
 
 ## Description
 
@@ -94,7 +94,7 @@ Exposed in: `BuyerPort`.
 
 ---
 
-# 2. ValidatePayment
+# 2. ValidatePaymentService
 
 ## Description
 
@@ -166,7 +166,7 @@ Exposed in: `BuyerPort`.
 
 ---
 
-# 3. ConsultOrder
+# 3. ConsultOrderService
 
 ## Description
 
@@ -227,7 +227,7 @@ Not audited (read-only or authentication check).
 
 ---
 
-# 4. ConsultBuyerOrders
+# 4. ConsultBuyerOrdersService
 
 ## Description
 

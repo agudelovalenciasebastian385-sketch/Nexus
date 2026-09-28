@@ -20,7 +20,7 @@ All services live in the package `nexusmarket.domain.services.returns`. They ope
 
 ---
 
-# 1. RequestReturn
+# 1. RequestReturnService
 
 ## Description
 
@@ -89,7 +89,7 @@ Exposed in: `BuyerPort`.
 
 ---
 
-# 2. ApproveReturn
+# 2. ApproveReturnService
 
 ## Description
 
@@ -158,7 +158,7 @@ Exposed in: `AdministratorPort`.
 
 ---
 
-# 3. RejectReturn
+# 3. RejectReturnService
 
 ## Description
 
@@ -220,7 +220,7 @@ Exposed in: `AdministratorPort`.
 
 ---
 
-# 4. ProcessRefund
+# 4. ProcessRefundService
 
 ## Description
 
@@ -282,7 +282,7 @@ Exposed in: `AdministratorPort`.
 
 ---
 
-# 5. ConsultReturn
+# 5. ConsultReturnService
 
 ## Description
 

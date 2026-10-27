@@ -10,13 +10,13 @@ All services live in the package `nexusmarket.domain.services.cart`. They operat
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
-| 1 | `AddItemToCartService` | `AddItemToCartUseCase` | `BUYER` (owner of the cart). |
-| 2 | `RemoveItemFromCartService` | `RemoveItemFromCartUseCase` | `BUYER` (owner of the cart). |
-| 3 | `UpdateCartItemQuantityService` | `UpdateCartItemQuantityUseCase` | `BUYER` (owner of the cart). |
-| 4 | `ConsultCartService` | `ConsultCartUseCase` | `BUYER` over its own cart; `SUPERVISOR` over any cart. |
-| 5 | `ClearCartService` | `ClearCartUseCase` | `BUYER` (owner of the cart). |
+| 1 | `AddItemToCartService` | `BuyerPort` | `BUYER` (owner of the cart). |
+| 2 | `RemoveItemFromCartService` | `BuyerPort` | `BUYER` (owner of the cart). |
+| 3 | `UpdateCartItemQuantityService` | `BuyerPort` | `BUYER` (owner of the cart). |
+| 4 | `ConsultCartService` | `BuyerPort`, `SupervisorPort` | `BUYER` over its own cart; `SUPERVISOR` over any cart. |
+| 5 | `ClearCartService` | `BuyerPort` | `BUYER` (owner of the cart). |
 
 ---
 
@@ -29,7 +29,6 @@ Adds a published product to the requesting buyer's cart at its current price.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.cart.AddItemToCartService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.AddItemToCartUseCase`.
 
 ```java
 Cart addItemToCart(User requestingUser, String productId, Variant variant, int quantity);
@@ -99,7 +98,6 @@ Removes a product/variant line from the requesting buyer's cart.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.cart.RemoveItemFromCartService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.RemoveItemFromCartUseCase`.
 
 ```java
 Cart removeItemFromCart(User requestingUser, String productId, Variant variant);
@@ -164,7 +162,6 @@ Replaces the quantity of a product/variant line of the requesting buyer's cart.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.cart.UpdateCartItemQuantityService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.UpdateCartItemQuantityUseCase`.
 
 ```java
 Cart updateCartItemQuantity(User requestingUser, String productId, Variant variant, int quantity);
@@ -231,7 +228,6 @@ Retrieves the cart of a buyer with its items and total.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.cart.ConsultCartService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultCartUseCase`.
 
 ```java
 Cart consultCart(User requestingUser, String buyerId);
@@ -293,7 +289,6 @@ Removes every item from the requesting buyer's cart.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.cart.ClearCartService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ClearCartUseCase`.
 
 ```java
 Cart clearCart(User requestingUser);

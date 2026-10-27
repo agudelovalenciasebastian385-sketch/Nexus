@@ -8,7 +8,6 @@ import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Cart;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.UpdateCartItemQuantityUseCase;
 import nexusmarket.domain.ports.out.BuyerRepositoryPort;
 import nexusmarket.domain.ports.out.CartRepositoryPort;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
@@ -25,7 +24,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class UpdateCartItemQuantityService implements UpdateCartItemQuantityUseCase {
+public class UpdateCartItemQuantityService {
 
     private final BuyerRepositoryPort buyerRepositoryPort;
     private final CartRepositoryPort cartRepositoryPort;
@@ -33,7 +32,6 @@ public class UpdateCartItemQuantityService implements UpdateCartItemQuantityUseC
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Cart updateCartItemQuantity(User requestingUser, String productId, Variant variant, int quantity) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.BUYER);
         Cart cart = loadOwnCart(requester);

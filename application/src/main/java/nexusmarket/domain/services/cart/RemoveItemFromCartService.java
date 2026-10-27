@@ -8,7 +8,6 @@ import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Cart;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.RemoveItemFromCartUseCase;
 import nexusmarket.domain.ports.out.BuyerRepositoryPort;
 import nexusmarket.domain.ports.out.CartRepositoryPort;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
@@ -25,7 +24,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class RemoveItemFromCartService implements RemoveItemFromCartUseCase {
+public class RemoveItemFromCartService {
 
     private final BuyerRepositoryPort buyerRepositoryPort;
     private final CartRepositoryPort cartRepositoryPort;
@@ -33,7 +32,6 @@ public class RemoveItemFromCartService implements RemoveItemFromCartUseCase {
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Cart removeItemFromCart(User requestingUser, String productId, Variant variant) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.BUYER);
         Cart cart = loadOwnCart(requester);

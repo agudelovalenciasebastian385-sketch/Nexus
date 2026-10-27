@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.SuspendProductUseCase;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -23,14 +22,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class SuspendProductService implements SuspendProductUseCase {
+public class SuspendProductService {
 
     private final ProductRepositoryPort productRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final ValidateSellerOwnershipService validateSellerOwnershipService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Product suspendProduct(User requestingUser, String productId) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.SELLER);
         Product product = productRepositoryPort.findById(productId)

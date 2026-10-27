@@ -7,7 +7,6 @@ import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.exceptions.UnauthorizedOperationException;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
-import nexusmarket.domain.ports.in.UpdateWarehouseUseCase;
 import nexusmarket.domain.ports.out.WarehouseRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -24,14 +23,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class UpdateWarehouseService implements UpdateWarehouseUseCase {
+public class UpdateWarehouseService {
 
     private final WarehouseRepositoryPort warehouseRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final ValidateSellerOwnershipService validateSellerOwnershipService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Warehouse updateWarehouse(User requestingUser, String warehouseId, String name, Address location) {
         User requester = validateRoleAuthorizationService.execute(requestingUser,
                 SystemRole.ADMINISTRATOR, SystemRole.SELLER);

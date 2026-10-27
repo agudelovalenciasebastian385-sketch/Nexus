@@ -10,12 +10,12 @@ All services live in the package `nexusmarket.domain.services.shipment`. They op
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
-| 1 | `CreateShipmentsService` | `CreateShipmentsUseCase` | `LOGISTICS_OPERATOR`. |
-| 2 | `PackShipmentService` | `PackShipmentUseCase` | `LOGISTICS_OPERATOR` assigned to the shipment. |
-| 3 | `DispatchShipmentService` | `DispatchShipmentUseCase` | `LOGISTICS_OPERATOR` assigned to the shipment. |
-| 4 | `ConfirmDeliveryService` | `ConfirmDeliveryUseCase` | `LOGISTICS_OPERATOR` assigned to the shipment. |
+| 1 | `CreateShipmentsService` | `LogisticsOperatorPort` | `LOGISTICS_OPERATOR`. |
+| 2 | `PackShipmentService` | `LogisticsOperatorPort` | `LOGISTICS_OPERATOR` assigned to the shipment. |
+| 3 | `DispatchShipmentService` | `LogisticsOperatorPort` | `LOGISTICS_OPERATOR` assigned to the shipment. |
+| 4 | `ConfirmDeliveryService` | `LogisticsOperatorPort` | `LOGISTICS_OPERATOR` assigned to the shipment. |
 
 ---
 
@@ -28,7 +28,6 @@ Creates the shipments of a `PAID` order: one per origin warehouse, only for phys
 ## Implementation
 
 * Class: `nexusmarket.domain.services.shipment.CreateShipmentsService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.CreateShipmentsUseCase`.
 
 ```java
 List<Shipment> createShipments(User requestingUser, String orderId);
@@ -95,7 +94,6 @@ Registers that a shipment has been packed (`PREPARING` → `PACKED`).
 ## Implementation
 
 * Class: `nexusmarket.domain.services.shipment.PackShipmentService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.PackShipmentUseCase`.
 
 ```java
 Shipment packShipment(User requestingUser, String shipmentId);
@@ -157,7 +155,6 @@ Dispatches a packed shipment (`PACKED` → `IN_TRANSIT`), converts its reservati
 ## Implementation
 
 * Class: `nexusmarket.domain.services.shipment.DispatchShipmentService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.DispatchShipmentUseCase`.
 
 ```java
 Shipment dispatchShipment(User requestingUser, String shipmentId);
@@ -225,7 +222,6 @@ Confirms the delivery of a shipment (`IN_TRANSIT` → `DELIVERED`) and finalizes
 ## Implementation
 
 * Class: `nexusmarket.domain.services.shipment.ConfirmDeliveryService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConfirmDeliveryUseCase`.
 
 ```java
 Shipment confirmDelivery(User requestingUser, String shipmentId);

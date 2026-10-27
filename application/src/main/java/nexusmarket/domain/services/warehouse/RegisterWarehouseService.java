@@ -10,7 +10,6 @@ import nexusmarket.domain.exceptions.UnauthorizedOperationException;
 import nexusmarket.domain.models.Seller;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
-import nexusmarket.domain.ports.in.RegisterWarehouseUseCase;
 import nexusmarket.domain.ports.out.SellerRepositoryPort;
 import nexusmarket.domain.ports.out.WarehouseRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
@@ -29,14 +28,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class RegisterWarehouseService implements RegisterWarehouseUseCase {
+public class RegisterWarehouseService {
 
     private final SellerRepositoryPort sellerRepositoryPort;
     private final WarehouseRepositoryPort warehouseRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Warehouse registerWarehouse(User requestingUser, String name, Address location, WarehouseType type) {
         User requester = validateRoleAuthorizationService.execute(requestingUser,
                 SystemRole.ADMINISTRATOR, SystemRole.SELLER);

@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.Refund;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ProcessRefundUseCase;
 import nexusmarket.domain.ports.out.RefundRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -22,13 +21,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ProcessRefundService implements ProcessRefundUseCase {
+public class ProcessRefundService {
 
     private final RefundRepositoryPort refundRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Refund processRefund(User requestingUser, String refundId) {
         User administrator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.ADMINISTRATOR);
         Refund refund = refundRepositoryPort.findById(refundId)

@@ -7,7 +7,6 @@ import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.exceptions.UnauthorizedOperationException;
 import nexusmarket.domain.models.Shipment;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.PackShipmentUseCase;
 import nexusmarket.domain.ports.out.ShipmentRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -23,13 +22,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class PackShipmentService implements PackShipmentUseCase {
+public class PackShipmentService {
 
     private final ShipmentRepositoryPort shipmentRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Shipment packShipment(User requestingUser, String shipmentId) {
         User operator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.LOGISTICS_OPERATOR);
         Shipment shipment = shipmentRepositoryPort.findById(shipmentId)

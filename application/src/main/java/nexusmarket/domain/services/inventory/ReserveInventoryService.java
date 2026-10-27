@@ -11,7 +11,6 @@ import nexusmarket.domain.models.PhysicalProduct;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
-import nexusmarket.domain.ports.in.ReserveInventoryUseCase;
 import nexusmarket.domain.ports.out.InventoryRepositoryPort;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
 import nexusmarket.domain.ports.out.WarehouseRepositoryPort;
@@ -31,7 +30,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ReserveInventoryService implements ReserveInventoryUseCase {
+public class ReserveInventoryService {
 
     private final ProductRepositoryPort productRepositoryPort;
     private final WarehouseRepositoryPort warehouseRepositoryPort;
@@ -39,7 +38,6 @@ public class ReserveInventoryService implements ReserveInventoryUseCase {
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Inventory reserveInventory(User requestingUser, String productId, String warehouseId, int quantity) {
         User operator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.LOGISTICS_OPERATOR);
         Product product = productRepositoryPort.findById(productId)

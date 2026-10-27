@@ -19,8 +19,8 @@ Role Port (domain/ports/in)
       |  implemented by
 Use Case Adapter (adapters/useCases)
       |
-      v  delegates to
-Domain Service (domain/services) — implements <Name>UseCase
+      v  injects & delegates to
+Domain Service (domain/services)
       |
       v  calls
 Output Port (domain/ports/out)
@@ -30,7 +30,7 @@ Output Port (domain/ports/out)
 
 | Role port | Use case adapter | Injected domain services |
 | --- | --- | --- |
-| `PublicAccessPort` | `PublicAccessUseCaseImpl` | `RegisterBuyerUserService`, `LoginService`, `ConsultCatalogService` |
+| `PublicAccessPort` | `PublicAccessUseCaseImpl` | `RegisterBuyerUserService`, `LoginService`, `LogoutService`, `ConsultCatalogService` |
 | `BuyerPort` | `BuyerUseCaseImpl` | `ConsultUserService`, `ChangeUserPasswordService`, `ConsultBuyerService`, `UpdateBuyerProfileService`, `AddItemToCartService`, `RemoveItemFromCartService`, `UpdateCartItemQuantityService`, `ConsultCartService`, `ClearCartService`, `ConfirmOrderService`, `ValidatePaymentService`, `ConsultOrderService`, `ConsultBuyerOrdersService`, `ConsultInvoiceService`, `RequestReturnService`, `ConsultReturnService` |
 | `SellerPort` | `SellerUseCaseImpl` | `ConsultUserService`, `ChangeUserPasswordService`, `ConsultSellerService`, `UpdateSellerService`, `RegisterWarehouseService`, `ConsultWarehouseService`, `UpdateWarehouseService`, `RegisterProductService`, `UpdateProductService`, `PublishProductService`, `SuspendProductService`, `DiscontinueProductService`, `ConsultSellerProductsService`, `RegisterInitialStockService`, `RegisterInventoryInboundService`, `ConsultInventoryService`, `ConsultOrderService` |
 | `LogisticsOperatorPort` | `LogisticsOperatorUseCaseImpl` | `ConsultUserService`, `ChangeUserPasswordService`, `ConsultWarehouseService`, `RegisterInitialStockService`, `RegisterInventoryInboundService`, `RegisterInventoryAdjustmentService`, `ReserveInventoryService`, `ReleaseInventoryReservationService`, `ConsultInventoryService`, `ConsultOrderService`, `CreateShipmentsService`, `PackShipmentService`, `DispatchShipmentService`, `ConfirmDeliveryService` |
@@ -41,12 +41,13 @@ Output Port (domain/ports/out)
 
 ## PublicAccessUseCaseImpl
 
-Implements `PublicAccessPort`. Public operations that do not require an authenticated user: buyer self-registration, login and the public catalog.
+Implements `PublicAccessPort`. Public operations that do not require a specific role: buyer self-registration, login, logout and the public catalog.
 
 | Method | Delegates to |
 | --- | --- |
 | `registerBuyerUser` | `RegisterBuyerUserService.registerBuyerUser` |
 | `login` | `LoginService.login` |
+| `logout` | `LogoutService.logout` |
 | `consultCatalog` | `ConsultCatalogService.consultCatalog` |
 | `consultCatalogProduct` | `ConsultCatalogService.consultCatalogProduct` |
 

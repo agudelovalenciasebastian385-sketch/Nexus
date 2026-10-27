@@ -7,7 +7,6 @@ import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ConsultBuyerOrdersUseCase;
 import nexusmarket.domain.ports.out.BuyerRepositoryPort;
 import nexusmarket.domain.ports.out.OrderRepositoryPort;
 import nexusmarket.domain.services.authorization.ValidateBuyerOwnershipService;
@@ -21,14 +20,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ConsultBuyerOrdersService implements ConsultBuyerOrdersUseCase {
+public class ConsultBuyerOrdersService {
 
     private final BuyerRepositoryPort buyerRepositoryPort;
     private final OrderRepositoryPort orderRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final ValidateBuyerOwnershipService validateBuyerOwnershipService;
 
-    @Override
     public List<Order> consultBuyerOrders(User requestingUser, String buyerId) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.BUYER,
                 SystemRole.SUPERVISOR);

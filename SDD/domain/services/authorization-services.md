@@ -10,7 +10,7 @@ All services live in the package `nexusmarket.domain.services.authorization`. Th
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
 | 1 | `ValidateUserStatusService` | — (internal) | Internal (used by every protected service). |
 | 2 | `ValidateRoleAuthorizationService` | — (internal) | Internal (used by every protected service). |
@@ -28,7 +28,7 @@ RG-01: validates that the operation is executed by an authenticated user that is
 ## Implementation
 
 * Class: `nexusmarket.domain.services.authorization.ValidateUserStatusService` (`@Service`, `@RequiredArgsConstructor`).
-* Internal service: it has no use case interface and is not exposed in any role port.
+* Internal service: it is not exposed in any role port.
 
 ```java
 User execute(User user);
@@ -79,7 +79,7 @@ RG-02 and RG-03: validates RG-01 and that the single role of the user is one of 
 ## Implementation
 
 * Class: `nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService` (`@Service`, `@RequiredArgsConstructor`).
-* Internal service: it has no use case interface and is not exposed in any role port.
+* Internal service: it is not exposed in any role port.
 
 ```java
 User execute(User user, SystemRole... allowedRoles);
@@ -136,7 +136,7 @@ RG-03 for sellers: validates that a seller only manages its own information.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.authorization.ValidateSellerOwnershipService` (`@Service`, `@RequiredArgsConstructor`).
-* Internal service: it has no use case interface and is not exposed in any role port.
+* Internal service: it is not exposed in any role port.
 
 ```java
 void execute(User user, Seller seller);
@@ -208,7 +208,7 @@ RG-03 for buyers: validates that a buyer only accesses its own information.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.authorization.ValidateBuyerOwnershipService` (`@Service`, `@RequiredArgsConstructor`).
-* Internal service: it has no use case interface and is not exposed in any role port.
+* Internal service: it is not exposed in any role port.
 
 ```java
 void execute(User user, Buyer buyer);

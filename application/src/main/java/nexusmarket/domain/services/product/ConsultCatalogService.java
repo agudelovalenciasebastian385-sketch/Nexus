@@ -5,7 +5,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.Product;
-import nexusmarket.domain.ports.in.ConsultCatalogUseCase;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
 import nexusmarket.domain.valueobjects.ProductStatus;
 import org.springframework.stereotype.Service;
@@ -16,16 +15,14 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ConsultCatalogService implements ConsultCatalogUseCase {
+public class ConsultCatalogService {
 
     private final ProductRepositoryPort productRepositoryPort;
 
-    @Override
     public List<Product> consultCatalog() {
         return productRepositoryPort.findByStatus(ProductStatus.PUBLISHED);
     }
 
-    @Override
     public Product consultCatalogProduct(String productId) {
         return productRepositoryPort.findById(productId)
                 .filter(Product::isPublished)

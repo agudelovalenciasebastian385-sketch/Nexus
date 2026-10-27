@@ -6,7 +6,6 @@ import nexusmarket.domain.exceptions.UnauthorizedOperationException;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.OrderItem;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ConsultOrderUseCase;
 import nexusmarket.domain.ports.out.OrderRepositoryPort;
 import nexusmarket.domain.services.authorization.ValidateBuyerOwnershipService;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -20,13 +19,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ConsultOrderService implements ConsultOrderUseCase {
+public class ConsultOrderService {
 
     private final OrderRepositoryPort orderRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final ValidateBuyerOwnershipService validateBuyerOwnershipService;
 
-    @Override
     public Order consultOrder(User requestingUser, String orderId) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.BUYER,
                 SystemRole.SELLER, SystemRole.LOGISTICS_OPERATOR, SystemRole.SUPERVISOR);

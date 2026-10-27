@@ -10,12 +10,12 @@ All services live in the package `nexusmarket.domain.services.order`. They opera
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
-| 1 | `ConfirmOrderService` | `ConfirmOrderUseCase` | `BUYER`. |
-| 2 | `ValidatePaymentService` | `ValidatePaymentUseCase` | `BUYER` over its own order. |
-| 3 | `ConsultOrderService` | `ConsultOrderUseCase` | `BUYER` (own orders); `SELLER` (orders containing its products); `LOGISTICS_OPERATOR` and `SUPERVISOR`. |
-| 4 | `ConsultBuyerOrdersService` | `ConsultBuyerOrdersUseCase` | `BUYER` over its own orders; `SUPERVISOR`. |
+| 1 | `ConfirmOrderService` | `BuyerPort` | `BUYER`. |
+| 2 | `ValidatePaymentService` | `BuyerPort` | `BUYER` over its own order. |
+| 3 | `ConsultOrderService` | `BuyerPort`, `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort` | `BUYER` (own orders); `SELLER` (orders containing its products); `LOGISTICS_OPERATOR` and `SUPERVISOR`. |
+| 4 | `ConsultBuyerOrdersService` | `BuyerPort`, `SupervisorPort` | `BUYER` over its own orders; `SUPERVISOR`. |
 
 ---
 
@@ -28,7 +28,6 @@ Converts the requesting buyer's cart into an order in `PENDING_PAYMENT`, reserve
 ## Implementation
 
 * Class: `nexusmarket.domain.services.order.ConfirmOrderService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConfirmOrderUseCase`.
 
 ```java
 Order confirmOrder(User requestingUser);
@@ -103,7 +102,6 @@ Processes the payment of the buyer's own `PENDING_PAYMENT` order through the pay
 ## Implementation
 
 * Class: `nexusmarket.domain.services.order.ValidatePaymentService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ValidatePaymentUseCase`.
 
 ```java
 Order validatePayment(User requestingUser, String orderId);
@@ -175,7 +173,6 @@ Retrieves an order.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.order.ConsultOrderService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultOrderUseCase`.
 
 ```java
 Order consultOrder(User requestingUser, String orderId);
@@ -236,7 +233,6 @@ Retrieves the historical and active orders of a buyer.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.order.ConsultBuyerOrdersService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultBuyerOrdersUseCase`.
 
 ```java
 List<Order> consultBuyerOrders(User requestingUser, String buyerId);

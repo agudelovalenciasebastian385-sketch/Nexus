@@ -7,7 +7,6 @@ import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Cart;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ClearCartUseCase;
 import nexusmarket.domain.ports.out.BuyerRepositoryPort;
 import nexusmarket.domain.ports.out.CartRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
@@ -22,14 +21,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ClearCartService implements ClearCartUseCase {
+public class ClearCartService {
 
     private final BuyerRepositoryPort buyerRepositoryPort;
     private final CartRepositoryPort cartRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Cart clearCart(User requestingUser) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.BUYER);
         Cart cart = loadOwnCart(requester);

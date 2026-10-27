@@ -9,7 +9,6 @@ import nexusmarket.domain.exceptions.OrderAlreadyFinalizedException;
 import nexusmarket.domain.exceptions.PaymentRejectedException;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ValidatePaymentUseCase;
 import nexusmarket.domain.ports.out.OrderRepositoryPort;
 import nexusmarket.domain.ports.out.PaymentGatewayPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
@@ -34,7 +33,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ValidatePaymentService implements ValidatePaymentUseCase {
+public class ValidatePaymentService {
 
     private final OrderRepositoryPort orderRepositoryPort;
     private final PaymentGatewayPort paymentGatewayPort;
@@ -43,7 +42,6 @@ public class ValidatePaymentService implements ValidatePaymentUseCase {
     private final GenerateInvoiceService generateInvoiceService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Order validatePayment(User requestingUser, String orderId) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.BUYER);
         Order order = orderRepositoryPort.findById(orderId)

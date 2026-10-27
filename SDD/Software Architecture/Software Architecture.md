@@ -92,7 +92,7 @@ application/src/main/java/
         │   ├── authorization/
         │   └── audit/
         └── ports/
-            ├── in/                   49 <Name>UseCase interfaces and 6 role ports
+            ├── in/                   6 role ports
             └── out/                  16 output ports
 ```
 
@@ -190,12 +190,12 @@ Value objects are immutable and compared by value. There is no separate `enums` 
 Package `nexusmarket.domain.services.<subdomain>`. Each service implements exactly one business capability (see [Domain Services](../domain/Domain%20Services.md)).
 
 - Class `<Name>Service`, annotated with `@Service` and `@RequiredArgsConstructor`.
-- Implements the input port `<Name>UseCase`, except the 5 internal services (`ValidateUserStatusService`, `ValidateRoleAuthorizationService`, `ValidateSellerOwnershipService`, `ValidateBuyerOwnershipService`, `RegisterAuditLogService`).
+- Concrete class that implements no interface: the use case adapters inject it directly and expose its operations through the role ports. The 7 internal services (`LoadAuthenticatedUserService`, `GenerateInvoiceService`, `ValidateUserStatusService`, `ValidateRoleAuthorizationService`, `ValidateSellerOwnershipService`, `ValidateBuyerOwnershipService`, `RegisterAuditLogService`) are not exposed in any role port.
 - Receives the requesting `User` as first parameter, validates RG-01/RG-02/RG-03 through the authorization services, reads and stores exclusively through output ports, delegates rules to the entities and registers audit records.
 
 | Subdomain | Services |
 | --- | --- |
-| `user` | `RegisterBuyerUserService`, `RegisterStaffUserService`, `LoginService`, `ConsultUserService`, `ChangeUserStatusService`, `ChangeUserPasswordService` |
+| `user` | `RegisterBuyerUserService`, `RegisterStaffUserService`, `LoginService`, `LogoutService`, `LoadAuthenticatedUserService`, `ConsultUserService`, `ChangeUserStatusService`, `ChangeUserPasswordService` |
 | `seller` | `RegisterSellerService`, `ConsultSellerService`, `UpdateSellerService` |
 | `buyer` | `ConsultBuyerService`, `UpdateBuyerProfileService`, `ChangeBuyerCommercialStatusService` |
 | `warehouse` | `RegisterWarehouseService`, `ConsultWarehouseService`, `UpdateWarehouseService` |
@@ -209,7 +209,7 @@ Package `nexusmarket.domain.services.<subdomain>`. Each service implements exact
 | `authorization` | `ValidateUserStatusService`, `ValidateRoleAuthorizationService`, `ValidateSellerOwnershipService`, `ValidateBuyerOwnershipService` |
 | `audit` | `RegisterAuditLogService`, `ConsultAuditLogsService` |
 
-Total: **54 services** (49 with a use case interface, 5 internal).
+Total: **56 services** (49 exposed in role ports, 7 internal).
 
 ---
 
@@ -219,14 +219,11 @@ Ports define communication contracts between the domain and external technologie
 
 ### Input Ports
 
-Package `nexusmarket.domain.ports.in` (see [Input Ports](../domain/Input-ports.md)). Two levels:
-
-- **Use case interfaces** — one `<Name>UseCase` per domain service (49), e.g. `ConfirmOrderUseCase`, `PublishProductUseCase`, `RegisterInventoryAdjustmentUseCase`, `ApproveReturnUseCase`.
-- **Role ports** — the operations each role is allowed to execute:
+Package `nexusmarket.domain.ports.in` (see [Input Ports](../domain/Input-ports.md)). Input ports are organized strictly by role: one role port per system role plus a public port, each one with the operations that role is allowed to execute. There are no per-service interfaces.
 
 | Role port | Role | Operations |
 | --- | --- | --- |
-| `PublicAccessPort` | public (no authentication) | 4 |
+| `PublicAccessPort` | public (no specific role) | 5 |
 | `BuyerPort` | `BUYER` | 17 |
 | `SellerPort` | `SELLER` | 19 |
 | `LogisticsOperatorPort` | `LOGISTICS_OPERATOR` | 16 |
@@ -253,7 +250,7 @@ Package `nexusmarket.domain.ports.out` (see [Output Ports](../domain/Output-port
 | `RefundRepositoryPort` | Refunds | MySQL |
 | `AuditLogRepositoryPort` | Append-only audit records | MongoDB |
 | `PasswordServicePort` | Password encryption and verification | Hashing library |
-| `JwtServicePort` | Token generation, validation and `User` reconstruction | JWT library |
+| `JwtServicePort` | Token generation and validation, extraction of the user id and token version, and `User` reconstruction | JWT library |
 | `PaymentGatewayPort` | Order payment processing (`PaymentResult`) | Simulated gateway |
 
 ---
@@ -316,7 +313,7 @@ Will contain technical configuration without business logic:
 
 - **Config:** REST configuration, serialization, environment configuration.
 - **Database:** connection pool and schema configuration (today `spring.jpa.hibernate.ddl-auto: update` in `application.yml`).
-- **Security:** authentication filters and token validation, aligned with RG-01 (every operation must be executed by an authenticated user).
+- **Security:** authentication filters and token validation, aligned with RG-01 (every operation must be executed by an authenticated user). The JWT filter loads the user with `LoadAuthenticatedUserService` and rejects tokens whose version differs from `User.authTokenVersion` (logout, password change or status change).
 
 ---
 
@@ -331,7 +328,7 @@ REST Controller (next phase)
 Role Port (domain/ports/in)  ◄── implemented by ── Use Case Adapter (adapters/useCases)
         │                                                   │
         │                                                   ▼ delegates to
-        │                                   Domain Service (domain/services) — implements <Name>UseCase
+        │                                   Domain Service (domain/services)
         │                                                   │
         │                                                   ▼
         └────────────────────────────────── Output Port (domain/ports/out)

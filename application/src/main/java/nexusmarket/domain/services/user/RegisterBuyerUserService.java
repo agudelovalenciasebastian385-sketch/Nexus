@@ -8,7 +8,6 @@ import nexusmarket.domain.exceptions.InvalidUserException;
 import nexusmarket.domain.exceptions.UserAlreadyExistsException;
 import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Cart;
-import nexusmarket.domain.ports.in.RegisterBuyerUserUseCase;
 import nexusmarket.domain.ports.out.BuyerRepositoryPort;
 import nexusmarket.domain.ports.out.CartRepositoryPort;
 import nexusmarket.domain.ports.out.PasswordServicePort;
@@ -27,7 +26,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class RegisterBuyerUserService implements RegisterBuyerUserUseCase {
+public class RegisterBuyerUserService {
 
     private final UserRepositoryPort userRepositoryPort;
     private final BuyerRepositoryPort buyerRepositoryPort;
@@ -35,7 +34,6 @@ public class RegisterBuyerUserService implements RegisterBuyerUserUseCase {
     private final PasswordServicePort passwordServicePort;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Buyer registerBuyerUser(String identificationNumber, String fullName, String email, String rawPassword,
                                    Address primaryAddress) {
         validateUniqueness(identificationNumber, email);

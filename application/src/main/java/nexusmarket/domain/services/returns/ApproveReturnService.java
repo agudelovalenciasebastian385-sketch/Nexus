@@ -15,7 +15,6 @@ import nexusmarket.domain.models.PhysicalProduct;
 import nexusmarket.domain.models.Refund;
 import nexusmarket.domain.models.ReturnRequest;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ApproveReturnUseCase;
 import nexusmarket.domain.ports.out.InventoryRepositoryPort;
 import nexusmarket.domain.ports.out.InvoiceRepositoryPort;
 import nexusmarket.domain.ports.out.RefundRepositoryPort;
@@ -35,7 +34,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ApproveReturnService implements ApproveReturnUseCase {
+public class ApproveReturnService {
 
     private final ReturnRequestRepositoryPort returnRequestRepositoryPort;
     private final InvoiceRepositoryPort invoiceRepositoryPort;
@@ -44,7 +43,6 @@ public class ApproveReturnService implements ApproveReturnUseCase {
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public ReturnRequest approveReturn(User requestingUser, String returnRequestId) {
         User administrator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.ADMINISTRATOR);
         ReturnRequest returnRequest = returnRequestRepositoryPort.findById(returnRequestId)

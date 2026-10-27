@@ -38,21 +38,23 @@ public class Buyer extends User {
     /** Buyer's historical and active orders. Empty by default; loaded on demand. */
     private final List<Order> orders = new ArrayList<>();
 
+    /** Creates a new buyer starting at token version {@code 1}. */
     public Buyer(String id, String identificationNumber, String fullName, String email, String password,
                 UserStatus status, Address primaryAddress, CommercialStatus commercialStatus) {
-        super(id, identificationNumber, fullName, email, password, SystemRole.BUYER, status);
+        this(id, identificationNumber, fullName, email, password, status, primaryAddress, null, commercialStatus,
+                null, 1);
+    }
+
+    /** Rehydration constructor used to rebuild a persisted buyer with its stored token version. */
+    public Buyer(String id, String identificationNumber, String fullName, String email, String password,
+                UserStatus status, Address primaryAddress, List<Address> additionalAddresses,
+                CommercialStatus commercialStatus, List<Order> orders, Integer authTokenVersion) {
+        super(id, identificationNumber, fullName, email, password, SystemRole.BUYER, status, authTokenVersion);
         this.primaryAddress = requireAddress(primaryAddress, "Buyer primary address is required.");
         if (commercialStatus == null) {
             throw new InvalidUserException("Buyer commercial status is required.");
         }
         this.commercialStatus = commercialStatus;
-    }
-
-    /** Rehydration constructor used to rebuild a persisted buyer. */
-    public Buyer(String id, String identificationNumber, String fullName, String email, String password,
-                UserStatus status, Address primaryAddress, List<Address> additionalAddresses,
-                CommercialStatus commercialStatus, List<Order> orders) {
-        this(id, identificationNumber, fullName, email, password, status, primaryAddress, commercialStatus);
         if (additionalAddresses != null) {
             for (Address address : additionalAddresses) {
                 addAdditionalAddress(address);

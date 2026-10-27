@@ -27,9 +27,17 @@ public class Seller extends User {
     /** Products published by the seller. Empty by default. */
     private final List<Product> products = new ArrayList<>();
 
+    /** Creates a new seller starting at token version {@code 1}. */
     public Seller(String id, String identificationNumber, String fullName, String email, String password,
                   UserStatus status) {
-        super(id, identificationNumber, fullName, email, password, SystemRole.SELLER, status);
+        this(id, identificationNumber, fullName, email, password, status, 1);
+    }
+
+    /** Rehydration constructor used to rebuild a persisted seller with its stored token version. */
+    public Seller(String id, String identificationNumber, String fullName, String email, String password,
+                  UserStatus status, Integer authTokenVersion) {
+        super(id, identificationNumber, fullName, email, password, SystemRole.SELLER, status,
+                authTokenVersion);
     }
 
     public List<Warehouse> getWarehouses() {

@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.Seller;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.UpdateSellerUseCase;
 import nexusmarket.domain.ports.out.SellerRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -22,14 +21,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class UpdateSellerService implements UpdateSellerUseCase {
+public class UpdateSellerService {
 
     private final SellerRepositoryPort sellerRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final ValidateSellerOwnershipService validateSellerOwnershipService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Seller updateSeller(User requestingUser, String sellerId, String fullName) {
         User requester = validateRoleAuthorizationService.execute(requestingUser,
                 SystemRole.SELLER, SystemRole.ADMINISTRATOR);

@@ -16,9 +16,17 @@ import nexusmarket.domain.valueobjects.UserStatus;
  */
 public class Administrator extends User {
 
+    /** Creates a new administrator starting at token version {@code 1}. */
     public Administrator(String id, String identificationNumber, String fullName, String email, String password,
                          UserStatus status) {
-        super(id, identificationNumber, fullName, email, password, SystemRole.ADMINISTRATOR, status);
+        this(id, identificationNumber, fullName, email, password, status, 1);
+    }
+
+    /** Rehydration constructor used to rebuild a persisted administrator with its stored token version. */
+    public Administrator(String id, String identificationNumber, String fullName, String email, String password,
+                         UserStatus status, Integer authTokenVersion) {
+        super(id, identificationNumber, fullName, email, password, SystemRole.ADMINISTRATOR, status,
+                authTokenVersion);
     }
 
     @Override

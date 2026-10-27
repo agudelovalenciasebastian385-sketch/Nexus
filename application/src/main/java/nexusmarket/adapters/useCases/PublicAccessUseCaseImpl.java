@@ -3,11 +3,14 @@ package nexusmarket.adapters.useCases;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import nexusmarket.domain.models.AuthenticationResult;
 import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Product;
+import nexusmarket.domain.models.User;
 import nexusmarket.domain.ports.in.PublicAccessPort;
 import nexusmarket.domain.services.product.ConsultCatalogService;
 import nexusmarket.domain.services.user.LoginService;
+import nexusmarket.domain.services.user.LogoutService;
 import nexusmarket.domain.services.user.RegisterBuyerUserService;
 import nexusmarket.domain.valueobjects.Address;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ public class PublicAccessUseCaseImpl implements PublicAccessPort {
 
     private final RegisterBuyerUserService registerBuyerUserService;
     private final LoginService loginService;
+    private final LogoutService logoutService;
     private final ConsultCatalogService consultCatalogService;
 
     @Override
@@ -32,8 +36,13 @@ public class PublicAccessUseCaseImpl implements PublicAccessPort {
     }
 
     @Override
-    public String login(String email, String rawPassword) {
+    public AuthenticationResult login(String email, String rawPassword) {
         return loginService.login(email, rawPassword);
+    }
+
+    @Override
+    public void logout(User user) {
+        logoutService.logout(user);
     }
 
     @Override

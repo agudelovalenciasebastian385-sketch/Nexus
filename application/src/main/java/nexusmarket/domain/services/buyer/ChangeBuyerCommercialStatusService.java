@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ChangeBuyerCommercialStatusUseCase;
 import nexusmarket.domain.ports.out.BuyerRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -22,13 +21,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ChangeBuyerCommercialStatusService implements ChangeBuyerCommercialStatusUseCase {
+public class ChangeBuyerCommercialStatusService {
 
     private final BuyerRepositoryPort buyerRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Buyer changeBuyerCommercialStatus(User requestingUser, String buyerId, CommercialStatus newStatus) {
         User administrator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.ADMINISTRATOR);
         Buyer buyer = buyerRepositoryPort.findById(buyerId)

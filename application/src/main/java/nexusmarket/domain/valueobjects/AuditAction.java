@@ -14,6 +14,8 @@ public enum AuditAction implements DomainCatalog {
     STAFF_USER_REGISTERED("STAFF_USER_REGISTERED", "Staff User Registered",
             "An administrator registered a logistics operator or a supervisor."),
     USER_LOGGED_IN("USER_LOGGED_IN", "User Logged In", "A user authenticated successfully."),
+    USER_LOGGED_OUT("USER_LOGGED_OUT", "User Logged Out",
+            "A user logged out and its previously issued tokens were invalidated."),
     USER_STATUS_CHANGED("USER_STATUS_CHANGED", "User Status Changed", "The operational status of a user changed."),
     USER_PASSWORD_CHANGED("USER_PASSWORD_CHANGED", "User Password Changed", "A user changed its password."),
     SELLER_REGISTERED("SELLER_REGISTERED", "Seller Registered", "An administrator onboarded a seller."),

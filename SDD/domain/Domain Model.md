@@ -28,7 +28,7 @@ An order may generate one invoice, one or more shipments, and, eventually, assoc
 
 * **Identity:** entities with an `id` attribute compare equality by `id`. `Inventory` has no `id`: its identity is the pair (`product`, `warehouse`).
 * **Collections** are never exposed for direct modification: getters return unmodifiable views and changes go through domain methods (for example `Cart.addItem`, `Cart.removeItem`, `Seller.addWarehouse`).
-* **Rehydration constructors:** entities with a lifecycle provide a second constructor that receives the current status (and collections) to rebuild a persisted object.
+* **Rehydration constructors:** entities with a lifecycle provide a second constructor that receives the current status (and collections) to rebuild a persisted object. Users are rehydrated with their stored `authTokenVersion`.
 * **Validation:** every rule violation raises a subclass of `DomainException` (see [Domain Exceptions](#domain-exceptions)). Required references that are `null` and required texts that are blank are rejected.
 
 ---
@@ -63,6 +63,8 @@ ReturnRequest
 Refund
 
 AuditLog
+
+AuthenticationResult
 ```
 
 ---
@@ -143,13 +145,34 @@ This class cannot be instantiated directly.
 | password             | String     | Encrypted password (never the plain text). Cannot be empty.                          |
 | role                 | SystemRole | Defines the user's responsibilities and permissions. Fixed by the subclass.          |
 | status               | UserStatus | Operational condition of the user (Active, Blocked, Inactive).                       |
+| authTokenVersion     | Integer    | Session version embedded in every issued token. Starts at `1`; always `>= 1`. Advancing it invalidates every previously issued token. |
+
+## Constructors
+
+| Constructor | Description |
+| --- | --- |
+| New user | Receives the identity, contact, password and status data; `authTokenVersion` starts at `1`. |
+| Rehydration | Same data plus the stored `Integer authTokenVersion`, to rebuild a persisted user. A `null` value or a value lower than `1` → `InvalidUserException`. |
+
+Every subclass exposes both constructors and fixes its own `role`:
+
+| Subclass | New user | Rehydration |
+| --- | --- | --- |
+| `Buyer` | `(id, identificationNumber, fullName, email, password, status, primaryAddress, commercialStatus)` | `(id, identificationNumber, fullName, email, password, status, primaryAddress, additionalAddresses, commercialStatus, orders, authTokenVersion)` |
+| `Seller` | `(id, identificationNumber, fullName, email, password, status)` | `(id, identificationNumber, fullName, email, password, status, authTokenVersion)` |
+| `LogisticsOperator` | `(id, identificationNumber, fullName, email, password, status)` | `(id, identificationNumber, fullName, email, password, status, authTokenVersion)` |
+| `Administrator` | `(id, identificationNumber, fullName, email, password, status)` | `(id, identificationNumber, fullName, email, password, status, authTokenVersion)` |
+| `Supervisor` | `(id, identificationNumber, fullName, email, password, status)` | `(id, identificationNumber, fullName, email, password, status, authTokenVersion)` |
+
+The new-user constructor delegates to the rehydration constructor with `authTokenVersion = 1`.
 
 ## Behavior
 
 | Method                                  | Description                                                   |
 | --------------------------------------- | ------------------------------------------------------------- |
-| `changeStatus(UserStatus newStatus)`    | Changes the operational condition of the user.                |
-| `changePassword(String encodedPassword)` | Replaces the encrypted password.                             |
+| `changeStatus(UserStatus newStatus)`    | Changes the operational condition of the user and calls `bumpAuthTokenVersion()`. |
+| `changePassword(String encodedPassword)` | Replaces the encrypted password and calls `bumpAuthTokenVersion()`. |
+| `bumpAuthTokenVersion()`                | Advances `authTokenVersion` by one, invalidating every previously issued token. Used by logout, status change and password change. |
 | `updateFullName(String fullName)`       | Replaces the full name.                                       |
 | `isActive()`                            | `true` when `status` is `ACTIVE`.                             |
 
@@ -159,6 +182,7 @@ This class cannot be instantiated directly.
 * `id`, `identificationNumber`, `fullName` and `password` cannot be empty; `email` must match `local@domain.tld` → `InvalidUserException`.
 * `password` always holds the value produced by `PasswordServicePort.encrypt`; `identificationNumber` and `email` are immutable.
 * The uniqueness of `identificationNumber` and `email` across the platform is enforced at domain service level (it requires querying other users).
+* `authTokenVersion` is never supplied by the caller of a registration: new users always start at `1`. Every token carries the version it was issued with; a token whose version differs from the stored `authTokenVersion` is rejected (logout, blocking a user or changing its password invalidates the previous tokens).
 
 ## Relationships
 
@@ -833,6 +857,30 @@ Represents an immutable record of a significant business operation. Audit record
 ## Relationships
 
 * An audit record is performed by exactly one `User`.
+
+---
+
+# AuthenticationResult
+
+## Description
+
+Outcome of a successful login (`LoginService.login`). Carries the authenticated user together with the freshly issued token. It is not persisted.
+
+## Attributes
+
+| Attribute         | Type   | Description                                                                 |
+| ----------------- | ------ | --------------------------------------------------------------------------- |
+| authenticatedUser | User   | Stored user that authenticated successfully. Required.                      |
+| token             | String | Token issued by `JwtServicePort`; it carries the user's current `authTokenVersion`. Cannot be empty. |
+
+## Business Rules
+
+* Missing user or empty token → `InvalidUserException`.
+* All attributes are final; there are no setters.
+
+## Relationships
+
+* An authentication result references exactly one `User`.
 
 ---
 

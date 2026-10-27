@@ -5,7 +5,6 @@ import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.Refund;
 import nexusmarket.domain.models.ReturnRequest;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ConsultReturnUseCase;
 import nexusmarket.domain.ports.out.RefundRepositoryPort;
 import nexusmarket.domain.ports.out.ReturnRequestRepositoryPort;
 import nexusmarket.domain.services.authorization.ValidateBuyerOwnershipService;
@@ -20,20 +19,18 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ConsultReturnService implements ConsultReturnUseCase {
+public class ConsultReturnService {
 
     private final ReturnRequestRepositoryPort returnRequestRepositoryPort;
     private final RefundRepositoryPort refundRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final ValidateBuyerOwnershipService validateBuyerOwnershipService;
 
-    @Override
     public ReturnRequest consultReturn(User requestingUser, String returnRequestId) {
         User requester = authorize(requestingUser);
         return loadAccessibleReturn(requester, returnRequestId);
     }
 
-    @Override
     public Refund consultRefund(User requestingUser, String returnRequestId) {
         User requester = authorize(requestingUser);
         ReturnRequest returnRequest = loadAccessibleReturn(requester, returnRequestId);

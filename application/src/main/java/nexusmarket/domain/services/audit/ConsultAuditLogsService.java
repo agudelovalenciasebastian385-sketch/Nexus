@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.AuditLog;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ConsultAuditLogsUseCase;
 import nexusmarket.domain.ports.out.AuditLogRepositoryPort;
 import nexusmarket.domain.ports.out.UserRepositoryPort;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -20,19 +19,17 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ConsultAuditLogsService implements ConsultAuditLogsUseCase {
+public class ConsultAuditLogsService {
 
     private final AuditLogRepositoryPort auditLogRepositoryPort;
     private final UserRepositoryPort userRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
 
-    @Override
     public List<AuditLog> consultAuditLogs(User requestingUser) {
         authorize(requestingUser);
         return auditLogRepositoryPort.findAll();
     }
 
-    @Override
     public List<AuditLog> consultAuditLogsByUser(User requestingUser, String userId) {
         authorize(requestingUser);
         User user = userRepositoryPort.findById(userId)
@@ -40,7 +37,6 @@ public class ConsultAuditLogsService implements ConsultAuditLogsUseCase {
         return auditLogRepositoryPort.findByPerformedBy(user);
     }
 
-    @Override
     public List<AuditLog> consultAuditLogsByEntity(User requestingUser, AuditEntityType entityType, String entityId) {
         authorize(requestingUser);
         return auditLogRepositoryPort.findByEntity(entityType, entityId);

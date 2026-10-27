@@ -12,7 +12,6 @@ import nexusmarket.domain.models.PhysicalProduct;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
-import nexusmarket.domain.ports.in.RegisterInventoryAdjustmentUseCase;
 import nexusmarket.domain.ports.out.InventoryRepositoryPort;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
 import nexusmarket.domain.ports.out.WarehouseRepositoryPort;
@@ -32,7 +31,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class RegisterInventoryAdjustmentService implements RegisterInventoryAdjustmentUseCase {
+public class RegisterInventoryAdjustmentService {
 
     private final ProductRepositoryPort productRepositoryPort;
     private final WarehouseRepositoryPort warehouseRepositoryPort;
@@ -40,7 +39,6 @@ public class RegisterInventoryAdjustmentService implements RegisterInventoryAdju
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Inventory registerInventoryAdjustment(User requestingUser, String productId, String warehouseId,
                                                  int quantity, InventoryCondition condition) {
         User operator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.LOGISTICS_OPERATOR);

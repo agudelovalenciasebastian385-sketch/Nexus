@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.InvalidCredentialsException;
 import nexusmarket.domain.exceptions.InvalidUserException;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ChangeUserPasswordUseCase;
 import nexusmarket.domain.ports.out.PasswordServicePort;
 import nexusmarket.domain.ports.out.UserRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
@@ -23,14 +22,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ChangeUserPasswordService implements ChangeUserPasswordUseCase {
+public class ChangeUserPasswordService {
 
     private final UserRepositoryPort userRepositoryPort;
     private final PasswordServicePort passwordServicePort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public void changeUserPassword(User requestingUser, String currentPassword, String newPassword) {
         User user = validateRoleAuthorizationService.execute(requestingUser, SystemRole.values());
         if (currentPassword == null || !passwordServicePort.matches(currentPassword, user.getPassword())) {

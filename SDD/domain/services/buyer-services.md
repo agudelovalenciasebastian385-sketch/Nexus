@@ -10,11 +10,11 @@ All services live in the package `nexusmarket.domain.services.buyer`. They opera
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
-| 1 | `ConsultBuyerService` | `ConsultBuyerUseCase` | `BUYER` over itself; `ADMINISTRATOR` and `SUPERVISOR` over any buyer. |
-| 2 | `UpdateBuyerProfileService` | `UpdateBuyerProfileUseCase` | `BUYER` over itself. |
-| 3 | `ChangeBuyerCommercialStatusService` | `ChangeBuyerCommercialStatusUseCase` | `ADMINISTRATOR`. |
+| 1 | `ConsultBuyerService` | `AdministratorPort`, `BuyerPort`, `SupervisorPort` | `BUYER` over itself; `ADMINISTRATOR` and `SUPERVISOR` over any buyer. |
+| 2 | `UpdateBuyerProfileService` | `BuyerPort` | `BUYER` over itself. |
+| 3 | `ChangeBuyerCommercialStatusService` | `AdministratorPort` | `ADMINISTRATOR`. |
 
 ---
 
@@ -27,7 +27,6 @@ Retrieves the information of a buyer.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.buyer.ConsultBuyerService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultBuyerUseCase`.
 
 ```java
 Buyer consultBuyer(User requestingUser, String buyerId);
@@ -88,7 +87,6 @@ Updates the profile of the requesting buyer: full name, primary address and addi
 ## Implementation
 
 * Class: `nexusmarket.domain.services.buyer.UpdateBuyerProfileService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.UpdateBuyerProfileUseCase`.
 
 ```java
 Buyer updateBuyerProfile(User requestingUser, String fullName, Address primaryAddress, List<Address> additionalAddresses);
@@ -154,7 +152,6 @@ Changes the commercial status of a buyer (`ENABLED`, `RESTRICTED`, `SUSPENDED`).
 ## Implementation
 
 * Class: `nexusmarket.domain.services.buyer.ChangeBuyerCommercialStatusService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ChangeBuyerCommercialStatusUseCase`.
 
 ```java
 Buyer changeBuyerCommercialStatus(User requestingUser, String buyerId, CommercialStatus newStatus);

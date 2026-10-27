@@ -9,7 +9,6 @@ import nexusmarket.domain.exceptions.UserAlreadyExistsException;
 import nexusmarket.domain.models.Seller;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
-import nexusmarket.domain.ports.in.RegisterSellerUseCase;
 import nexusmarket.domain.ports.out.PasswordServicePort;
 import nexusmarket.domain.ports.out.SellerRepositoryPort;
 import nexusmarket.domain.ports.out.UserRepositoryPort;
@@ -31,7 +30,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class RegisterSellerService implements RegisterSellerUseCase {
+public class RegisterSellerService {
 
     private final UserRepositoryPort userRepositoryPort;
     private final SellerRepositoryPort sellerRepositoryPort;
@@ -40,7 +39,6 @@ public class RegisterSellerService implements RegisterSellerUseCase {
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Seller registerSeller(User requestingUser, String identificationNumber, String fullName, String email,
                                  String rawPassword, String warehouseName, Address warehouseLocation) {
         User administrator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.ADMINISTRATOR);

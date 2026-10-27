@@ -9,7 +9,6 @@ import nexusmarket.domain.exceptions.InvalidReturnRequestException;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.ReturnRequest;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.RequestReturnUseCase;
 import nexusmarket.domain.ports.out.OrderRepositoryPort;
 import nexusmarket.domain.ports.out.ReturnRequestRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
@@ -28,7 +27,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class RequestReturnService implements RequestReturnUseCase {
+public class RequestReturnService {
 
     private final OrderRepositoryPort orderRepositoryPort;
     private final ReturnRequestRepositoryPort returnRequestRepositoryPort;
@@ -36,7 +35,6 @@ public class RequestReturnService implements RequestReturnUseCase {
     private final ValidateBuyerOwnershipService validateBuyerOwnershipService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public ReturnRequest requestReturn(User requestingUser, String orderId, String reason) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.BUYER);
         Order order = orderRepositoryPort.findById(orderId)

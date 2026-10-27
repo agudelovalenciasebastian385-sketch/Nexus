@@ -10,10 +10,10 @@ All services live in the package `nexusmarket.domain.services.audit`. They opera
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
 | 1 | `RegisterAuditLogService` | — (internal) | Internal (used by every service that changes information). |
-| 2 | `ConsultAuditLogsService` | `ConsultAuditLogsUseCase` | `ADMINISTRATOR` and `SUPERVISOR`. |
+| 2 | `ConsultAuditLogsService` | `AdministratorPort`, `SupervisorPort` | `ADMINISTRATOR` and `SUPERVISOR`. |
 
 ---
 
@@ -26,7 +26,7 @@ Registers an immutable audit record of a significant business operation.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.audit.RegisterAuditLogService` (`@Service`, `@RequiredArgsConstructor`).
-* Internal service: it has no use case interface and is not exposed in any role port.
+* Internal service: it is not exposed in any role port.
 
 ```java
 AuditLog execute(User performedBy, AuditAction action, AuditEntityType entityType, String entityId, Map<String, String> details);
@@ -83,7 +83,6 @@ Retrieves audit records: all of them, those performed by a user, or those of an 
 ## Implementation
 
 * Class: `nexusmarket.domain.services.audit.ConsultAuditLogsService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultAuditLogsUseCase`.
 
 ```java
 List<AuditLog> consultAuditLogs(User requestingUser);

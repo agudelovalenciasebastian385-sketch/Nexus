@@ -9,7 +9,6 @@ import nexusmarket.domain.exceptions.InvalidOrderException;
 import nexusmarket.domain.models.Invoice;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.GenerateInvoiceUseCase;
 import nexusmarket.domain.ports.out.InvoiceRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
 import nexusmarket.domain.valueobjects.AuditAction;
@@ -24,12 +23,11 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class GenerateInvoiceService implements GenerateInvoiceUseCase {
+public class GenerateInvoiceService {
 
     private final InvoiceRepositoryPort invoiceRepositoryPort;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Invoice generateInvoice(Order order, User performedBy) {
         if (order.getStatus() != OrderStatus.PAID) {
             throw new InvalidOrderException("Only a paid order can be invoiced; order " + order.getId() + " is "

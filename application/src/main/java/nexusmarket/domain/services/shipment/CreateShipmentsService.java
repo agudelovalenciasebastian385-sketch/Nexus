@@ -15,7 +15,6 @@ import nexusmarket.domain.models.OrderItem;
 import nexusmarket.domain.models.Shipment;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
-import nexusmarket.domain.ports.in.CreateShipmentsUseCase;
 import nexusmarket.domain.ports.out.OrderRepositoryPort;
 import nexusmarket.domain.ports.out.ShipmentRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
@@ -33,14 +32,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class CreateShipmentsService implements CreateShipmentsUseCase {
+public class CreateShipmentsService {
 
     private final OrderRepositoryPort orderRepositoryPort;
     private final ShipmentRepositoryPort shipmentRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public List<Shipment> createShipments(User requestingUser, String orderId) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.LOGISTICS_OPERATOR);
         if (!(requester instanceof LogisticsOperator operator)) {

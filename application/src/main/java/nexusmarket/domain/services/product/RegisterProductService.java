@@ -13,7 +13,6 @@ import nexusmarket.domain.models.PhysicalProduct;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.Seller;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.RegisterProductUseCase;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
 import nexusmarket.domain.ports.out.SellerRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
@@ -32,14 +31,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class RegisterProductService implements RegisterProductUseCase {
+public class RegisterProductService {
 
     private final SellerRepositoryPort sellerRepositoryPort;
     private final ProductRepositoryPort productRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Product registerProduct(User requestingUser, ProductType type, String name, String description,
                                    BigDecimal price, List<Variant> variants) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.SELLER);

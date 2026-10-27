@@ -415,6 +415,7 @@ Classifies the business action recorded by an `AuditLog`. Every service that cha
 | USER_REGISTERED                    | User Registered                    | A buyer self-registered in the Marketplace. |
 | STAFF_USER_REGISTERED              | Staff User Registered              | An administrator registered a logistics operator or a supervisor. |
 | USER_LOGGED_IN                     | User Logged In                     | A user authenticated successfully. |
+| USER_LOGGED_OUT                    | User Logged Out                    | A user logged out and its previously issued tokens were invalidated. |
 | USER_STATUS_CHANGED                | User Status Changed                | The operational status of a user changed. |
 | USER_PASSWORD_CHANGED              | User Password Changed              | A user changed its password. |
 | SELLER_REGISTERED                  | Seller Registered                  | An administrator onboarded a seller. |

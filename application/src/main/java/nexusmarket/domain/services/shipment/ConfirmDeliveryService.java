@@ -8,7 +8,6 @@ import nexusmarket.domain.exceptions.UnauthorizedOperationException;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.Shipment;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ConfirmDeliveryUseCase;
 import nexusmarket.domain.ports.out.OrderRepositoryPort;
 import nexusmarket.domain.ports.out.ShipmentRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
@@ -25,14 +24,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ConfirmDeliveryService implements ConfirmDeliveryUseCase {
+public class ConfirmDeliveryService {
 
     private final ShipmentRepositoryPort shipmentRepositoryPort;
     private final OrderRepositoryPort orderRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Shipment confirmDelivery(User requestingUser, String shipmentId) {
         User operator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.LOGISTICS_OPERATOR);
         Shipment shipment = shipmentRepositoryPort.findById(shipmentId)

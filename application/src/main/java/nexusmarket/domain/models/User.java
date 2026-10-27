@@ -32,9 +32,21 @@ public abstract class User {
     private String password;
     private final SystemRole role;
     private UserStatus status;
+    /**
+     * Session version embedded in every issued token. Advancing it invalidates
+     * all previously issued tokens (logout, password change, status change).
+     */
+    private Integer authTokenVersion;
 
+    /** Creates a new user starting at token version {@code 1}. */
     protected User(String id, String identificationNumber, String fullName, String email, String password,
                    SystemRole role, UserStatus status) {
+        this(id, identificationNumber, fullName, email, password, role, status, 1);
+    }
+
+    /** Rehydration constructor used to rebuild a persisted user with its stored token version. */
+    protected User(String id, String identificationNumber, String fullName, String email, String password,
+                   SystemRole role, UserStatus status, Integer authTokenVersion) {
         if (id == null || id.isBlank()) {
             throw new InvalidUserException("User id cannot be empty.");
         }
@@ -60,6 +72,10 @@ public abstract class User {
             throw new InvalidUserException("User status is required.");
         }
         this.status = status;
+        if (authTokenVersion == null || authTokenVersion < 1) {
+            throw new InvalidUserException("User authTokenVersion must be greater than or equal to 1.");
+        }
+        this.authTokenVersion = authTokenVersion;
     }
 
     public String getId() {
@@ -90,20 +106,35 @@ public abstract class User {
         return status;
     }
 
+    public Integer getAuthTokenVersion() {
+        return authTokenVersion;
+    }
+
     /**
      * Changes the operational condition of the user
-     * (e.g. {@code ACTIVE}, {@code BLOCKED}, {@code INACTIVE}).
+     * (e.g. {@code ACTIVE}, {@code BLOCKED}, {@code INACTIVE}) and invalidates
+     * the previously issued tokens.
      */
     public void changeStatus(UserStatus newStatus) {
         if (newStatus == null) {
             throw new InvalidUserException("User status is required.");
         }
         this.status = newStatus;
+        bumpAuthTokenVersion();
     }
 
-    /** Replaces the encrypted password. */
+    /** Replaces the encrypted password and invalidates the previously issued tokens. */
     public void changePassword(String encodedPassword) {
         this.password = requirePassword(encodedPassword);
+        bumpAuthTokenVersion();
+    }
+
+    /**
+     * Invalidates every previously issued token by advancing the token version.
+     * Invoked on logout and on every security-relevant change (status, password).
+     */
+    public void bumpAuthTokenVersion() {
+        this.authTokenVersion = authTokenVersion + 1;
     }
 
     /** Replaces the full name of the user. */

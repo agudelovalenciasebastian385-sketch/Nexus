@@ -13,7 +13,6 @@ import nexusmarket.domain.models.OrderItem;
 import nexusmarket.domain.models.PhysicalProduct;
 import nexusmarket.domain.models.Shipment;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.DispatchShipmentUseCase;
 import nexusmarket.domain.ports.out.InventoryRepositoryPort;
 import nexusmarket.domain.ports.out.OrderRepositoryPort;
 import nexusmarket.domain.ports.out.ShipmentRepositoryPort;
@@ -34,7 +33,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class DispatchShipmentService implements DispatchShipmentUseCase {
+public class DispatchShipmentService {
 
     private final ShipmentRepositoryPort shipmentRepositoryPort;
     private final OrderRepositoryPort orderRepositoryPort;
@@ -42,7 +41,6 @@ public class DispatchShipmentService implements DispatchShipmentUseCase {
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Shipment dispatchShipment(User requestingUser, String shipmentId) {
         User operator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.LOGISTICS_OPERATOR);
         Shipment shipment = shipmentRepositoryPort.findById(shipmentId)

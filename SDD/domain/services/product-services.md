@@ -10,15 +10,15 @@ All services live in the package `nexusmarket.domain.services.product`. They ope
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
-| 1 | `RegisterProductService` | `RegisterProductUseCase` | `SELLER`. |
-| 2 | `UpdateProductService` | `UpdateProductUseCase` | `SELLER` over its own products. |
-| 3 | `PublishProductService` | `PublishProductUseCase` | `SELLER` over its own products. |
-| 4 | `SuspendProductService` | `SuspendProductUseCase` | `SELLER` over its own products. |
-| 5 | `DiscontinueProductService` | `DiscontinueProductUseCase` | `SELLER` over its own products. |
-| 6 | `ConsultCatalogService` | `ConsultCatalogUseCase` | Public (no authentication required). |
-| 7 | `ConsultSellerProductsService` | `ConsultSellerProductsUseCase` | `SELLER` over its own products; `ADMINISTRATOR` and `SUPERVISOR` over any seller. |
+| 1 | `RegisterProductService` | `SellerPort` | `SELLER`. |
+| 2 | `UpdateProductService` | `SellerPort` | `SELLER` over its own products. |
+| 3 | `PublishProductService` | `SellerPort` | `SELLER` over its own products. |
+| 4 | `SuspendProductService` | `SellerPort` | `SELLER` over its own products. |
+| 5 | `DiscontinueProductService` | `SellerPort` | `SELLER` over its own products. |
+| 6 | `ConsultCatalogService` | `PublicAccessPort` | Public (no authentication required). |
+| 7 | `ConsultSellerProductsService` | `AdministratorPort`, `SellerPort`, `SupervisorPort` | `SELLER` over its own products; `ADMINISTRATOR` and `SUPERVISOR` over any seller. |
 
 ---
 
@@ -31,7 +31,6 @@ Registers a physical or digital product of the requesting seller in `DRAFT` stat
 ## Implementation
 
 * Class: `nexusmarket.domain.services.product.RegisterProductService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.RegisterProductUseCase`.
 
 ```java
 Product registerProduct(User requestingUser, ProductType type, String name, String description, BigDecimal price, List<Variant> variants);
@@ -100,7 +99,6 @@ Updates the commercial information of a product of the requesting seller.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.product.UpdateProductService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.UpdateProductUseCase`.
 
 ```java
 Product updateProduct(User requestingUser, String productId, String name, String description, BigDecimal price, List<Variant> variants);
@@ -169,7 +167,6 @@ Makes a product visible in the public catalog (`DRAFT` or `SUSPENDED` → `PUBLI
 ## Implementation
 
 * Class: `nexusmarket.domain.services.product.PublishProductService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.PublishProductUseCase`.
 
 ```java
 Product publishProduct(User requestingUser, String productId);
@@ -232,7 +229,6 @@ Temporarily removes a product from the catalog (`PUBLISHED` → `SUSPENDED`).
 ## Implementation
 
 * Class: `nexusmarket.domain.services.product.SuspendProductService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.SuspendProductUseCase`.
 
 ```java
 Product suspendProduct(User requestingUser, String productId);
@@ -295,7 +291,6 @@ Permanently withdraws a product from the catalog (any status except `DISCONTINUE
 ## Implementation
 
 * Class: `nexusmarket.domain.services.product.DiscontinueProductService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.DiscontinueProductUseCase`.
 
 ```java
 Product discontinueProduct(User requestingUser, String productId);
@@ -358,7 +353,6 @@ Retrieves the public catalog: only products in `PUBLISHED` status.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.product.ConsultCatalogService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultCatalogUseCase`.
 
 ```java
 List<Product> consultCatalog();
@@ -418,7 +412,6 @@ Retrieves all the products of a seller, in any status.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.product.ConsultSellerProductsService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultSellerProductsUseCase`.
 
 ```java
 List<Product> consultSellerProducts(User requestingUser, String sellerId);

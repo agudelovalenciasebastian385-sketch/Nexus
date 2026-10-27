@@ -55,7 +55,9 @@ public interface UserRepositoryPort {
 * `ChangeUserStatusService`
 * `ConsultAuditLogsService`
 * `ConsultUserService`
+* `LoadAuthenticatedUserService`
 * `LoginService`
+* `LogoutService`
 * `RegisterBuyerUserService`
 * `RegisterSellerService`
 * `RegisterStaffUserService`
@@ -463,6 +465,8 @@ public interface JwtServicePort {
 
     String generateToken(User user);
     boolean validateToken(String token);
+    String extractUserId(String token);
+    Integer extractTokenVersion(String token);
     User reconstructUser(String token);
 }
 ```

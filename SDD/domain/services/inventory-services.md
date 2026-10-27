@@ -10,14 +10,14 @@ All services live in the package `nexusmarket.domain.services.inventory`. They o
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
-| 1 | `RegisterInitialStockService` | `RegisterInitialStockUseCase` | `SELLER` (own products in own warehouses); `LOGISTICS_OPERATOR` (any product and warehouse). |
-| 2 | `RegisterInventoryInboundService` | `RegisterInventoryInboundUseCase` | `SELLER` (own products in own warehouses); `LOGISTICS_OPERATOR`. |
-| 3 | `RegisterInventoryAdjustmentService` | `RegisterInventoryAdjustmentUseCase` | `LOGISTICS_OPERATOR`. |
-| 4 | `ReserveInventoryService` | `ReserveInventoryUseCase` | `LOGISTICS_OPERATOR` (use case); internally used by `ConfirmOrderService`. |
-| 5 | `ReleaseInventoryReservationService` | `ReleaseInventoryReservationUseCase` | `LOGISTICS_OPERATOR`. |
-| 6 | `ConsultInventoryService` | `ConsultInventoryUseCase` | `SELLER` (own products / own warehouses); `LOGISTICS_OPERATOR` and `SUPERVISOR`. |
+| 1 | `RegisterInitialStockService` | `LogisticsOperatorPort`, `SellerPort` | `SELLER` (own products in own warehouses); `LOGISTICS_OPERATOR` (any product and warehouse). |
+| 2 | `RegisterInventoryInboundService` | `LogisticsOperatorPort`, `SellerPort` | `SELLER` (own products in own warehouses); `LOGISTICS_OPERATOR`. |
+| 3 | `RegisterInventoryAdjustmentService` | `LogisticsOperatorPort` | `LOGISTICS_OPERATOR`. |
+| 4 | `ReserveInventoryService` | `LogisticsOperatorPort` | `LOGISTICS_OPERATOR` (use case); internally used by `ConfirmOrderService`. |
+| 5 | `ReleaseInventoryReservationService` | `LogisticsOperatorPort` | `LOGISTICS_OPERATOR`. |
+| 6 | `ConsultInventoryService` | `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort` | `SELLER` (own products / own warehouses); `LOGISTICS_OPERATOR` and `SUPERVISOR`. |
 
 ---
 
@@ -30,7 +30,6 @@ Creates the inventory record of a physical product in a warehouse with its initi
 ## Implementation
 
 * Class: `nexusmarket.domain.services.inventory.RegisterInitialStockService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.RegisterInitialStockUseCase`.
 
 ```java
 Inventory registerInitialStock(User requestingUser, String productId, String warehouseId, int quantity);
@@ -101,7 +100,6 @@ Adds stock to an existing inventory record (`INBOUND` movement).
 ## Implementation
 
 * Class: `nexusmarket.domain.services.inventory.RegisterInventoryInboundService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.RegisterInventoryInboundUseCase`.
 
 ```java
 Inventory registerInventoryInbound(User requestingUser, String productId, String warehouseId, int quantity);
@@ -170,7 +168,6 @@ Applies a manual correction of stock and/or changes the condition of an inventor
 ## Implementation
 
 * Class: `nexusmarket.domain.services.inventory.RegisterInventoryAdjustmentService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.RegisterInventoryAdjustmentUseCase`.
 
 ```java
 Inventory registerInventoryAdjustment(User requestingUser, String productId, String warehouseId, int quantity, InventoryCondition condition);
@@ -240,7 +237,6 @@ Holds stock of a physical product for an order in progress (`RESERVATION` moveme
 ## Implementation
 
 * Class: `nexusmarket.domain.services.inventory.ReserveInventoryService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ReserveInventoryUseCase`.
 
 ```java
 Inventory reserveInventory(User requestingUser, String productId, String warehouseId, int quantity);
@@ -309,7 +305,6 @@ Returns reserved stock to the available stock (`RESERVATION_RELEASE` movement).
 ## Implementation
 
 * Class: `nexusmarket.domain.services.inventory.ReleaseInventoryReservationService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ReleaseInventoryReservationUseCase`.
 
 ```java
 Inventory releaseInventoryReservation(User requestingUser, String productId, String warehouseId, int quantity);
@@ -376,7 +371,6 @@ Retrieves the inventory records of a product or of a warehouse.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.inventory.ConsultInventoryService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultInventoryUseCase`.
 
 ```java
 List<Inventory> consultProductInventory(User requestingUser, String productId);

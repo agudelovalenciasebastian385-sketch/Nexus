@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.exceptions.UnauthorizedOperationException;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.ConsultUserUseCase;
 import nexusmarket.domain.ports.out.UserRepositoryPort;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
 import nexusmarket.domain.valueobjects.SystemRole;
@@ -16,12 +15,11 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ConsultUserService implements ConsultUserUseCase {
+public class ConsultUserService {
 
     private final UserRepositoryPort userRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
 
-    @Override
     public User consultUser(User requestingUser, String userId) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.values());
         boolean canConsultAnyUser = requester.getRole() == SystemRole.ADMINISTRATOR

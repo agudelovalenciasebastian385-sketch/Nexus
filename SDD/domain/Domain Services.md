@@ -8,7 +8,7 @@ The detailed specification of every service (authorized roles, input, output, bu
 
 ## Service Design Principles
 
-* **One service per use case.** Each service is a class `<Name>Service` annotated with `@Service` and `@RequiredArgsConstructor` that implements the input port `<Name>UseCase` (`nexusmarket.domain.ports.in`). Internal services (authorization and audit registration) have no use case interface.
+* **One service per use case.** Each service is a concrete class `<Name>Service` annotated with `@Service` and `@RequiredArgsConstructor`; it implements no interface. Its operations are exposed through the role ports of `nexusmarket.domain.ports.in`, whose use case adapters inject the service class directly. Internal services (authorization, audit registration and loading of the authenticated user) are not exposed in any role port.
 * **Requesting user first.** Every protected operation receives the authenticated `User` (reconstructed from the token) as its first parameter.
 * **Authorization first.** Services validate RG-01 (authenticated and `ACTIVE` user), RG-02 (single role) and RG-03 (no information outside the role) through the authorization services before doing anything else.
 * **Output ports only.** Services read and store information exclusively through the output ports of `nexusmarket.domain.ports.out`; they never depend on databases, JPA, MongoDB, HTTP, JWT or hashing libraries.
@@ -29,18 +29,20 @@ The detailed specification of every service (authorized roles, input, output, bu
 
 # User Management
 
-Registration of buyers and staff users, authentication, user consultation, user status and password management.
+Registration of buyers and staff users, authentication and logout, loading of the authenticated user, user consultation, user status and password management.
 
 Package: `nexusmarket.domain.services.user` — detail: [services/user-services.md](services/user-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `RegisterBuyerUserService` | `RegisterBuyerUserUseCase` | Registers a new buyer who self-registers in the Marketplace, together with its unique shopping cart. |
-| `RegisterStaffUserService` | `RegisterStaffUserUseCase` | Registers a staff user: a logistics operator or a supervisor. |
-| `LoginService` | `LoginUseCase` | Authenticates a user with its email and password and returns a token. |
-| `ConsultUserService` | `ConsultUserUseCase` | Retrieves the information of a user. |
-| `ChangeUserStatusService` | `ChangeUserStatusUseCase` | Changes the operational status of a user (`ACTIVE`, `BLOCKED`, `INACTIVE`). |
-| `ChangeUserPasswordService` | `ChangeUserPasswordUseCase` | Changes the password of the requesting user. |
+| `RegisterBuyerUserService` | `PublicAccessPort` | Registers a new buyer who self-registers in the Marketplace, together with its unique shopping cart. |
+| `RegisterStaffUserService` | `AdministratorPort` | Registers a staff user: a logistics operator or a supervisor. |
+| `LoginService` | `PublicAccessPort` | Authenticates a user with its email and password and returns the authenticated user together with its token. |
+| `LogoutService` | `PublicAccessPort` | Logs out the authenticated user by invalidating every token previously issued to it. |
+| `LoadAuthenticatedUserService` | — (internal) | Loads the stored user identified by the token so that the JWT filter can validate its token version and status. |
+| `ConsultUserService` | `AdministratorPort`, `BuyerPort`, `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort` | Retrieves the information of a user. |
+| `ChangeUserStatusService` | `AdministratorPort` | Changes the operational status of a user (`ACTIVE`, `BLOCKED`, `INACTIVE`). |
+| `ChangeUserPasswordService` | `AdministratorPort`, `BuyerPort`, `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort` | Changes the password of the requesting user. |
 
 ---
 
@@ -50,11 +52,11 @@ Administrative onboarding of sellers together with their first warehouse, and ma
 
 Package: `nexusmarket.domain.services.seller` — detail: [services/seller-services.md](services/seller-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `RegisterSellerService` | `RegisterSellerUseCase` | Onboards a seller together with its first warehouse of type `SELLER` in the same operation. |
-| `ConsultSellerService` | `ConsultSellerUseCase` | Retrieves the information of a seller. |
-| `UpdateSellerService` | `UpdateSellerUseCase` | Updates the full name of a seller. |
+| `RegisterSellerService` | `AdministratorPort` | Onboards a seller together with its first warehouse of type `SELLER` in the same operation. |
+| `ConsultSellerService` | `AdministratorPort`, `SellerPort`, `SupervisorPort` | Retrieves the information of a seller. |
+| `UpdateSellerService` | `AdministratorPort`, `SellerPort` | Updates the full name of a seller. |
 
 ---
 
@@ -64,11 +66,11 @@ Consultation and maintenance of the buyer profile, delivery addresses and commer
 
 Package: `nexusmarket.domain.services.buyer` — detail: [services/buyer-services.md](services/buyer-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `ConsultBuyerService` | `ConsultBuyerUseCase` | Retrieves the information of a buyer. |
-| `UpdateBuyerProfileService` | `UpdateBuyerProfileUseCase` | Updates the profile of the requesting buyer: full name, primary address and additional addresses. |
-| `ChangeBuyerCommercialStatusService` | `ChangeBuyerCommercialStatusUseCase` | Changes the commercial status of a buyer (`ENABLED`, `RESTRICTED`, `SUSPENDED`). |
+| `ConsultBuyerService` | `AdministratorPort`, `BuyerPort`, `SupervisorPort` | Retrieves the information of a buyer. |
+| `UpdateBuyerProfileService` | `BuyerPort` | Updates the profile of the requesting buyer: full name, primary address and additional addresses. |
+| `ChangeBuyerCommercialStatusService` | `AdministratorPort` | Changes the commercial status of a buyer (`ENABLED`, `RESTRICTED`, `SUSPENDED`). |
 
 ---
 
@@ -78,11 +80,11 @@ Registration, consultation and maintenance of Marketplace and Seller warehouses.
 
 Package: `nexusmarket.domain.services.warehouse` — detail: [services/warehouse-services.md](services/warehouse-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `RegisterWarehouseService` | `RegisterWarehouseUseCase` | Registers a warehouse: the administrator registers Marketplace warehouses and a seller registers additional warehouses of its own. |
-| `ConsultWarehouseService` | `ConsultWarehouseUseCase` | Retrieves one warehouse or the list of warehouses visible to the requesting user. |
-| `UpdateWarehouseService` | `UpdateWarehouseUseCase` | Updates the name and location of a warehouse. |
+| `RegisterWarehouseService` | `AdministratorPort`, `SellerPort` | Registers a warehouse: the administrator registers Marketplace warehouses and a seller registers additional warehouses of its own. |
+| `ConsultWarehouseService` | `AdministratorPort`, `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort` | Retrieves one warehouse or the list of warehouses visible to the requesting user. |
+| `UpdateWarehouseService` | `AdministratorPort`, `SellerPort` | Updates the name and location of a warehouse. |
 
 ---
 
@@ -92,15 +94,15 @@ Registration and maintenance of physical and digital products, their publication
 
 Package: `nexusmarket.domain.services.product` — detail: [services/product-services.md](services/product-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `RegisterProductService` | `RegisterProductUseCase` | Registers a physical or digital product of the requesting seller in `DRAFT` status. |
-| `UpdateProductService` | `UpdateProductUseCase` | Updates the commercial information of a product of the requesting seller. |
-| `PublishProductService` | `PublishProductUseCase` | Makes a product visible in the public catalog (`DRAFT` or `SUSPENDED` → `PUBLISHED`). |
-| `SuspendProductService` | `SuspendProductUseCase` | Temporarily removes a product from the catalog (`PUBLISHED` → `SUSPENDED`). |
-| `DiscontinueProductService` | `DiscontinueProductUseCase` | Permanently withdraws a product from the catalog (any status except `DISCONTINUED` → `DISCONTINUED`). |
-| `ConsultCatalogService` | `ConsultCatalogUseCase` | Retrieves the public catalog: only products in `PUBLISHED` status. |
-| `ConsultSellerProductsService` | `ConsultSellerProductsUseCase` | Retrieves all the products of a seller, in any status. |
+| `RegisterProductService` | `SellerPort` | Registers a physical or digital product of the requesting seller in `DRAFT` status. |
+| `UpdateProductService` | `SellerPort` | Updates the commercial information of a product of the requesting seller. |
+| `PublishProductService` | `SellerPort` | Makes a product visible in the public catalog (`DRAFT` or `SUSPENDED` → `PUBLISHED`). |
+| `SuspendProductService` | `SellerPort` | Temporarily removes a product from the catalog (`PUBLISHED` → `SUSPENDED`). |
+| `DiscontinueProductService` | `SellerPort` | Permanently withdraws a product from the catalog (any status except `DISCONTINUED` → `DISCONTINUED`). |
+| `ConsultCatalogService` | `PublicAccessPort` | Retrieves the public catalog: only products in `PUBLISHED` status. |
+| `ConsultSellerProductsService` | `AdministratorPort`, `SellerPort`, `SupervisorPort` | Retrieves all the products of a seller, in any status. |
 
 ---
 
@@ -110,14 +112,14 @@ Distributed stock per product and warehouse: initial stock, inbounds, adjustment
 
 Package: `nexusmarket.domain.services.inventory` — detail: [services/inventory-services.md](services/inventory-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `RegisterInitialStockService` | `RegisterInitialStockUseCase` | Creates the inventory record of a physical product in a warehouse with its initial stock. |
-| `RegisterInventoryInboundService` | `RegisterInventoryInboundUseCase` | Adds stock to an existing inventory record (`INBOUND` movement). |
-| `RegisterInventoryAdjustmentService` | `RegisterInventoryAdjustmentUseCase` | Applies a manual correction of stock and/or changes the condition of an inventory record (e.g. marks it `DAMAGED`). |
-| `ReserveInventoryService` | `ReserveInventoryUseCase` | Holds stock of a physical product for an order in progress (`RESERVATION` movement: available → reserved). |
-| `ReleaseInventoryReservationService` | `ReleaseInventoryReservationUseCase` | Returns reserved stock to the available stock (`RESERVATION_RELEASE` movement). |
-| `ConsultInventoryService` | `ConsultInventoryUseCase` | Retrieves the inventory records of a product or of a warehouse. |
+| `RegisterInitialStockService` | `LogisticsOperatorPort`, `SellerPort` | Creates the inventory record of a physical product in a warehouse with its initial stock. |
+| `RegisterInventoryInboundService` | `LogisticsOperatorPort`, `SellerPort` | Adds stock to an existing inventory record (`INBOUND` movement). |
+| `RegisterInventoryAdjustmentService` | `LogisticsOperatorPort` | Applies a manual correction of stock and/or changes the condition of an inventory record (e.g. marks it `DAMAGED`). |
+| `ReserveInventoryService` | `LogisticsOperatorPort` | Holds stock of a physical product for an order in progress (`RESERVATION` movement: available → reserved). |
+| `ReleaseInventoryReservationService` | `LogisticsOperatorPort` | Returns reserved stock to the available stock (`RESERVATION_RELEASE` movement). |
+| `ConsultInventoryService` | `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort` | Retrieves the inventory records of a product or of a warehouse. |
 
 ---
 
@@ -127,13 +129,13 @@ The buyer's provisional selection of published products before confirming an ord
 
 Package: `nexusmarket.domain.services.cart` — detail: [services/cart-services.md](services/cart-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `AddItemToCartService` | `AddItemToCartUseCase` | Adds a published product to the requesting buyer's cart at its current price. |
-| `RemoveItemFromCartService` | `RemoveItemFromCartUseCase` | Removes a product/variant line from the requesting buyer's cart. |
-| `UpdateCartItemQuantityService` | `UpdateCartItemQuantityUseCase` | Replaces the quantity of a product/variant line of the requesting buyer's cart. |
-| `ConsultCartService` | `ConsultCartUseCase` | Retrieves the cart of a buyer with its items and total. |
-| `ClearCartService` | `ClearCartUseCase` | Removes every item from the requesting buyer's cart. |
+| `AddItemToCartService` | `BuyerPort` | Adds a published product to the requesting buyer's cart at its current price. |
+| `RemoveItemFromCartService` | `BuyerPort` | Removes a product/variant line from the requesting buyer's cart. |
+| `UpdateCartItemQuantityService` | `BuyerPort` | Replaces the quantity of a product/variant line of the requesting buyer's cart. |
+| `ConsultCartService` | `BuyerPort`, `SupervisorPort` | Retrieves the cart of a buyer with its items and total. |
+| `ClearCartService` | `BuyerPort` | Removes every item from the requesting buyer's cart. |
 
 ---
 
@@ -143,12 +145,12 @@ Order confirmation from the cart, payment validation and order consultation.
 
 Package: `nexusmarket.domain.services.order` — detail: [services/order-services.md](services/order-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `ConfirmOrderService` | `ConfirmOrderUseCase` | Converts the requesting buyer's cart into an order in `PENDING_PAYMENT`, reserves the inventory of its physical items and empties the cart. |
-| `ValidatePaymentService` | `ValidatePaymentUseCase` | Processes the payment of the buyer's own `PENDING_PAYMENT` order through the payment gateway. |
-| `ConsultOrderService` | `ConsultOrderUseCase` | Retrieves an order. |
-| `ConsultBuyerOrdersService` | `ConsultBuyerOrdersUseCase` | Retrieves the historical and active orders of a buyer. |
+| `ConfirmOrderService` | `BuyerPort` | Converts the requesting buyer's cart into an order in `PENDING_PAYMENT`, reserves the inventory of its physical items and empties the cart. |
+| `ValidatePaymentService` | `BuyerPort` | Processes the payment of the buyer's own `PENDING_PAYMENT` order through the payment gateway. |
+| `ConsultOrderService` | `BuyerPort`, `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort` | Retrieves an order. |
+| `ConsultBuyerOrdersService` | `BuyerPort`, `SupervisorPort` | Retrieves the historical and active orders of a buyer. |
 
 ---
 
@@ -158,10 +160,10 @@ Generation of the unique invoice of an order once its payment is validated, and 
 
 Package: `nexusmarket.domain.services.invoice` — detail: [services/invoice-services.md](services/invoice-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `GenerateInvoiceService` | `GenerateInvoiceUseCase` | Generates the unique invoice of a `PAID` order. Invoked by `ValidatePaymentService`; it is not exposed in any role port. |
-| `ConsultInvoiceService` | `ConsultInvoiceUseCase` | Retrieves the invoice of an order. |
+| `GenerateInvoiceService` | — (internal) | Generates the unique invoice of a `PAID` order. Invoked by `ValidatePaymentService`; it is not exposed in any role port. |
+| `ConsultInvoiceService` | `AdministratorPort`, `BuyerPort`, `SupervisorPort` | Retrieves the invoice of an order. |
 
 ---
 
@@ -171,12 +173,12 @@ Logistics of physical products: shipment creation per origin warehouse, packing,
 
 Package: `nexusmarket.domain.services.shipment` — detail: [services/shipment-services.md](services/shipment-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `CreateShipmentsService` | `CreateShipmentsUseCase` | Creates the shipments of a `PAID` order: one per origin warehouse, only for physical items. |
-| `PackShipmentService` | `PackShipmentUseCase` | Registers that a shipment has been packed (`PREPARING` → `PACKED`). |
-| `DispatchShipmentService` | `DispatchShipmentUseCase` | Dispatches a packed shipment (`PACKED` → `IN_TRANSIT`), converts its reservations into sale outbounds and moves the order to `SHIPPED`. |
-| `ConfirmDeliveryService` | `ConfirmDeliveryUseCase` | Confirms the delivery of a shipment (`IN_TRANSIT` → `DELIVERED`) and finalizes the order when all its shipments are delivered. |
+| `CreateShipmentsService` | `LogisticsOperatorPort` | Creates the shipments of a `PAID` order: one per origin warehouse, only for physical items. |
+| `PackShipmentService` | `LogisticsOperatorPort` | Registers that a shipment has been packed (`PREPARING` → `PACKED`). |
+| `DispatchShipmentService` | `LogisticsOperatorPort` | Dispatches a packed shipment (`PACKED` → `IN_TRANSIT`), converts its reservations into sale outbounds and moves the order to `SHIPPED`. |
+| `ConfirmDeliveryService` | `LogisticsOperatorPort` | Confirms the delivery of a shipment (`IN_TRANSIT` → `DELIVERED`) and finalizes the order when all its shipments are delivered. |
 
 ---
 
@@ -186,13 +188,13 @@ Return requests over delivered orders, their approval or rejection, inventory re
 
 Package: `nexusmarket.domain.services.returns` — detail: [services/returns-services.md](services/returns-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
-| `RequestReturnService` | `RequestReturnUseCase` | Registers a return request over a delivered order of the requesting buyer. |
-| `ApproveReturnService` | `ApproveReturnUseCase` | Approves a return request, re-enters the inventory of its physical items and creates the pending refund. |
-| `RejectReturnService` | `RejectReturnUseCase` | Rejects a return request that does not meet the required conditions. |
-| `ProcessRefundService` | `ProcessRefundUseCase` | Processes a pending refund: the amount is restituted to the buyer (`PENDING` → `PROCESSED`). |
-| `ConsultReturnService` | `ConsultReturnUseCase` | Retrieves a return request or the refund generated by it. |
+| `RequestReturnService` | `BuyerPort` | Registers a return request over a delivered order of the requesting buyer. |
+| `ApproveReturnService` | `AdministratorPort` | Approves a return request, re-enters the inventory of its physical items and creates the pending refund. |
+| `RejectReturnService` | `AdministratorPort` | Rejects a return request that does not meet the required conditions. |
+| `ProcessRefundService` | `AdministratorPort` | Processes a pending refund: the amount is restituted to the buyer (`PENDING` → `PROCESSED`). |
+| `ConsultReturnService` | `AdministratorPort`, `BuyerPort`, `SupervisorPort` | Retrieves a return request or the refund generated by it. |
 
 ---
 
@@ -202,7 +204,7 @@ Cross-cutting validations of the general restrictions RG-01, RG-02 and RG-03 and
 
 Package: `nexusmarket.domain.services.authorization` — detail: [services/authorization-services.md](services/authorization-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
 | `ValidateUserStatusService` | — (internal) | RG-01: validates that the operation is executed by an authenticated user that is currently `ACTIVE`. |
 | `ValidateRoleAuthorizationService` | — (internal) | RG-02 and RG-03: validates RG-01 and that the single role of the user is one of the roles allowed for the operation. |
@@ -217,15 +219,15 @@ Immutable registration of every significant business operation and consultation 
 
 Package: `nexusmarket.domain.services.audit` — detail: [services/audit-services.md](services/audit-services.md)
 
-| Service | Use case | Purpose |
+| Service | Exposed in | Purpose |
 | --- | --- | --- |
 | `RegisterAuditLogService` | — (internal) | Registers an immutable audit record of a significant business operation. |
-| `ConsultAuditLogsService` | `ConsultAuditLogsUseCase` | Retrieves audit records: all of them, those performed by a user, or those of an entity. |
+| `ConsultAuditLogsService` | `AdministratorPort`, `SupervisorPort` | Retrieves audit records: all of them, those performed by a user, or those of an entity. |
 
 ---
 
 # Service Count
 
-* Domain services: **54**.
-* Services with a use case interface: **49**.
-* Internal services: **5** (`ValidateUserStatusService`, `ValidateRoleAuthorizationService`, `ValidateSellerOwnershipService`, `ValidateBuyerOwnershipService`, `RegisterAuditLogService`).
+* Domain services: **56**.
+* Services exposed in role ports: **49**.
+* Internal services: **7** (`LoadAuthenticatedUserService`, `GenerateInvoiceService`, `ValidateUserStatusService`, `ValidateRoleAuthorizationService`, `ValidateSellerOwnershipService`, `ValidateBuyerOwnershipService`, `RegisterAuditLogService`).

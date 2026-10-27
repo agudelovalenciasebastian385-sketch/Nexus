@@ -16,9 +16,17 @@ import nexusmarket.domain.valueobjects.UserStatus;
  */
 public class LogisticsOperator extends User {
 
+    /** Creates a new logistics operator starting at token version {@code 1}. */
     public LogisticsOperator(String id, String identificationNumber, String fullName, String email, String password,
                              UserStatus status) {
-        super(id, identificationNumber, fullName, email, password, SystemRole.LOGISTICS_OPERATOR, status);
+        this(id, identificationNumber, fullName, email, password, status, 1);
+    }
+
+    /** Rehydration constructor used to rebuild a persisted logistics operator with its stored token version. */
+    public LogisticsOperator(String id, String identificationNumber, String fullName, String email, String password,
+                             UserStatus status, Integer authTokenVersion) {
+        super(id, identificationNumber, fullName, email, password, SystemRole.LOGISTICS_OPERATOR, status,
+                authTokenVersion);
     }
 
     @Override

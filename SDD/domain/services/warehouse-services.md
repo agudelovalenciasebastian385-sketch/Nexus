@@ -10,11 +10,11 @@ All services live in the package `nexusmarket.domain.services.warehouse`. They o
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
-| 1 | `RegisterWarehouseService` | `RegisterWarehouseUseCase` | `ADMINISTRATOR` (type `MARKETPLACE`); `SELLER` (type `SELLER`, owned by itself). |
-| 2 | `ConsultWarehouseService` | `ConsultWarehouseUseCase` | `ADMINISTRATOR`, `LOGISTICS_OPERATOR` and `SUPERVISOR` over any warehouse; `SELLER` over its own warehouses. |
-| 3 | `UpdateWarehouseService` | `UpdateWarehouseUseCase` | `ADMINISTRATOR` over `MARKETPLACE` warehouses; `SELLER` over its own warehouses. |
+| 1 | `RegisterWarehouseService` | `AdministratorPort`, `SellerPort` | `ADMINISTRATOR` (type `MARKETPLACE`); `SELLER` (type `SELLER`, owned by itself). |
+| 2 | `ConsultWarehouseService` | `AdministratorPort`, `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort` | `ADMINISTRATOR`, `LOGISTICS_OPERATOR` and `SUPERVISOR` over any warehouse; `SELLER` over its own warehouses. |
+| 3 | `UpdateWarehouseService` | `AdministratorPort`, `SellerPort` | `ADMINISTRATOR` over `MARKETPLACE` warehouses; `SELLER` over its own warehouses. |
 
 ---
 
@@ -27,7 +27,6 @@ Registers a warehouse: the administrator registers Marketplace warehouses and a 
 ## Implementation
 
 * Class: `nexusmarket.domain.services.warehouse.RegisterWarehouseService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.RegisterWarehouseUseCase`.
 
 ```java
 Warehouse registerWarehouse(User requestingUser, String name, Address location, WarehouseType type);
@@ -94,7 +93,6 @@ Retrieves one warehouse or the list of warehouses visible to the requesting user
 ## Implementation
 
 * Class: `nexusmarket.domain.services.warehouse.ConsultWarehouseService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultWarehouseUseCase`.
 
 ```java
 Warehouse consultWarehouse(User requestingUser, String warehouseId);
@@ -165,7 +163,6 @@ Updates the name and location of a warehouse.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.warehouse.UpdateWarehouseService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.UpdateWarehouseUseCase`.
 
 ```java
 Warehouse updateWarehouse(User requestingUser, String warehouseId, String name, Address location);

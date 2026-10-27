@@ -10,10 +10,10 @@ All services live in the package `nexusmarket.domain.services.invoice`. They ope
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
-| 1 | `GenerateInvoiceService` | `GenerateInvoiceUseCase` | Internal (executed within `ValidatePaymentService`). |
-| 2 | `ConsultInvoiceService` | `ConsultInvoiceUseCase` | `BUYER` (own orders); `ADMINISTRATOR` and `SUPERVISOR`. |
+| 1 | `GenerateInvoiceService` | — (internal) | Internal (executed within `ValidatePaymentService`). |
+| 2 | `ConsultInvoiceService` | `AdministratorPort`, `BuyerPort`, `SupervisorPort` | `BUYER` (own orders); `ADMINISTRATOR` and `SUPERVISOR`. |
 
 ---
 
@@ -26,7 +26,7 @@ Generates the unique invoice of a `PAID` order. Invoked by `ValidatePaymentServi
 ## Implementation
 
 * Class: `nexusmarket.domain.services.invoice.GenerateInvoiceService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.GenerateInvoiceUseCase`.
+* Internal service: it is not exposed in any role port.
 
 ```java
 Invoice generateInvoice(Order order, User performedBy);
@@ -85,7 +85,6 @@ Retrieves the invoice of an order.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.invoice.ConsultInvoiceService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultInvoiceUseCase`.
 
 ```java
 Invoice consultInvoice(User requestingUser, String orderId);

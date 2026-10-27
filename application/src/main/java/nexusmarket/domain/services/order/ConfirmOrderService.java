@@ -23,7 +23,6 @@ import nexusmarket.domain.models.PhysicalProduct;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
-import nexusmarket.domain.ports.in.ConfirmOrderUseCase;
 import nexusmarket.domain.ports.out.BuyerRepositoryPort;
 import nexusmarket.domain.ports.out.CartRepositoryPort;
 import nexusmarket.domain.ports.out.InventoryRepositoryPort;
@@ -48,7 +47,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ConfirmOrderService implements ConfirmOrderUseCase {
+public class ConfirmOrderService {
 
     private final BuyerRepositoryPort buyerRepositoryPort;
     private final CartRepositoryPort cartRepositoryPort;
@@ -59,7 +58,6 @@ public class ConfirmOrderService implements ConfirmOrderUseCase {
     private final ReserveInventoryService reserveInventoryService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Order confirmOrder(User requestingUser) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.BUYER);
         Buyer buyer = buyerRepositoryPort.findById(requester.getId())

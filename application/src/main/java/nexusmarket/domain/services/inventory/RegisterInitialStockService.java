@@ -11,7 +11,6 @@ import nexusmarket.domain.models.PhysicalProduct;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
-import nexusmarket.domain.ports.in.RegisterInitialStockUseCase;
 import nexusmarket.domain.ports.out.InventoryRepositoryPort;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
 import nexusmarket.domain.ports.out.WarehouseRepositoryPort;
@@ -31,7 +30,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class RegisterInitialStockService implements RegisterInitialStockUseCase {
+public class RegisterInitialStockService {
 
     private final ProductRepositoryPort productRepositoryPort;
     private final WarehouseRepositoryPort warehouseRepositoryPort;
@@ -40,7 +39,6 @@ public class RegisterInitialStockService implements RegisterInitialStockUseCase 
     private final ValidateSellerOwnershipService validateSellerOwnershipService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Inventory registerInitialStock(User requestingUser, String productId, String warehouseId, int quantity) {
         User requester = validateRoleAuthorizationService.execute(requestingUser,
                 SystemRole.SELLER, SystemRole.LOGISTICS_OPERATOR);

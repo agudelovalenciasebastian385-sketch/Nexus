@@ -11,5 +11,9 @@ public interface JwtServicePort {
 
     boolean validateToken(String token);
 
+    String extractUserId(String token);
+
+    Integer extractTokenVersion(String token);
+
     User reconstructUser(String token);
 }

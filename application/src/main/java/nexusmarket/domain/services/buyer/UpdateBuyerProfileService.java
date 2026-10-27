@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.UpdateBuyerProfileUseCase;
 import nexusmarket.domain.ports.out.BuyerRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -24,13 +23,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class UpdateBuyerProfileService implements UpdateBuyerProfileUseCase {
+public class UpdateBuyerProfileService {
 
     private final BuyerRepositoryPort buyerRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Buyer updateBuyerProfile(User requestingUser, String fullName, Address primaryAddress,
                                     List<Address> additionalAddresses) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.BUYER);

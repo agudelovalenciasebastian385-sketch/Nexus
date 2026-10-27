@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.UpdateProductUseCase;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -25,14 +24,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class UpdateProductService implements UpdateProductUseCase {
+public class UpdateProductService {
 
     private final ProductRepositoryPort productRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final ValidateSellerOwnershipService validateSellerOwnershipService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public Product updateProduct(User requestingUser, String productId, String name, String description,
                                  BigDecimal price, List<Variant> variants) {
         User requester = validateRoleAuthorizationService.execute(requestingUser, SystemRole.SELLER);

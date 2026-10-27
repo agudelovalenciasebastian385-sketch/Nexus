@@ -10,11 +10,11 @@ All services live in the package `nexusmarket.domain.services.seller`. They oper
 
 ## Services
 
-| # | Service | Use case (input port) | Authorized roles |
+| # | Service | Exposed in (role ports) | Authorized roles |
 | --- | --- | --- | --- |
-| 1 | `RegisterSellerService` | `RegisterSellerUseCase` | `ADMINISTRATOR` (sellers cannot self-register). |
-| 2 | `ConsultSellerService` | `ConsultSellerUseCase` | `SELLER` over itself; `ADMINISTRATOR` and `SUPERVISOR` over any seller. |
-| 3 | `UpdateSellerService` | `UpdateSellerUseCase` | `ADMINISTRATOR` over any seller; `SELLER` over itself. |
+| 1 | `RegisterSellerService` | `AdministratorPort` | `ADMINISTRATOR` (sellers cannot self-register). |
+| 2 | `ConsultSellerService` | `AdministratorPort`, `SellerPort`, `SupervisorPort` | `SELLER` over itself; `ADMINISTRATOR` and `SUPERVISOR` over any seller. |
+| 3 | `UpdateSellerService` | `AdministratorPort`, `SellerPort` | `ADMINISTRATOR` over any seller; `SELLER` over itself. |
 
 ---
 
@@ -27,7 +27,6 @@ Onboards a seller together with its first warehouse of type `SELLER` in the same
 ## Implementation
 
 * Class: `nexusmarket.domain.services.seller.RegisterSellerService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.RegisterSellerUseCase`.
 
 ```java
 Seller registerSeller(User requestingUser, String identificationNumber, String fullName, String email, String rawPassword, String warehouseName, Address warehouseLocation);
@@ -103,7 +102,6 @@ Retrieves the information of a seller.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.seller.ConsultSellerService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.ConsultSellerUseCase`.
 
 ```java
 Seller consultSeller(User requestingUser, String sellerId);
@@ -164,7 +162,6 @@ Updates the full name of a seller.
 ## Implementation
 
 * Class: `nexusmarket.domain.services.seller.UpdateSellerService` (`@Service`, `@RequiredArgsConstructor`).
-* Implements: `nexusmarket.domain.ports.in.UpdateSellerUseCase`.
 
 ```java
 Seller updateSeller(User requestingUser, String sellerId, String fullName);

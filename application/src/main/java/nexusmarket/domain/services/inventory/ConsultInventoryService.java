@@ -10,7 +10,6 @@ import nexusmarket.domain.models.PhysicalProduct;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
-import nexusmarket.domain.ports.in.ConsultInventoryUseCase;
 import nexusmarket.domain.ports.out.InventoryRepositoryPort;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
 import nexusmarket.domain.ports.out.WarehouseRepositoryPort;
@@ -26,7 +25,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class ConsultInventoryService implements ConsultInventoryUseCase {
+public class ConsultInventoryService {
 
     private final ProductRepositoryPort productRepositoryPort;
     private final WarehouseRepositoryPort warehouseRepositoryPort;
@@ -34,7 +33,6 @@ public class ConsultInventoryService implements ConsultInventoryUseCase {
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final ValidateSellerOwnershipService validateSellerOwnershipService;
 
-    @Override
     public List<Inventory> consultProductInventory(User requestingUser, String productId) {
         User requester = authorize(requestingUser);
         Product product = productRepositoryPort.findById(productId)
@@ -46,7 +44,6 @@ public class ConsultInventoryService implements ConsultInventoryUseCase {
         return inventoryRepositoryPort.findByProduct(physicalProduct);
     }
 
-    @Override
     public List<Inventory> consultWarehouseInventory(User requestingUser, String warehouseId) {
         User requester = authorize(requestingUser);
         Warehouse warehouse = warehouseRepositoryPort.findById(warehouseId)

@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
 import nexusmarket.domain.models.ReturnRequest;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.RejectReturnUseCase;
 import nexusmarket.domain.ports.out.ReturnRequestRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
 import nexusmarket.domain.services.authorization.ValidateRoleAuthorizationService;
@@ -21,13 +20,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class RejectReturnService implements RejectReturnUseCase {
+public class RejectReturnService {
 
     private final ReturnRequestRepositoryPort returnRequestRepositoryPort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public ReturnRequest rejectReturn(User requestingUser, String returnRequestId) {
         User administrator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.ADMINISTRATOR);
         ReturnRequest returnRequest = returnRequestRepositoryPort.findById(returnRequestId)

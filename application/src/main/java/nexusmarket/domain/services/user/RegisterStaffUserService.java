@@ -9,7 +9,6 @@ import nexusmarket.domain.exceptions.UserAlreadyExistsException;
 import nexusmarket.domain.models.LogisticsOperator;
 import nexusmarket.domain.models.Supervisor;
 import nexusmarket.domain.models.User;
-import nexusmarket.domain.ports.in.RegisterStaffUserUseCase;
 import nexusmarket.domain.ports.out.PasswordServicePort;
 import nexusmarket.domain.ports.out.UserRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
@@ -26,14 +25,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class RegisterStaffUserService implements RegisterStaffUserUseCase {
+public class RegisterStaffUserService {
 
     private final UserRepositoryPort userRepositoryPort;
     private final PasswordServicePort passwordServicePort;
     private final ValidateRoleAuthorizationService validateRoleAuthorizationService;
     private final RegisterAuditLogService registerAuditLogService;
 
-    @Override
     public User registerStaffUser(User requestingUser, SystemRole role, String identificationNumber,
                                   String fullName, String email, String rawPassword) {
         User administrator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.ADMINISTRATOR);

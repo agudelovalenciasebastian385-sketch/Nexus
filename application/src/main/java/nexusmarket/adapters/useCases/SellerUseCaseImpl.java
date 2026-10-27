@@ -8,6 +8,7 @@ import nexusmarket.domain.models.Inventory;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.Seller;
+import nexusmarket.domain.models.SellerPerformanceReport;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
 import nexusmarket.domain.ports.in.SellerPort;
@@ -21,6 +22,7 @@ import nexusmarket.domain.services.product.PublishProductService;
 import nexusmarket.domain.services.product.RegisterProductService;
 import nexusmarket.domain.services.product.SuspendProductService;
 import nexusmarket.domain.services.product.UpdateProductService;
+import nexusmarket.domain.services.reporting.ConsultSellerPerformanceReportService;
 import nexusmarket.domain.services.seller.ConsultSellerService;
 import nexusmarket.domain.services.seller.UpdateSellerService;
 import nexusmarket.domain.services.user.ChangeUserPasswordService;
@@ -30,6 +32,7 @@ import nexusmarket.domain.services.warehouse.RegisterWarehouseService;
 import nexusmarket.domain.services.warehouse.UpdateWarehouseService;
 import nexusmarket.domain.valueobjects.Address;
 import nexusmarket.domain.valueobjects.ProductType;
+import nexusmarket.domain.valueobjects.ReportPeriod;
 import nexusmarket.domain.valueobjects.Variant;
 import nexusmarket.domain.valueobjects.WarehouseType;
 import org.springframework.stereotype.Service;
@@ -60,6 +63,7 @@ public class SellerUseCaseImpl implements SellerPort {
     private final RegisterInventoryInboundService registerInventoryInboundService;
     private final ConsultInventoryService consultInventoryService;
     private final ConsultOrderService consultOrderService;
+    private final ConsultSellerPerformanceReportService consultSellerPerformanceReportService;
 
     @Override
     public User consultUser(User requestingUser, String userId) {
@@ -159,5 +163,11 @@ public class SellerUseCaseImpl implements SellerPort {
     @Override
     public Order consultOrder(User requestingUser, String orderId) {
         return consultOrderService.consultOrder(requestingUser, orderId);
+    }
+
+    @Override
+    public SellerPerformanceReport consultSellerPerformanceReport(User requestingUser, String sellerId,
+                                                                  ReportPeriod period) {
+        return consultSellerPerformanceReportService.consultSellerPerformanceReport(requestingUser, sellerId, period);
     }
 }

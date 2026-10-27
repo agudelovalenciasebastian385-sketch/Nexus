@@ -11,6 +11,7 @@ Domain services must never depend directly on MySQL, MongoDB, JPA, Spring Data, 
 * Methods that store information receive Domain Models (`save(Order order)`, `update(Order order)`).
 * Lookups of an aggregate receive its identifier (`findById(String id)`), because NexusMarket entities validate their invariants on construction and cannot be built with only an identifier.
 * Queries by relationship receive the related Domain Model (`findByBuyer(Buyer buyer)`).
+* Date-range queries (`findBy<Date>Between(LocalDateTime from, LocalDateTime toExclusive)`) use the half-open interval `[from, toExclusive)`: the lower bound is **inclusive** and the upper bound is **exclusive**. Reports obtain both bounds from `ReportPeriod.startDateTime()` and `ReportPeriod.endDateTimeExclusive()` (the first moment of the day after the end date), so the end date is covered completely. Adapters must not translate them into an inclusive SQL BETWEEN (such as a Spring Data derived query ending in Between); they must use `>= from` and `< toExclusive` (Spring Data keywords GreaterThanEqual and LessThan).
 
 ## Dependency Flow
 
@@ -117,6 +118,7 @@ public interface SellerRepositoryPort {
 
 ## Consumers
 
+* `ConsultSellerPerformanceReportService`
 * `ConsultSellerProductsService`
 * `ConsultSellerService`
 * `ConsultWarehouseService`
@@ -148,6 +150,7 @@ public interface WarehouseRepositoryPort {
 
 ## Consumers
 
+* `ConsultInventoryReportService`
 * `ConsultInventoryService`
 * `ConsultWarehouseService`
 * `RegisterInitialStockService`
@@ -186,6 +189,7 @@ public interface ProductRepositoryPort {
 * `ConfirmOrderService`
 * `ConsultCatalogService`
 * `ConsultInventoryService`
+* `ConsultSellerPerformanceReportService`
 * `ConsultSellerProductsService`
 * `DiscontinueProductService`
 * `PublishProductService`
@@ -218,6 +222,7 @@ public interface InventoryRepositoryPort {
     Optional<Inventory> findByProductAndWarehouse(PhysicalProduct product, Warehouse warehouse);
     List<Inventory> findByProduct(PhysicalProduct product);
     List<Inventory> findByWarehouse(Warehouse warehouse);
+    List<Inventory> findAll();
 }
 ```
 
@@ -225,6 +230,7 @@ public interface InventoryRepositoryPort {
 
 * `ApproveReturnService`
 * `ConfirmOrderService`
+* `ConsultInventoryReportService`
 * `ConsultInventoryService`
 * `DispatchShipmentService`
 * `RegisterInitialStockService`
@@ -279,6 +285,7 @@ public interface OrderRepositoryPort {
     void update(Order order);
     Optional<Order> findById(String id);
     List<Order> findByBuyer(Buyer buyer);
+    List<Order> findByCreatedAtBetween(LocalDateTime from, LocalDateTime toExclusive);
 }
 ```
 
@@ -287,8 +294,10 @@ public interface OrderRepositoryPort {
 * `ConfirmDeliveryService`
 * `ConfirmOrderService`
 * `ConsultBuyerOrdersService`
+* `ConsultCommercialReportService`
 * `ConsultInvoiceService`
 * `ConsultOrderService`
+* `ConsultSellerPerformanceReportService`
 * `CreateShipmentsService`
 * `DispatchShipmentService`
 * `RequestReturnService`
@@ -310,12 +319,14 @@ public interface InvoiceRepositoryPort {
     Invoice save(Invoice invoice);
     Optional<Invoice> findByOrder(Order order);
     boolean existsByOrder(Order order);
+    List<Invoice> findByIssuedAtBetween(LocalDateTime from, LocalDateTime toExclusive);
 }
 ```
 
 ## Consumers
 
 * `ApproveReturnService`
+* `ConsultCommercialReportService`
 * `ConsultInvoiceService`
 * `GenerateInvoiceService`
 
@@ -336,12 +347,14 @@ public interface ShipmentRepositoryPort {
     void update(Shipment shipment);
     Optional<Shipment> findById(String id);
     List<Shipment> findByOrder(Order order);
+    List<Shipment> findByCreatedAtBetween(LocalDateTime from, LocalDateTime toExclusive);
 }
 ```
 
 ## Consumers
 
 * `ConfirmDeliveryService`
+* `ConsultLogisticsReportService`
 * `CreateShipmentsService`
 * `DispatchShipmentService`
 * `PackShipmentService`
@@ -370,6 +383,7 @@ public interface ReturnRequestRepositoryPort {
 
 * `ApproveReturnService`
 * `ConsultReturnService`
+* `ConsultSellerPerformanceReportService`
 * `RejectReturnService`
 * `RequestReturnService`
 
@@ -390,12 +404,14 @@ public interface RefundRepositoryPort {
     void update(Refund refund);
     Optional<Refund> findById(String id);
     Optional<Refund> findByReturnRequest(ReturnRequest returnRequest);
+    List<Refund> findByProcessedAtBetween(LocalDateTime from, LocalDateTime toExclusive);
 }
 ```
 
 ## Consumers
 
 * `ApproveReturnService`
+* `ConsultCommercialReportService`
 * `ConsultReturnService`
 * `ProcessRefundService`
 

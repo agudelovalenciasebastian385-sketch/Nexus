@@ -20,7 +20,8 @@ public enum AuditEntityType implements DomainCatalog {
     INVOICE("INVOICE", "Invoice", "An invoice."),
     SHIPMENT("SHIPMENT", "Shipment", "A shipment."),
     RETURN_REQUEST("RETURN_REQUEST", "Return Request", "A return request."),
-    REFUND("REFUND", "Refund", "A refund.");
+    REFUND("REFUND", "Refund", "A refund."),
+    REPORT("REPORT", "Report", "An administrative report (identified by its report type).");
 
     private final String code;
     private final String name;

@@ -113,7 +113,7 @@ public interface BuyerPort {
 
 ## 3.3 SellerPort (`SELLER`)
 
-Operations of a seller over its own profile, warehouses, products, inventory and the orders that contain its products.
+Operations of a seller over its own profile, warehouses, products, inventory, the orders that contain its products and its own performance report.
 
 ```java
 public interface SellerPort {
@@ -136,6 +136,7 @@ public interface SellerPort {
     List<Inventory> consultProductInventory(User requestingUser, String productId);
     List<Inventory> consultWarehouseInventory(User requestingUser, String warehouseId);
     Order consultOrder(User requestingUser, String orderId);
+    SellerPerformanceReport consultSellerPerformanceReport(User requestingUser, String sellerId, ReportPeriod period);
 }
 ```
 
@@ -160,12 +161,13 @@ public interface SellerPort {
 | `consultProductInventory` | `ConsultInventoryService` |
 | `consultWarehouseInventory` | `ConsultInventoryService` |
 | `consultOrder` | `ConsultOrderService` |
+| `consultSellerPerformanceReport` | `ConsultSellerPerformanceReportService` |
 
 ---
 
 ## 3.4 LogisticsOperatorPort (`LOGISTICS_OPERATOR`)
 
-Physical operation of warehouses: inventory movements, reservations and the shipment lifecycle.
+Physical operation of warehouses: inventory movements, reservations, the shipment lifecycle and the inventory report.
 
 ```java
 public interface LogisticsOperatorPort {
@@ -185,6 +187,7 @@ public interface LogisticsOperatorPort {
     Shipment packShipment(User requestingUser, String shipmentId);
     Shipment dispatchShipment(User requestingUser, String shipmentId);
     Shipment confirmDelivery(User requestingUser, String shipmentId);
+    InventoryReport consultInventoryReport(User requestingUser, int lowStockThreshold);
 }
 ```
 
@@ -206,12 +209,13 @@ public interface LogisticsOperatorPort {
 | `packShipment` | `PackShipmentService` |
 | `dispatchShipment` | `DispatchShipmentService` |
 | `confirmDelivery` | `ConfirmDeliveryService` |
+| `consultInventoryReport` | `ConsultInventoryReportService` |
 
 ---
 
 ## 3.5 AdministratorPort (`ADMINISTRATOR`)
 
-Administration of users, sellers, buyers' commercial status, Marketplace warehouses, returns, refunds and audit logs.
+Administration of users, sellers, buyers' commercial status, Marketplace warehouses, returns, refunds, audit logs and administrative reports.
 
 ```java
 public interface AdministratorPort {
@@ -238,6 +242,10 @@ public interface AdministratorPort {
     List<AuditLog> consultAuditLogs(User requestingUser);
     List<AuditLog> consultAuditLogsByUser(User requestingUser, String userId);
     List<AuditLog> consultAuditLogsByEntity(User requestingUser, AuditEntityType entityType, String entityId);
+    CommercialReport consultCommercialReport(User requestingUser, ReportPeriod period);
+    SellerPerformanceReport consultSellerPerformanceReport(User requestingUser, String sellerId, ReportPeriod period);
+    InventoryReport consultInventoryReport(User requestingUser, int lowStockThreshold);
+    LogisticsReport consultLogisticsReport(User requestingUser, ReportPeriod period);
 }
 ```
 
@@ -266,6 +274,10 @@ public interface AdministratorPort {
 | `consultAuditLogs` | `ConsultAuditLogsService` |
 | `consultAuditLogsByUser` | `ConsultAuditLogsService` |
 | `consultAuditLogsByEntity` | `ConsultAuditLogsService` |
+| `consultCommercialReport` | `ConsultCommercialReportService` |
+| `consultSellerPerformanceReport` | `ConsultSellerPerformanceReportService` |
+| `consultInventoryReport` | `ConsultInventoryReportService` |
+| `consultLogisticsReport` | `ConsultLogisticsReportService` |
 
 ---
 
@@ -293,6 +305,10 @@ public interface SupervisorPort {
     List<AuditLog> consultAuditLogs(User requestingUser);
     List<AuditLog> consultAuditLogsByUser(User requestingUser, String userId);
     List<AuditLog> consultAuditLogsByEntity(User requestingUser, AuditEntityType entityType, String entityId);
+    CommercialReport consultCommercialReport(User requestingUser, ReportPeriod period);
+    SellerPerformanceReport consultSellerPerformanceReport(User requestingUser, String sellerId, ReportPeriod period);
+    InventoryReport consultInventoryReport(User requestingUser, int lowStockThreshold);
+    LogisticsReport consultLogisticsReport(User requestingUser, ReportPeriod period);
 }
 ```
 
@@ -316,5 +332,9 @@ public interface SupervisorPort {
 | `consultAuditLogs` | `ConsultAuditLogsService` |
 | `consultAuditLogsByUser` | `ConsultAuditLogsService` |
 | `consultAuditLogsByEntity` | `ConsultAuditLogsService` |
+| `consultCommercialReport` | `ConsultCommercialReportService` |
+| `consultSellerPerformanceReport` | `ConsultSellerPerformanceReportService` |
+| `consultInventoryReport` | `ConsultInventoryReportService` |
+| `consultLogisticsReport` | `ConsultLogisticsReportService` |
 
 ---

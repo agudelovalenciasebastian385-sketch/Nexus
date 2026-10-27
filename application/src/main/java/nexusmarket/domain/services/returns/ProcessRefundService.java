@@ -1,5 +1,6 @@
 package nexusmarket.domain.services.returns;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class ProcessRefundService {
         Refund refund = refundRepositoryPort.findById(refundId)
                 .orElseThrow(() -> new EntityNotFoundException("Refund", refundId));
 
-        refund.markProcessed();
+        refund.markProcessed(LocalDateTime.now());
         refundRepositoryPort.update(refund);
         registerAuditLogService.execute(administrator, AuditAction.REFUND_PROCESSED, AuditEntityType.REFUND,
                 refundId, Map.of("amount", refund.getAmount().toPlainString()));

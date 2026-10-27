@@ -1,6 +1,7 @@
 package nexusmarket.domain.models;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import nexusmarket.domain.exceptions.InvalidRefundException;
 import nexusmarket.domain.exceptions.InvalidStatusTransitionException;
@@ -18,14 +19,17 @@ public class Refund {
     private final ReturnRequest returnRequest;
     private final BigDecimal amount;
     private RefundStatus status;
+    /** Moment the amount was restituted; {@code null} unless the refund is {@code PROCESSED}. */
+    private LocalDateTime processedAt;
 
     /** Creates a new refund starting at {@code PENDING}. */
     public Refund(String id, ReturnRequest returnRequest, BigDecimal amount) {
-        this(id, returnRequest, amount, RefundStatus.PENDING);
+        this(id, returnRequest, amount, RefundStatus.PENDING, null);
     }
 
     /** Rehydration constructor used to rebuild a persisted refund. */
-    public Refund(String id, ReturnRequest returnRequest, BigDecimal amount, RefundStatus status) {
+    public Refund(String id, ReturnRequest returnRequest, BigDecimal amount, RefundStatus status,
+                  LocalDateTime processedAt) {
         if (id == null || id.isBlank()) {
             throw new InvalidRefundException("Refund id cannot be empty.");
         }
@@ -42,6 +46,13 @@ public class Refund {
             throw new InvalidRefundException("Refund status is required.");
         }
         this.status = status;
+        if (status == RefundStatus.PROCESSED && processedAt == null) {
+            throw new InvalidRefundException("A processed refund requires its processedAt date.");
+        }
+        if (status != RefundStatus.PROCESSED && processedAt != null) {
+            throw new InvalidRefundException("Only a processed refund has a processedAt date.");
+        }
+        this.processedAt = processedAt;
     }
 
     public String getId() {
@@ -60,13 +71,21 @@ public class Refund {
         return status;
     }
 
-    /** The amount was restituted to the buyer. */
-    public void markProcessed() {
+    public LocalDateTime getProcessedAt() {
+        return processedAt;
+    }
+
+    /** The amount was restituted to the buyer at the given moment. */
+    public void markProcessed(LocalDateTime processedAt) {
         if (status != RefundStatus.PENDING) {
             throw new InvalidStatusTransitionException("refund", status.getCode(),
                     RefundStatus.PROCESSED.getCode());
         }
+        if (processedAt == null) {
+            throw new InvalidRefundException("Refund processedAt is required.");
+        }
         status = RefundStatus.PROCESSED;
+        this.processedAt = processedAt;
     }
 
     /** The refund did not proceed. */

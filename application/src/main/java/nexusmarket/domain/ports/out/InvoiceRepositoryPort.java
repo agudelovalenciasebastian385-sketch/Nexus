@@ -1,5 +1,7 @@
 package nexusmarket.domain.ports.out;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import nexusmarket.domain.models.Invoice;
@@ -15,4 +17,6 @@ public interface InvoiceRepositoryPort {
     Optional<Invoice> findByOrder(Order order);
 
     boolean existsByOrder(Order order);
+
+    List<Invoice> findByIssuedAtBetween(LocalDateTime from, LocalDateTime toExclusive);
 }

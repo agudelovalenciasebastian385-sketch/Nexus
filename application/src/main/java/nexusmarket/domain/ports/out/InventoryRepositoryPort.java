@@ -21,4 +21,6 @@ public interface InventoryRepositoryPort {
     List<Inventory> findByProduct(PhysicalProduct product);
 
     List<Inventory> findByWarehouse(Warehouse warehouse);
+
+    List<Inventory> findAll();
 }

@@ -9,7 +9,7 @@ Unlike Entities, Value Objects have no identity of their own. They are defined e
 The NexusMarket domain uses Value Objects for:
 
 * **Business catalogs** (roles, statuses, types), implemented as Java `enum`s that implement `DomainCatalog`.
-* **Compound concepts** such as `Address` and `Variant`, implemented as immutable `final` classes compared by value.
+* **Compound concepts** such as `Address`, `Variant` and `ReportPeriod`, implemented as immutable `final` classes compared by value.
 
 All Value Objects live in the package `nexusmarket.domain.valueobjects`.
 
@@ -37,6 +37,7 @@ DomainCatalog (Interface)
 
 Address
 Variant
+ReportPeriod
 ```
 
 ---
@@ -452,6 +453,7 @@ Classifies the business action recorded by an `AuditLog`. Every service that cha
 | RETURN_REJECTED                    | Return Rejected                    | A return request was rejected. |
 | REFUND_CREATED                     | Refund Created                     | A refund was generated from an approved return. |
 | REFUND_PROCESSED                   | Refund Processed                   | The amount of a refund was restituted to the buyer. |
+| REPORT_CONSULTED                   | Report Consulted                   | An administrative report was consulted. |
 
 ---
 
@@ -481,6 +483,7 @@ Classifies the type of entity affected by an audited operation (`AuditLog.entity
 | SHIPMENT       | Shipment       | A shipment. |
 | RETURN_REQUEST | Return Request | A return request. |
 | REFUND         | Refund         | A refund. |
+| REPORT         | Report         | An administrative report (identified by its report type). |
 
 ---
 
@@ -536,3 +539,40 @@ Used by `Product.variants`, `CartItem.variant` and `OrderItem.variant`.
 
 * Immutable (`final` class, `final` fields, no setters).
 * Compared by value (`equals` / `hashCode` over `type` and `value`), not by identity.
+
+---
+
+# ReportPeriod
+
+## Description
+
+Range of calendar days covered by a report. Both dates are **inclusive**: a period from `2026-10-01` to `2026-10-31` covers every moment of October 31.
+
+Used by `CommercialReport`, `SellerPerformanceReport` and `LogisticsReport`, and received by `ConsultCommercialReportService`, `ConsultSellerPerformanceReportService` and `ConsultLogisticsReportService`.
+
+## Attributes
+
+| Attribute | Type      | Description                         |
+| --------- | --------- | ----------------------------------- |
+| startDate | LocalDate | First day of the period. Required.  |
+| endDate   | LocalDate | Last day of the period. Required.   |
+
+## Behavior
+
+| Method                   | Description                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------------- |
+| `startDateTime()`        | Inclusive lower bound: `startDate` at `00:00`.                                      |
+| `endDateTimeExclusive()` | Exclusive upper bound: the day after `endDate` at `00:00`.                          |
+| `contains(LocalDateTime moment)` | `true` when `startDateTime() <= moment < endDateTimeExclusive()`.           |
+
+Every report converts the period with these two methods, and the `findBy<Date>Between(from, toExclusive)` methods of the output ports use the same half-open interval `[from, toExclusive)` (see [Output Ports](Output-ports.md)).
+
+## Validations
+
+* `startDate` and `endDate` are required → `InvalidReportPeriodException`.
+* `startDate` cannot be after `endDate` → `InvalidReportPeriodException` (a single-day period, `startDate == endDate`, is valid).
+
+## Characteristics
+
+* Immutable (`final` class, `final` fields, no setters).
+* Compared by value (`equals` / `hashCode` over `startDate` and `endDate`), not by identity.

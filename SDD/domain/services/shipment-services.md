@@ -53,6 +53,7 @@ Exposed in: `LogisticsOperatorPort`.
 * Physical items are grouped by `OrderItem.originWarehouse`; one `Shipment` is created per group.
 * The delivery address is the buyer's primary address.
 * The requesting operator is assigned to every created shipment.
+* Every shipment stores its creation date-time in `Shipment.createdAt`.
 
 ## Validations
 

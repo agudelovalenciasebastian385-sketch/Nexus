@@ -226,8 +226,23 @@ Package: `nexusmarket.domain.services.audit` — detail: [services/audit-service
 
 ---
 
+# Reporting
+
+Consolidation of administrative information (OBJ-12): commercial, seller performance, inventory and logistics reports. Reports are read-only, computed when consulted and never persisted.
+
+Package: `nexusmarket.domain.services.reporting` — detail: [services/reporting-services.md](services/reporting-services.md)
+
+| Service | Exposed in | Purpose |
+| --- | --- | --- |
+| `ConsultCommercialReportService` | `AdministratorPort`, `SupervisorPort` | Consolidates the commercial figures of a period: orders created per status, total invoiced, total refunded and net revenue. |
+| `ConsultSellerPerformanceReportService` | `AdministratorPort`, `SellerPort`, `SupervisorPort` | Consolidates the performance of a seller in a period: products per status, units and amount sold, approved returns and return rate. |
+| `ConsultInventoryReportService` | `AdministratorPort`, `LogisticsOperatorPort`, `SupervisorPort` | Consolidates the current stock of every warehouse and lists the physical products with low stock. |
+| `ConsultLogisticsReportService` | `AdministratorPort`, `SupervisorPort` | Consolidates the shipments created in a period per status, the shipments pending dispatch and the delivered ones. |
+
+---
+
 # Service Count
 
-* Domain services: **56**.
-* Services exposed in role ports: **49**.
+* Domain services: **60**.
+* Services exposed in role ports: **53**.
 * Internal services: **7** (`LoadAuthenticatedUserService`, `GenerateInvoiceService`, `ValidateUserStatusService`, `ValidateRoleAuthorizationService`, `ValidateSellerOwnershipService`, `ValidateBuyerOwnershipService`, `RegisterAuditLogService`).

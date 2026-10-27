@@ -3,6 +3,7 @@ package nexusmarket.domain.ports.in;
 import java.util.List;
 
 import nexusmarket.domain.models.Inventory;
+import nexusmarket.domain.models.InventoryReport;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.Shipment;
 import nexusmarket.domain.models.User;
@@ -12,7 +13,7 @@ import nexusmarket.domain.valueobjects.InventoryCondition;
 /**
  * Role input port ({@code LOGISTICS_OPERATOR}).
  *
- * <p>Physical operation of warehouses: inventory movements, reservations and the shipment lifecycle.</p>
+ * <p>Physical operation of warehouses: inventory movements, reservations, the shipment lifecycle and the inventory report.</p>
  */
 public interface LogisticsOperatorPort {
 
@@ -50,4 +51,6 @@ public interface LogisticsOperatorPort {
     Shipment dispatchShipment(User requestingUser, String shipmentId);
 
     Shipment confirmDelivery(User requestingUser, String shipmentId);
+
+    InventoryReport consultInventoryReport(User requestingUser, int lowStockThreshold);
 }

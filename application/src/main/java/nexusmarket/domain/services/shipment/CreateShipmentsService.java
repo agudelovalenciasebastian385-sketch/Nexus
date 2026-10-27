@@ -1,5 +1,6 @@
 package nexusmarket.domain.services.shipment;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -66,7 +67,7 @@ public class CreateShipmentsService {
         List<Shipment> shipments = new ArrayList<>();
         for (Warehouse warehouse : originWarehouses.values()) {
             Shipment shipment = new Shipment(UUID.randomUUID().toString(), order, warehouse,
-                    order.getBuyer().getPrimaryAddress(), operator);
+                    order.getBuyer().getPrimaryAddress(), operator, LocalDateTime.now());
             order.addShipment(shipment);
             shipments.add(shipmentRepositoryPort.save(shipment));
             registerAuditLogService.execute(operator, AuditAction.SHIPMENT_CREATED, AuditEntityType.SHIPMENT,

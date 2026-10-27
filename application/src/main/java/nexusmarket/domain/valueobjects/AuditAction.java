@@ -62,7 +62,8 @@ public enum AuditAction implements DomainCatalog {
     RETURN_REJECTED("RETURN_REJECTED", "Return Rejected", "A return request was rejected."),
     REFUND_CREATED("REFUND_CREATED", "Refund Created", "A refund was generated from an approved return."),
     REFUND_PROCESSED("REFUND_PROCESSED", "Refund Processed",
-            "The amount of a refund was restituted to the buyer.");
+            "The amount of a refund was restituted to the buyer."),
+    REPORT_CONSULTED("REPORT_CONSULTED", "Report Consulted", "An administrative report was consulted.");
 
     private final String code;
     private final String name;

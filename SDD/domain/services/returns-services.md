@@ -248,7 +248,7 @@ Exposed in: `AdministratorPort`.
 
 ## Business Rules
 
-* The transition is applied by `Refund.markProcessed()`.
+* The transition is applied by `Refund.markProcessed(processedAt)` with the current date-time, which is stored in `Refund.processedAt`.
 
 ## Validations
 

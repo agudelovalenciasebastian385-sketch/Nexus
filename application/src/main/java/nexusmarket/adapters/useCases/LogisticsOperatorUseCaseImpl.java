@@ -4,6 +4,7 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.models.Inventory;
+import nexusmarket.domain.models.InventoryReport;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.Shipment;
 import nexusmarket.domain.models.User;
@@ -16,6 +17,7 @@ import nexusmarket.domain.services.inventory.RegisterInventoryInboundService;
 import nexusmarket.domain.services.inventory.ReleaseInventoryReservationService;
 import nexusmarket.domain.services.inventory.ReserveInventoryService;
 import nexusmarket.domain.services.order.ConsultOrderService;
+import nexusmarket.domain.services.reporting.ConsultInventoryReportService;
 import nexusmarket.domain.services.shipment.ConfirmDeliveryService;
 import nexusmarket.domain.services.shipment.CreateShipmentsService;
 import nexusmarket.domain.services.shipment.DispatchShipmentService;
@@ -49,6 +51,7 @@ public class LogisticsOperatorUseCaseImpl implements LogisticsOperatorPort {
     private final PackShipmentService packShipmentService;
     private final DispatchShipmentService dispatchShipmentService;
     private final ConfirmDeliveryService confirmDeliveryService;
+    private final ConsultInventoryReportService consultInventoryReportService;
 
     @Override
     public User consultUser(User requestingUser, String userId) {
@@ -133,5 +136,10 @@ public class LogisticsOperatorUseCaseImpl implements LogisticsOperatorPort {
     @Override
     public Shipment confirmDelivery(User requestingUser, String shipmentId) {
         return confirmDeliveryService.confirmDelivery(requestingUser, shipmentId);
+    }
+
+    @Override
+    public InventoryReport consultInventoryReport(User requestingUser, int lowStockThreshold) {
+        return consultInventoryReportService.consultInventoryReport(requestingUser, lowStockThreshold);
     }
 }

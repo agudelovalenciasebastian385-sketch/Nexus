@@ -13,8 +13,8 @@ This approach promotes maintainability, scalability, testability, and technology
 | Component | Status |
 | --- | --- |
 | Domain models, value objects and domain exceptions | Implemented |
-| Domain services (54, organized in 13 subdomains) | Implemented |
-| Input ports: 49 use case interfaces and 6 role ports | Implemented |
+| Domain services (60, organized in 14 subdomains) | Implemented |
+| Input ports: 6 role ports | Implemented |
 | Output ports (16 interfaces) | Implemented (interfaces only) |
 | Use case adapters (`adapters/useCases`, 6 classes) | Implemented |
 | REST input adapters (controllers, DTOs, mappers) | **Next phase** |
@@ -74,9 +74,9 @@ application/src/main/java/
     │   └── useCases/                 6 role port implementations
     │
     └── domain/
-        ├── models/                   entities (21 classes)
-        ├── valueobjects/             catalogs (enums implementing DomainCatalog), Address, Variant
-        ├── exceptions/               DomainException and its subclasses (25 classes)
+        ├── models/                   entities, authentication result and read-only reports (28 classes)
+        ├── valueobjects/             catalogs (enums implementing DomainCatalog), Address, Variant, ReportPeriod
+        ├── exceptions/               DomainException and its subclasses (27 classes)
         ├── services/
         │   ├── user/
         │   ├── seller/
@@ -90,7 +90,8 @@ application/src/main/java/
         │   ├── shipment/
         │   ├── returns/
         │   ├── authorization/
-        │   └── audit/
+        │   ├── audit/
+        │   └── reporting/
         └── ports/
             ├── in/                   6 role ports
             └── out/                  16 output ports
@@ -170,6 +171,8 @@ Package `nexusmarket.domain.models`. Contains the business entities (see [Domain
 - `Shipment`
 - `ReturnRequest`, `Refund`
 - `AuditLog`
+- `AuthenticationResult` (outcome of a login; not persisted)
+- Read-only reports, computed when consulted and never persisted: `CommercialReport`, `SellerPerformanceReport`, `InventoryReport` (with the detail rows `WarehouseStockSummary` and `LowStockProduct`), `LogisticsReport`
 
 ---
 
@@ -179,7 +182,7 @@ Package `nexusmarket.domain.valueobjects` (see [Domain Value Objects](../domain/
 
 - Business catalogs: Java enums implementing the `DomainCatalog` interface (`code`, `name`, `description`, `fromCode`):
   `SystemRole`, `UserStatus`, `CommercialStatus`, `WarehouseType`, `ProductType`, `ProductStatus`, `InventoryCondition`, `MovementType`, `OrderStatus`, `ShipmentStatus`, `ReturnStatus`, `RefundStatus`, `PaymentResult`, `AuditAction`, `AuditEntityType`.
-- Compound value objects: `Address`, `Variant`.
+- Compound value objects: `Address`, `Variant`, `ReportPeriod` (inclusive range of days of a report).
 
 Value objects are immutable and compared by value. There is no separate `enums` package: every bounded value of the domain is a catalog value object.
 
@@ -208,8 +211,9 @@ Package `nexusmarket.domain.services.<subdomain>`. Each service implements exact
 | `returns` | `RequestReturnService`, `ApproveReturnService`, `RejectReturnService`, `ProcessRefundService`, `ConsultReturnService` |
 | `authorization` | `ValidateUserStatusService`, `ValidateRoleAuthorizationService`, `ValidateSellerOwnershipService`, `ValidateBuyerOwnershipService` |
 | `audit` | `RegisterAuditLogService`, `ConsultAuditLogsService` |
+| `reporting` | `ConsultCommercialReportService`, `ConsultSellerPerformanceReportService`, `ConsultInventoryReportService`, `ConsultLogisticsReportService` |
 
-Total: **56 services** (49 exposed in role ports, 7 internal).
+Total: **60 services** in 14 subdomains (53 exposed in role ports, 7 internal).
 
 ---
 
@@ -225,10 +229,10 @@ Package `nexusmarket.domain.ports.in` (see [Input Ports](../domain/Input-ports.m
 | --- | --- | --- |
 | `PublicAccessPort` | public (no specific role) | 5 |
 | `BuyerPort` | `BUYER` | 17 |
-| `SellerPort` | `SELLER` | 19 |
-| `LogisticsOperatorPort` | `LOGISTICS_OPERATOR` | 16 |
-| `AdministratorPort` | `ADMINISTRATOR` | 23 |
-| `SupervisorPort` | `SUPERVISOR` (read-only) | 18 |
+| `SellerPort` | `SELLER` | 20 |
+| `LogisticsOperatorPort` | `LOGISTICS_OPERATOR` | 17 |
+| `AdministratorPort` | `ADMINISTRATOR` | 27 |
+| `SupervisorPort` | `SUPERVISOR` (read-only) | 22 |
 
 ### Output Ports
 
@@ -241,17 +245,19 @@ Package `nexusmarket.domain.ports.out` (see [Output Ports](../domain/Output-port
 | `SellerRepositoryPort` | Sellers | MySQL |
 | `WarehouseRepositoryPort` | Warehouses | MySQL |
 | `ProductRepositoryPort` | Physical and digital products | MySQL |
-| `InventoryRepositoryPort` | Inventory records and movements | MySQL |
+| `InventoryRepositoryPort` | Inventory records and movements (also all records, for the inventory report) | MySQL |
 | `CartRepositoryPort` | Carts and cart items | MySQL |
-| `OrderRepositoryPort` | Orders and order items | MySQL |
-| `InvoiceRepositoryPort` | Invoices | MySQL |
-| `ShipmentRepositoryPort` | Shipments | MySQL |
+| `OrderRepositoryPort` | Orders and order items; orders created in a date range | MySQL |
+| `InvoiceRepositoryPort` | Invoices; invoices issued in a date range | MySQL |
+| `ShipmentRepositoryPort` | Shipments; shipments created in a date range | MySQL |
 | `ReturnRequestRepositoryPort` | Return requests | MySQL |
-| `RefundRepositoryPort` | Refunds | MySQL |
+| `RefundRepositoryPort` | Refunds; refunds processed in a date range | MySQL |
 | `AuditLogRepositoryPort` | Append-only audit records | MongoDB |
 | `PasswordServicePort` | Password encryption and verification | Hashing library |
 | `JwtServicePort` | Token generation and validation, extraction of the user id and token version, and `User` reconstruction | JWT library |
 | `PaymentGatewayPort` | Order payment processing (`PaymentResult`) | Simulated gateway |
+
+Date-range methods (`findBy<Date>Between(LocalDateTime from, LocalDateTime toExclusive)`) use the half-open interval `[from, toExclusive)`: inclusive lower bound, exclusive upper bound (see [Output Ports](../domain/Output-ports.md)).
 
 ---
 

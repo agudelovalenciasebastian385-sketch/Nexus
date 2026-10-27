@@ -1,5 +1,7 @@
 package nexusmarket.domain.models;
 
+import java.time.LocalDateTime;
+
 import nexusmarket.domain.exceptions.InvalidShipmentException;
 import nexusmarket.domain.exceptions.InvalidStatusTransitionException;
 import nexusmarket.domain.valueobjects.Address;
@@ -22,16 +24,19 @@ public class Shipment {
     private final Address deliveryAddress;
     private final LogisticsOperator logisticsOperator;
     private ShipmentStatus status;
+    private final LocalDateTime createdAt;
 
     /** Creates a new shipment starting at {@code PREPARING}. */
     public Shipment(String id, Order order, Warehouse originWarehouse,
-                    Address deliveryAddress, LogisticsOperator logisticsOperator) {
-        this(id, order, originWarehouse, deliveryAddress, logisticsOperator, ShipmentStatus.PREPARING);
+                    Address deliveryAddress, LogisticsOperator logisticsOperator, LocalDateTime createdAt) {
+        this(id, order, originWarehouse, deliveryAddress, logisticsOperator, ShipmentStatus.PREPARING,
+                createdAt == null ? LocalDateTime.now() : createdAt);
     }
 
     /** Rehydration constructor used to rebuild a persisted shipment. */
     public Shipment(String id, Order order, Warehouse originWarehouse,
-                    Address deliveryAddress, LogisticsOperator logisticsOperator, ShipmentStatus status) {
+                    Address deliveryAddress, LogisticsOperator logisticsOperator, ShipmentStatus status,
+                    LocalDateTime createdAt) {
         if (id == null || id.isBlank()) {
             throw new InvalidShipmentException("Shipment id cannot be empty.");
         }
@@ -56,6 +61,10 @@ public class Shipment {
             throw new InvalidShipmentException("Shipment status is required.");
         }
         this.status = status;
+        if (createdAt == null) {
+            throw new InvalidShipmentException("Shipment createdAt is required.");
+        }
+        this.createdAt = createdAt;
     }
 
     public String getId() {
@@ -80,6 +89,10 @@ public class Shipment {
 
     public ShipmentStatus getStatus() {
         return status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     /** The shipment has been packed at the origin warehouse. */

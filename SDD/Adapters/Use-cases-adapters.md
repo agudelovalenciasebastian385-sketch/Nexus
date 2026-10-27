@@ -32,10 +32,10 @@ Output Port (domain/ports/out)
 | --- | --- | --- |
 | `PublicAccessPort` | `PublicAccessUseCaseImpl` | `RegisterBuyerUserService`, `LoginService`, `LogoutService`, `ConsultCatalogService` |
 | `BuyerPort` | `BuyerUseCaseImpl` | `ConsultUserService`, `ChangeUserPasswordService`, `ConsultBuyerService`, `UpdateBuyerProfileService`, `AddItemToCartService`, `RemoveItemFromCartService`, `UpdateCartItemQuantityService`, `ConsultCartService`, `ClearCartService`, `ConfirmOrderService`, `ValidatePaymentService`, `ConsultOrderService`, `ConsultBuyerOrdersService`, `ConsultInvoiceService`, `RequestReturnService`, `ConsultReturnService` |
-| `SellerPort` | `SellerUseCaseImpl` | `ConsultUserService`, `ChangeUserPasswordService`, `ConsultSellerService`, `UpdateSellerService`, `RegisterWarehouseService`, `ConsultWarehouseService`, `UpdateWarehouseService`, `RegisterProductService`, `UpdateProductService`, `PublishProductService`, `SuspendProductService`, `DiscontinueProductService`, `ConsultSellerProductsService`, `RegisterInitialStockService`, `RegisterInventoryInboundService`, `ConsultInventoryService`, `ConsultOrderService` |
-| `LogisticsOperatorPort` | `LogisticsOperatorUseCaseImpl` | `ConsultUserService`, `ChangeUserPasswordService`, `ConsultWarehouseService`, `RegisterInitialStockService`, `RegisterInventoryInboundService`, `RegisterInventoryAdjustmentService`, `ReserveInventoryService`, `ReleaseInventoryReservationService`, `ConsultInventoryService`, `ConsultOrderService`, `CreateShipmentsService`, `PackShipmentService`, `DispatchShipmentService`, `ConfirmDeliveryService` |
-| `AdministratorPort` | `AdministratorUseCaseImpl` | `RegisterStaffUserService`, `ConsultUserService`, `ChangeUserStatusService`, `ChangeUserPasswordService`, `RegisterSellerService`, `ConsultSellerService`, `UpdateSellerService`, `ConsultBuyerService`, `ChangeBuyerCommercialStatusService`, `RegisterWarehouseService`, `ConsultWarehouseService`, `UpdateWarehouseService`, `ConsultSellerProductsService`, `ConsultInvoiceService`, `ApproveReturnService`, `RejectReturnService`, `ProcessRefundService`, `ConsultReturnService`, `ConsultAuditLogsService` |
-| `SupervisorPort` | `SupervisorUseCaseImpl` | `ConsultUserService`, `ChangeUserPasswordService`, `ConsultSellerService`, `ConsultBuyerService`, `ConsultWarehouseService`, `ConsultSellerProductsService`, `ConsultInventoryService`, `ConsultCartService`, `ConsultOrderService`, `ConsultBuyerOrdersService`, `ConsultInvoiceService`, `ConsultReturnService`, `ConsultAuditLogsService` |
+| `SellerPort` | `SellerUseCaseImpl` | `ConsultUserService`, `ChangeUserPasswordService`, `ConsultSellerService`, `UpdateSellerService`, `RegisterWarehouseService`, `ConsultWarehouseService`, `UpdateWarehouseService`, `RegisterProductService`, `UpdateProductService`, `PublishProductService`, `SuspendProductService`, `DiscontinueProductService`, `ConsultSellerProductsService`, `RegisterInitialStockService`, `RegisterInventoryInboundService`, `ConsultInventoryService`, `ConsultOrderService`, `ConsultSellerPerformanceReportService` |
+| `LogisticsOperatorPort` | `LogisticsOperatorUseCaseImpl` | `ConsultUserService`, `ChangeUserPasswordService`, `ConsultWarehouseService`, `RegisterInitialStockService`, `RegisterInventoryInboundService`, `RegisterInventoryAdjustmentService`, `ReserveInventoryService`, `ReleaseInventoryReservationService`, `ConsultInventoryService`, `ConsultOrderService`, `CreateShipmentsService`, `PackShipmentService`, `DispatchShipmentService`, `ConfirmDeliveryService`, `ConsultInventoryReportService` |
+| `AdministratorPort` | `AdministratorUseCaseImpl` | `RegisterStaffUserService`, `ConsultUserService`, `ChangeUserStatusService`, `ChangeUserPasswordService`, `RegisterSellerService`, `ConsultSellerService`, `UpdateSellerService`, `ConsultBuyerService`, `ChangeBuyerCommercialStatusService`, `RegisterWarehouseService`, `ConsultWarehouseService`, `UpdateWarehouseService`, `ConsultSellerProductsService`, `ConsultInvoiceService`, `ApproveReturnService`, `RejectReturnService`, `ProcessRefundService`, `ConsultReturnService`, `ConsultAuditLogsService`, `ConsultCommercialReportService`, `ConsultSellerPerformanceReportService`, `ConsultInventoryReportService`, `ConsultLogisticsReportService` |
+| `SupervisorPort` | `SupervisorUseCaseImpl` | `ConsultUserService`, `ChangeUserPasswordService`, `ConsultSellerService`, `ConsultBuyerService`, `ConsultWarehouseService`, `ConsultSellerProductsService`, `ConsultInventoryService`, `ConsultCartService`, `ConsultOrderService`, `ConsultBuyerOrdersService`, `ConsultInvoiceService`, `ConsultReturnService`, `ConsultAuditLogsService`, `ConsultCommercialReportService`, `ConsultSellerPerformanceReportService`, `ConsultInventoryReportService`, `ConsultLogisticsReportService` |
 
 ---
 
@@ -77,7 +77,7 @@ Implements `BuyerPort`. Operations of a buyer over its own profile, cart, orders
 
 ## SellerUseCaseImpl
 
-Implements `SellerPort`. Operations of a seller over its own profile, warehouses, products, inventory and the orders that contain its products.
+Implements `SellerPort`. Operations of a seller over its own profile, warehouses, products, inventory, the orders that contain its products and its own performance report.
 
 | Method | Delegates to |
 | --- | --- |
@@ -100,10 +100,11 @@ Implements `SellerPort`. Operations of a seller over its own profile, warehouses
 | `consultProductInventory` | `ConsultInventoryService.consultProductInventory` |
 | `consultWarehouseInventory` | `ConsultInventoryService.consultWarehouseInventory` |
 | `consultOrder` | `ConsultOrderService.consultOrder` |
+| `consultSellerPerformanceReport` | `ConsultSellerPerformanceReportService.consultSellerPerformanceReport` |
 
 ## LogisticsOperatorUseCaseImpl
 
-Implements `LogisticsOperatorPort`. Physical operation of warehouses: inventory movements, reservations and the shipment lifecycle.
+Implements `LogisticsOperatorPort`. Physical operation of warehouses: inventory movements, reservations, the shipment lifecycle and the inventory report.
 
 | Method | Delegates to |
 | --- | --- |
@@ -123,10 +124,11 @@ Implements `LogisticsOperatorPort`. Physical operation of warehouses: inventory 
 | `packShipment` | `PackShipmentService.packShipment` |
 | `dispatchShipment` | `DispatchShipmentService.dispatchShipment` |
 | `confirmDelivery` | `ConfirmDeliveryService.confirmDelivery` |
+| `consultInventoryReport` | `ConsultInventoryReportService.consultInventoryReport` |
 
 ## AdministratorUseCaseImpl
 
-Implements `AdministratorPort`. Administration of users, sellers, buyers' commercial status, Marketplace warehouses, returns, refunds and audit logs.
+Implements `AdministratorPort`. Administration of users, sellers, buyers' commercial status, Marketplace warehouses, returns, refunds, audit logs and administrative reports.
 
 | Method | Delegates to |
 | --- | --- |
@@ -153,6 +155,10 @@ Implements `AdministratorPort`. Administration of users, sellers, buyers' commer
 | `consultAuditLogs` | `ConsultAuditLogsService.consultAuditLogs` |
 | `consultAuditLogsByUser` | `ConsultAuditLogsService.consultAuditLogsByUser` |
 | `consultAuditLogsByEntity` | `ConsultAuditLogsService.consultAuditLogsByEntity` |
+| `consultCommercialReport` | `ConsultCommercialReportService.consultCommercialReport` |
+| `consultSellerPerformanceReport` | `ConsultSellerPerformanceReportService.consultSellerPerformanceReport` |
+| `consultInventoryReport` | `ConsultInventoryReportService.consultInventoryReport` |
+| `consultLogisticsReport` | `ConsultLogisticsReportService.consultLogisticsReport` |
 
 ## SupervisorUseCaseImpl
 
@@ -178,6 +184,10 @@ Implements `SupervisorPort`. Read-only oversight: consultation operations across
 | `consultAuditLogs` | `ConsultAuditLogsService.consultAuditLogs` |
 | `consultAuditLogsByUser` | `ConsultAuditLogsService.consultAuditLogsByUser` |
 | `consultAuditLogsByEntity` | `ConsultAuditLogsService.consultAuditLogsByEntity` |
+| `consultCommercialReport` | `ConsultCommercialReportService.consultCommercialReport` |
+| `consultSellerPerformanceReport` | `ConsultSellerPerformanceReportService.consultSellerPerformanceReport` |
+| `consultInventoryReport` | `ConsultInventoryReportService.consultInventoryReport` |
+| `consultLogisticsReport` | `ConsultLogisticsReportService.consultLogisticsReport` |
 
 ---
 

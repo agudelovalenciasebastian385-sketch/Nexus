@@ -5,11 +5,15 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.models.AuditLog;
 import nexusmarket.domain.models.Buyer;
+import nexusmarket.domain.models.CommercialReport;
+import nexusmarket.domain.models.InventoryReport;
 import nexusmarket.domain.models.Invoice;
+import nexusmarket.domain.models.LogisticsReport;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.Refund;
 import nexusmarket.domain.models.ReturnRequest;
 import nexusmarket.domain.models.Seller;
+import nexusmarket.domain.models.SellerPerformanceReport;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
 import nexusmarket.domain.ports.in.AdministratorPort;
@@ -18,6 +22,10 @@ import nexusmarket.domain.services.buyer.ChangeBuyerCommercialStatusService;
 import nexusmarket.domain.services.buyer.ConsultBuyerService;
 import nexusmarket.domain.services.invoice.ConsultInvoiceService;
 import nexusmarket.domain.services.product.ConsultSellerProductsService;
+import nexusmarket.domain.services.reporting.ConsultCommercialReportService;
+import nexusmarket.domain.services.reporting.ConsultInventoryReportService;
+import nexusmarket.domain.services.reporting.ConsultLogisticsReportService;
+import nexusmarket.domain.services.reporting.ConsultSellerPerformanceReportService;
 import nexusmarket.domain.services.returns.ApproveReturnService;
 import nexusmarket.domain.services.returns.ConsultReturnService;
 import nexusmarket.domain.services.returns.ProcessRefundService;
@@ -35,6 +43,7 @@ import nexusmarket.domain.services.warehouse.UpdateWarehouseService;
 import nexusmarket.domain.valueobjects.Address;
 import nexusmarket.domain.valueobjects.AuditEntityType;
 import nexusmarket.domain.valueobjects.CommercialStatus;
+import nexusmarket.domain.valueobjects.ReportPeriod;
 import nexusmarket.domain.valueobjects.SystemRole;
 import nexusmarket.domain.valueobjects.UserStatus;
 import nexusmarket.domain.valueobjects.WarehouseType;
@@ -68,6 +77,10 @@ public class AdministratorUseCaseImpl implements AdministratorPort {
     private final ProcessRefundService processRefundService;
     private final ConsultReturnService consultReturnService;
     private final ConsultAuditLogsService consultAuditLogsService;
+    private final ConsultCommercialReportService consultCommercialReportService;
+    private final ConsultSellerPerformanceReportService consultSellerPerformanceReportService;
+    private final ConsultInventoryReportService consultInventoryReportService;
+    private final ConsultLogisticsReportService consultLogisticsReportService;
 
     @Override
     public User registerStaffUser(User requestingUser, SystemRole role, String identificationNumber,
@@ -188,5 +201,26 @@ public class AdministratorUseCaseImpl implements AdministratorPort {
     public List<AuditLog> consultAuditLogsByEntity(User requestingUser, AuditEntityType entityType,
                                                    String entityId) {
         return consultAuditLogsService.consultAuditLogsByEntity(requestingUser, entityType, entityId);
+    }
+
+    @Override
+    public CommercialReport consultCommercialReport(User requestingUser, ReportPeriod period) {
+        return consultCommercialReportService.consultCommercialReport(requestingUser, period);
+    }
+
+    @Override
+    public SellerPerformanceReport consultSellerPerformanceReport(User requestingUser, String sellerId,
+                                                                  ReportPeriod period) {
+        return consultSellerPerformanceReportService.consultSellerPerformanceReport(requestingUser, sellerId, period);
+    }
+
+    @Override
+    public InventoryReport consultInventoryReport(User requestingUser, int lowStockThreshold) {
+        return consultInventoryReportService.consultInventoryReport(requestingUser, lowStockThreshold);
+    }
+
+    @Override
+    public LogisticsReport consultLogisticsReport(User requestingUser, ReportPeriod period) {
+        return consultLogisticsReportService.consultLogisticsReport(requestingUser, period);
     }
 }

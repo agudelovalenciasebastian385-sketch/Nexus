@@ -7,17 +7,19 @@ import nexusmarket.domain.models.Inventory;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.Seller;
+import nexusmarket.domain.models.SellerPerformanceReport;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
 import nexusmarket.domain.valueobjects.Address;
 import nexusmarket.domain.valueobjects.ProductType;
+import nexusmarket.domain.valueobjects.ReportPeriod;
 import nexusmarket.domain.valueobjects.Variant;
 import nexusmarket.domain.valueobjects.WarehouseType;
 
 /**
  * Role input port ({@code SELLER}).
  *
- * <p>Operations of a seller over its own profile, warehouses, products, inventory and the orders that contain its products.</p>
+ * <p>Operations of a seller over its own profile, warehouses, products, inventory, the orders that contain its products and its own performance report.</p>
  */
 public interface SellerPort {
 
@@ -61,4 +63,7 @@ public interface SellerPort {
     List<Inventory> consultWarehouseInventory(User requestingUser, String warehouseId);
 
     Order consultOrder(User requestingUser, String orderId);
+
+    SellerPerformanceReport consultSellerPerformanceReport(User requestingUser, String sellerId,
+                                                           ReportPeriod period);
 }

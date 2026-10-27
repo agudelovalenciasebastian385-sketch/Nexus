@@ -6,13 +6,17 @@ import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.models.AuditLog;
 import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Cart;
+import nexusmarket.domain.models.CommercialReport;
 import nexusmarket.domain.models.Inventory;
+import nexusmarket.domain.models.InventoryReport;
 import nexusmarket.domain.models.Invoice;
+import nexusmarket.domain.models.LogisticsReport;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.Refund;
 import nexusmarket.domain.models.ReturnRequest;
 import nexusmarket.domain.models.Seller;
+import nexusmarket.domain.models.SellerPerformanceReport;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
 import nexusmarket.domain.ports.in.SupervisorPort;
@@ -24,12 +28,17 @@ import nexusmarket.domain.services.invoice.ConsultInvoiceService;
 import nexusmarket.domain.services.order.ConsultBuyerOrdersService;
 import nexusmarket.domain.services.order.ConsultOrderService;
 import nexusmarket.domain.services.product.ConsultSellerProductsService;
+import nexusmarket.domain.services.reporting.ConsultCommercialReportService;
+import nexusmarket.domain.services.reporting.ConsultInventoryReportService;
+import nexusmarket.domain.services.reporting.ConsultLogisticsReportService;
+import nexusmarket.domain.services.reporting.ConsultSellerPerformanceReportService;
 import nexusmarket.domain.services.returns.ConsultReturnService;
 import nexusmarket.domain.services.seller.ConsultSellerService;
 import nexusmarket.domain.services.user.ChangeUserPasswordService;
 import nexusmarket.domain.services.user.ConsultUserService;
 import nexusmarket.domain.services.warehouse.ConsultWarehouseService;
 import nexusmarket.domain.valueobjects.AuditEntityType;
+import nexusmarket.domain.valueobjects.ReportPeriod;
 import org.springframework.stereotype.Service;
 
 /**
@@ -54,6 +63,10 @@ public class SupervisorUseCaseImpl implements SupervisorPort {
     private final ConsultInvoiceService consultInvoiceService;
     private final ConsultReturnService consultReturnService;
     private final ConsultAuditLogsService consultAuditLogsService;
+    private final ConsultCommercialReportService consultCommercialReportService;
+    private final ConsultSellerPerformanceReportService consultSellerPerformanceReportService;
+    private final ConsultInventoryReportService consultInventoryReportService;
+    private final ConsultLogisticsReportService consultLogisticsReportService;
 
     @Override
     public User consultUser(User requestingUser, String userId) {
@@ -144,5 +157,26 @@ public class SupervisorUseCaseImpl implements SupervisorPort {
     public List<AuditLog> consultAuditLogsByEntity(User requestingUser, AuditEntityType entityType,
                                                    String entityId) {
         return consultAuditLogsService.consultAuditLogsByEntity(requestingUser, entityType, entityId);
+    }
+
+    @Override
+    public CommercialReport consultCommercialReport(User requestingUser, ReportPeriod period) {
+        return consultCommercialReportService.consultCommercialReport(requestingUser, period);
+    }
+
+    @Override
+    public SellerPerformanceReport consultSellerPerformanceReport(User requestingUser, String sellerId,
+                                                                  ReportPeriod period) {
+        return consultSellerPerformanceReportService.consultSellerPerformanceReport(requestingUser, sellerId, period);
+    }
+
+    @Override
+    public InventoryReport consultInventoryReport(User requestingUser, int lowStockThreshold) {
+        return consultInventoryReportService.consultInventoryReport(requestingUser, lowStockThreshold);
+    }
+
+    @Override
+    public LogisticsReport consultLogisticsReport(User requestingUser, ReportPeriod period) {
+        return consultLogisticsReportService.consultLogisticsReport(requestingUser, period);
     }
 }

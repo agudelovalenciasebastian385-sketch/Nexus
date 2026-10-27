@@ -1,5 +1,6 @@
 package nexusmarket.domain.ports.out;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,4 +19,6 @@ public interface ShipmentRepositoryPort {
     Optional<Shipment> findById(String id);
 
     List<Shipment> findByOrder(Order order);
+
+    List<Shipment> findByCreatedAtBetween(LocalDateTime from, LocalDateTime toExclusive);
 }

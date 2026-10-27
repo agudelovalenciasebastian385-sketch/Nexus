@@ -65,6 +65,13 @@ Refund
 AuditLog
 
 AuthenticationResult
+
+CommercialReport
+SellerPerformanceReport
+InventoryReport
+├── WarehouseStockSummary (detail row)
+└── LowStockProduct (detail row)
+LogisticsReport
 ```
 
 ---
@@ -740,6 +747,7 @@ Represents the logistics process of packing, dispatching, and transporting the p
 | deliveryAddress   | Address           | Delivery address, taken from the order. Required.    |
 | logisticsOperator | LogisticsOperator | Operator responsible for executing the shipment. Required. |
 | status            | ShipmentStatus    | Logistics status. A new shipment starts at `PREPARING`. |
+| createdAt         | LocalDateTime     | Moment the shipment was created. Required. Used by the logistics report. |
 
 ## Behavior
 
@@ -754,6 +762,7 @@ Represents the logistics process of packing, dispatching, and transporting the p
 
 * Invalid data → `InvalidShipmentException`.
 * Transitions not listed above → `InvalidStatusTransitionException`.
+* The new-shipment constructor receives `createdAt` (the current date-time when `null`); the rehydration constructor requires it.
 
 ## Relationships
 
@@ -811,18 +820,20 @@ Represents the financial restitution associated with an approved return.
 | returnRequest | ReturnRequest | Return request that gives rise to the refund. Required. |
 | amount        | BigDecimal    | Refunded value. Must be positive.                    |
 | status        | RefundStatus  | Status of the refund process. Starts at `PENDING`.   |
+| processedAt   | LocalDateTime | Moment the amount was restituted. `null` unless `status` is `PROCESSED`. Used by the commercial report. |
 
 ## Behavior
 
-| Method            | Description                 |
-| ----------------- | --------------------------- |
-| `markProcessed()` | `PENDING` → `PROCESSED`.    |
-| `reject()`        | `PENDING` → `REJECTED`.     |
+| Method                                     | Description                                                   |
+| ------------------------------------------ | ------------------------------------------------------------- |
+| `markProcessed(LocalDateTime processedAt)` | `PENDING` → `PROCESSED`; stores `processedAt` (required).     |
+| `reject()`                                 | `PENDING` → `REJECTED`.                                       |
 
 ## Business Rules
 
 * Invalid data → `InvalidRefundException`.
 * Transitions not listed above → `InvalidStatusTransitionException`.
+* `processedAt` is required when `status` is `PROCESSED` and must be `null` otherwise (also enforced by the rehydration constructor).
 
 ## Relationships
 
@@ -884,6 +895,137 @@ Outcome of a successful login (`LoginService.login`). Carries the authenticated 
 
 ---
 
+# Report Models (Read-Only)
+
+Reports of the **Reporting** subdomain (OBJ-12). They are immutable (final attributes, no setters), computed by the reporting services when consulted and never persisted. Counts per status always contain every value of the catalog (`0` when there are none) and are unmodifiable. Invalid values → `InvalidReportParameterException`.
+
+---
+
+# CommercialReport
+
+## Description
+
+Consolidated commercial figures of a `ReportPeriod`.
+
+## Attributes
+
+| Attribute      | Type                     | Description                                                        |
+| -------------- | ------------------------ | ------------------------------------------------------------------ |
+| period         | ReportPeriod             | Period of the report. Required.                                    |
+| generatedAt    | LocalDateTime            | Moment the report was computed. Required.                          |
+| ordersByStatus | Map\<OrderStatus, Integer\> | Orders created in the period per status. Counts cannot be negative. |
+| totalInvoiced  | BigDecimal               | Sum of the invoices issued in the period. Zero or positive.        |
+| totalRefunded  | BigDecimal               | Sum of the refunds processed in the period. Zero or positive.      |
+
+## Behavior
+
+| Method            | Description                              |
+| ----------------- | ---------------------------------------- |
+| `getTotalOrders()` | Sum of `ordersByStatus`.                 |
+| `getNetRevenue()`  | `totalInvoiced - totalRefunded`.         |
+
+---
+
+# SellerPerformanceReport
+
+## Description
+
+Commercial performance of one seller in a `ReportPeriod`.
+
+## Attributes
+
+| Attribute                | Type                       | Description                                                        |
+| ------------------------ | -------------------------- | ------------------------------------------------------------------ |
+| seller                   | Seller                     | Seller of the report. Required.                                    |
+| period                   | ReportPeriod               | Period of the report. Required.                                    |
+| generatedAt              | LocalDateTime              | Moment the report was computed. Required.                          |
+| productsByStatus         | Map\<ProductStatus, Integer\> | Current products of the seller per status.                     |
+| ordersWithSellerProducts | int                        | Orders created in the period, `PAID` or later, with at least one product of the seller. |
+| unitsSold                | int                        | Units of the seller's products in those orders.                    |
+| amountSold               | BigDecimal                 | Sum of the subtotals of those items. Zero or positive.             |
+| approvedReturns          | int                        | `APPROVED` return requests of those orders. Cannot exceed `ordersWithSellerProducts`. |
+
+## Behavior
+
+| Method            | Description                                                                 |
+| ----------------- | --------------------------------------------------------------------------- |
+| `getReturnRate()` | `approvedReturns / ordersWithSellerProducts × 100`, 2 decimals (`HALF_UP`); `0.00` when there are no orders. |
+
+---
+
+# InventoryReport
+
+## Description
+
+Current stock of the Marketplace: one summary per warehouse and the products with low stock.
+
+## Attributes
+
+| Attribute         | Type                         | Description                                                      |
+| ----------------- | ---------------------------- | ---------------------------------------------------------------- |
+| lowStockThreshold | int                          | Products whose available stock is strictly below it are listed. Greater than 0. |
+| generatedAt       | LocalDateTime                | Moment the report was computed. Required.                        |
+| warehouses        | List\<WarehouseStockSummary\> | One row per warehouse. Unmodifiable.                           |
+| lowStockProducts  | List\<LowStockProduct\>      | Products with low stock, lowest available first. Unmodifiable.   |
+
+---
+
+# WarehouseStockSummary
+
+## Description
+
+Detail row of `InventoryReport`: the stock of one warehouse aggregated over its inventory records.
+
+## Attributes
+
+| Attribute     | Type      | Description                                                                 |
+| ------------- | --------- | --------------------------------------------------------------------------- |
+| warehouse     | Warehouse | Warehouse of the row. Required.                                             |
+| totalUnits    | int       | Available + reserved units.                                                 |
+| reservedUnits | int       | Reserved units. Cannot exceed `totalUnits`.                                 |
+| damagedUnits  | int       | Available + reserved units of the records in condition `DAMAGED`. Cannot exceed `totalUnits`. |
+
+---
+
+# LowStockProduct
+
+## Description
+
+Detail row of `InventoryReport`: a physical product whose available stock, summed over every warehouse and excluding `DAMAGED` records, is below the threshold.
+
+## Attributes
+
+| Attribute      | Type            | Description                           |
+| -------------- | --------------- | ------------------------------------- |
+| product        | PhysicalProduct | Product of the row. Required.         |
+| availableUnits | int             | Available units. Cannot be negative.  |
+
+---
+
+# LogisticsReport
+
+## Description
+
+Shipments created in a `ReportPeriod` per status.
+
+## Attributes
+
+| Attribute         | Type                        | Description                                              |
+| ----------------- | --------------------------- | -------------------------------------------------------- |
+| period            | ReportPeriod                | Period of the report. Required.                          |
+| generatedAt       | LocalDateTime               | Moment the report was computed. Required.                |
+| shipmentsByStatus | Map\<ShipmentStatus, Integer\> | Shipments created in the period per status.          |
+
+## Behavior
+
+| Method                 | Description                         |
+| ---------------------- | ----------------------------------- |
+| `getTotalShipments()`  | Sum of `shipmentsByStatus`.         |
+| `getPendingDispatch()` | `PREPARING` + `PACKED`.             |
+| `getDelivered()`       | `DELIVERED`.                        |
+
+---
+
 # Domain Exceptions
 
 All business exceptions live in `nexusmarket.domain.exceptions` and extend `DomainException` (unchecked, extends `RuntimeException`). They belong exclusively to the domain; adapters translate them into technology-specific responses.
@@ -909,6 +1051,8 @@ DomainException
 ├── InvalidVariantException
 ├── InvalidCatalogCodeException
 ├── InvalidAuditLogException
+├── InvalidReportPeriodException
+├── InvalidReportParameterException
 ├── UnauthorizedOperationException
 ├── EntityNotFoundException
 ├── UserAlreadyExistsException
@@ -937,6 +1081,8 @@ DomainException
 | `InvalidVariantException`               | A `Variant` is built with missing values.                                    | `Variant` |
 | `InvalidCatalogCodeException`           | A business code does not correspond to any value of a catalog.               | All catalog enums (`fromCode`) |
 | `InvalidAuditLogException`              | An audit record is missing required data.                                    | `AuditLog` |
+| `InvalidReportPeriodException`          | A report period is missing, or its start date is after its end date.          | `ReportPeriod`, reporting services |
+| `InvalidReportParameterException`       | The low stock threshold is not greater than 0, or a report is built with invalid values. | Report models, `ConsultInventoryReportService` |
 | `UnauthorizedOperationException`        | RG-01/RG-02/RG-03 violation: unauthenticated or inactive user, role not allowed or information outside the user's responsibilities. | Domain services |
 | `EntityNotFoundException`               | A referenced entity does not exist.                                          | Domain services |
 | `UserAlreadyExistsException`            | The identification number or the email is already registered.               | Domain services |

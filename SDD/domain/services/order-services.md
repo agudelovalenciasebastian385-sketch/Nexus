@@ -43,7 +43,7 @@ Exposed in: `BuyerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 
 **Output:** `Order`. Returns the confirmed order.
 
@@ -117,7 +117,7 @@ Exposed in: `BuyerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `orderId` | `String` | Identifier of the order. |
 
 **Output:** `Order`. Returns the paid order.
@@ -188,7 +188,7 @@ Exposed in: `BuyerPort`, `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort`
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `orderId` | `String` | Identifier of the order. |
 
 **Output:** `Order`. Returns the order.
@@ -248,7 +248,7 @@ Exposed in: `BuyerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `buyerId` | `String` | Identifier of the buyer. |
 
 **Output:** `List<Order>`. Returns the buyer's orders.

@@ -14,13 +14,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *       ({@code domain.ports.in}, {@code domain.ports.out}).</li>
  *   <li>{@code adapters.useCases}: the implementations of the role ports, which
  *       delegate to the domain services.</li>
+ *   <li>{@code adapters.persistence}, {@code adapters.security} and
+ *       {@code adapters.payment}: the implementations of the 16 output ports
+ *       (MySQL, MongoDB, BCrypt, JWT and the simulated payment gateway).</li>
+ *   <li>{@code infrastructure.seed}: the initial Administrator seeder.</li>
  * </ul>
  *
- * <p>Next phase (not implemented yet): REST input adapters, the MySQL and
- * MongoDB persistence adapters, the password, JWT and payment gateway adapters
- * that implement the output ports, and the security configuration (RG-01).
- * Until those output adapters exist the Spring context cannot start, because
- * no bean implements the output ports.</p>
+ * <p>REST API step (not implemented yet): REST input adapters, the JWT
+ * authentication filter and the security configuration (RG-01).</p>
  *
  * <p>The package structure follows the Software Architecture document.</p>
  */

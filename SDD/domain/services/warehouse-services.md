@@ -42,7 +42,7 @@ Exposed in: `AdministratorPort`, `SellerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `name` | `String` | Name of the warehouse. |
 | `location` | `Address` | Location of the warehouse. |
 | `type` | `WarehouseType` | `MARKETPLACE` or `SELLER`. |
@@ -109,7 +109,7 @@ Exposed in: `AdministratorPort`, `LogisticsOperatorPort`, `SellerPort`, `Supervi
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `warehouseId` | `String` | Identifier of the warehouse. |
 
 **Output:** `Warehouse`. Returns the warehouse.
@@ -118,7 +118,7 @@ Exposed in: `AdministratorPort`, `LogisticsOperatorPort`, `SellerPort`, `Supervi
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 
 **Output:** `List<Warehouse>`. Returns all warehouses, or only the own ones for a seller.
 
@@ -178,7 +178,7 @@ Exposed in: `AdministratorPort`, `SellerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `warehouseId` | `String` | Identifier of the warehouse. |
 | `name` | `String` | New name. |
 | `location` | `Address` | New location. |

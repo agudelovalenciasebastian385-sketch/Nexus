@@ -45,7 +45,7 @@ Exposed in: `LogisticsOperatorPort`, `SellerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the physical product. |
 | `warehouseId` | `String` | Identifier of the warehouse. |
 | `quantity` | `int` | Initial stock (> 0). |
@@ -115,7 +115,7 @@ Exposed in: `LogisticsOperatorPort`, `SellerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the physical product. |
 | `warehouseId` | `String` | Identifier of the warehouse. |
 | `quantity` | `int` | Units received (> 0). |
@@ -183,7 +183,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the physical product. |
 | `warehouseId` | `String` | Identifier of the warehouse. |
 | `quantity` | `int` | Signed correction of the available stock (0 = no correction). |
@@ -252,7 +252,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the physical product. |
 | `warehouseId` | `String` | Identifier of the warehouse. |
 | `quantity` | `int` | Units to reserve (> 0). |
@@ -320,7 +320,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the physical product. |
 | `warehouseId` | `String` | Identifier of the warehouse. |
 | `quantity` | `int` | Units to release (> 0). |
@@ -387,7 +387,7 @@ Exposed in: `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the physical product. |
 
 **Output:** `List<Inventory>`. Returns the product's records in every warehouse.
@@ -396,7 +396,7 @@ Exposed in: `LogisticsOperatorPort`, `SellerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `warehouseId` | `String` | Identifier of the warehouse. |
 
 **Output:** `List<Inventory>`. Returns the records held in the warehouse.

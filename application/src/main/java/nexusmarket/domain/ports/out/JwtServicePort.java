@@ -14,6 +14,4 @@ public interface JwtServicePort {
     String extractUserId(String token);
 
     Integer extractTokenVersion(String token);
-
-    User reconstructUser(String token);
 }

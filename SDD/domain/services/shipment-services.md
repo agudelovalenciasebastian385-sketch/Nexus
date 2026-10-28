@@ -43,7 +43,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `orderId` | `String` | Identifier of the order. |
 
 **Output:** `List<Shipment>`. Returns the created shipments.
@@ -110,7 +110,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `shipmentId` | `String` | Identifier of the shipment. |
 
 **Output:** `Shipment`. Returns the packed shipment.
@@ -171,7 +171,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `shipmentId` | `String` | Identifier of the shipment. |
 
 **Output:** `Shipment`. Returns the dispatched shipment.
@@ -238,7 +238,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `shipmentId` | `String` | Identifier of the shipment. |
 
 **Output:** `Shipment`. Returns the delivered shipment.

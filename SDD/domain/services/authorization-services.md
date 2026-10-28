@@ -42,7 +42,7 @@ Internal (used by every protected service).
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `user` | `User` | User reconstructed from the token. |
+| `user` | `User` | User loaded from the token by the JWT filter. |
 
 **Output:** `User`. Returns the stored (authoritative) user.
 
@@ -93,7 +93,7 @@ Internal (used by every protected service).
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `user` | `User` | User reconstructed from the token. |
+| `user` | `User` | User loaded from the token by the JWT filter. |
 | `allowedRoles` | `SystemRole...` | Roles allowed for the operation. |
 
 **Output:** `User`. Returns the stored (authoritative) user.

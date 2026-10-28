@@ -17,6 +17,11 @@ import nexusmarket.domain.valueobjects.Variant;
  * <p>Only products in {@code PUBLISHED} status can be added to a cart, and the
  * chosen variant (if any) must be one of the variants offered by the
  * product.</p>
+ *
+ * <p>Those two offer checks apply when an item is added. An item rebuilt from
+ * storage ({@link #rehydrate}) skips them, because the product may have been
+ * suspended, discontinued or lost the variant after the item was added; such an
+ * item stays in the cart and ConfirmOrderService rejects it at checkout.</p>
  */
 public class CartItem {
 
@@ -27,13 +32,27 @@ public class CartItem {
     private final BigDecimal unitPrice;
 
     public CartItem(Product product, Variant variant, int quantity, BigDecimal unitPrice) {
+        this(product, variant, quantity, unitPrice, true);
+    }
+
+    /**
+     * Rehydration factory: rebuilds a stored item without checking that the
+     * product is still published or still offers the variant. Product, quantity
+     * and unit price are validated as usual.
+     */
+    public static CartItem rehydrate(Product product, Variant variant, int quantity, BigDecimal unitPrice) {
+        return new CartItem(product, variant, quantity, unitPrice, false);
+    }
+
+    private CartItem(Product product, Variant variant, int quantity, BigDecimal unitPrice,
+                     boolean validateOffer) {
         if (product == null) {
             throw new InvalidCartException("Cart item product is required.");
         }
-        if (!product.isPublished()) {
+        if (validateOffer && !product.isPublished()) {
             throw new InvalidProductStatusException("Only published products can be added to a cart.");
         }
-        if (variant != null && !product.hasVariant(variant)) {
+        if (validateOffer && variant != null && !product.hasVariant(variant)) {
             throw new InvalidCartException("The variant " + variant + " is not offered by this product.");
         }
         if (unitPrice == null || unitPrice.signum() < 0) {

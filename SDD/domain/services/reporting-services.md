@@ -43,7 +43,7 @@ Exposed in: `AdministratorPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `period` | `ReportPeriod` | Inclusive range of days of the report. |
 
 **Output:** `CommercialReport`. Returns the commercial report of the period.
@@ -110,7 +110,7 @@ Exposed in: `AdministratorPort`, `SellerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `sellerId` | `String` | Identifier of the seller. |
 | `period` | `ReportPeriod` | Inclusive range of days of the report. |
 
@@ -183,7 +183,7 @@ Exposed in: `AdministratorPort`, `LogisticsOperatorPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `lowStockThreshold` | `int` | Products whose available stock is strictly below this value are listed (> 0). |
 
 **Output:** `InventoryReport`. Returns the inventory report.
@@ -248,7 +248,7 @@ Exposed in: `AdministratorPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `period` | `ReportPeriod` | Inclusive range of days of the report. |
 
 **Output:** `LogisticsReport`. Returns the logistics report of the period.

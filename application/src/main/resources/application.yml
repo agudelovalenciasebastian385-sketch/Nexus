@@ -1,8 +1,10 @@
 spring:
   application:
     name: nexusmarket
+  # MySQL (business aggregates). Default: host-local run against docker-compose (root / root).
+  # Under Docker Compose use MYSQL_URL=jdbc:mysql://mysql-db:3306/nexusmarket?... .
   datasource:
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/nexusmarket?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/nexusmarket?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -17,10 +19,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  # MongoDB (audit trail). Spring Boot 4 uses the spring.mongodb prefix.
+  # Under Docker Compose use MONGODB_URI=mongodb://mongo-db:27017/nexusmarket.
   mongodb:
-    host: ${MONGO_HOST:localhost}
-    port: ${MONGO_PORT:27017}
-    database: ${MONGO_DATABASE:nexusmarket}
+    uri: ${MONGODB_URI:mongodb://localhost:27017/nexusmarket}
 
 server:
   port: 8080
@@ -28,5 +30,19 @@ server:
 app:
   security:
     jwt:
+      # HS256 needs a key of at least 256 bits (32 bytes). This default is public:
+      # override JWT_SECRET outside local development.
       secret: ${JWT_SECRET:NexusMarket-Development-Secret-Key-Please-Change-In-Production-2026}
       expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
+  payment:
+    simulated:
+      # SimulatedPaymentGatewayAdapter approves every payment whose order total is less than or
+      # equal to this amount and rejects larger ones, so the rejection path can be tested.
+      approval-limit: ${PAYMENT_APPROVAL_LIMIT:10000000.00}
+  seed:
+    # Initial Administrator created by DatabaseSeeder when no Administrator exists yet.
+    admin:
+      identification-number: ${SEED_ADMIN_IDENTIFICATION:1000000000}
+      full-name: ${SEED_ADMIN_FULL_NAME:NexusMarket Administrator}
+      email: ${SEED_ADMIN_EMAIL:admin@nexusmarket.com}
+      password: ${SEED_ADMIN_PASSWORD:Admin123*}

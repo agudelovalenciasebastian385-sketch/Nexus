@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Output ports define the contracts through which the domain communicates with external resources. The domain owns these interfaces (`nexusmarket.domain.ports.out`); their implementations belong to the adapter layer (MySQL, MongoDB, password hashing, JWT and a simulated payment gateway) and are out of the scope of this phase.
+Output ports define the contracts through which the domain communicates with external resources. The domain owns these interfaces (`nexusmarket.domain.ports.out`); their implementations belong to the adapter layer (MySQL, MongoDB, password hashing, JWT and a simulated payment gateway); see [Adapters](#adapters) below.
 
 Domain services must never depend directly on MySQL, MongoDB, JPA, Spring Data, HTTP, REST, JWT or hashing libraries.
 
@@ -22,11 +22,34 @@ Domain Service
 Output Port (domain/ports/out)
       |
       v
-Output Adapter (adapters/out)
+Output Adapter (adapters/persistence, adapters/security, adapters/payment)
       |
       v
 External resource (MySQL, MongoDB, hashing, JWT, payment gateway)
 ```
+
+## Adapters
+
+Every output port is implemented (see [Persistence Adapters](../Adapters/Persistence-adapters.md) and [Security Adapters](../Adapters/Security-adapters.md)):
+
+| Output port | Adapter | Technology |
+| --- | --- | --- |
+| `UserRepositoryPort` | `UserJpaAdapter` | MySQL (Spring Data JPA) |
+| `BuyerRepositoryPort` | `BuyerJpaAdapter` | MySQL (Spring Data JPA) |
+| `SellerRepositoryPort` | `SellerJpaAdapter` | MySQL (Spring Data JPA) |
+| `WarehouseRepositoryPort` | `WarehouseJpaAdapter` | MySQL (Spring Data JPA) |
+| `ProductRepositoryPort` | `ProductJpaAdapter` | MySQL (Spring Data JPA) |
+| `InventoryRepositoryPort` | `InventoryJpaAdapter` | MySQL (Spring Data JPA) |
+| `CartRepositoryPort` | `CartJpaAdapter` | MySQL (Spring Data JPA) |
+| `OrderRepositoryPort` | `OrderJpaAdapter` | MySQL (Spring Data JPA) |
+| `InvoiceRepositoryPort` | `InvoiceJpaAdapter` | MySQL (Spring Data JPA) |
+| `ShipmentRepositoryPort` | `ShipmentJpaAdapter` | MySQL (Spring Data JPA) |
+| `ReturnRequestRepositoryPort` | `ReturnRequestJpaAdapter` | MySQL (Spring Data JPA) |
+| `RefundRepositoryPort` | `RefundJpaAdapter` | MySQL (Spring Data JPA) |
+| `AuditLogRepositoryPort` | `AuditLogMongoAdapter` | MongoDB (Spring Data MongoDB) |
+| `PasswordServicePort` | `BCryptPasswordServiceAdapter` | BCrypt (Spring Security Crypto) |
+| `JwtServicePort` | `JwtProvider` | JJWT 0.12.6, HS256 |
+| `PaymentGatewayPort` | `SimulatedPaymentGatewayAdapter` | Simulated gateway (configurable approval limit) |
 
 ---
 
@@ -483,7 +506,6 @@ public interface JwtServicePort {
     boolean validateToken(String token);
     String extractUserId(String token);
     Integer extractTokenVersion(String token);
-    User reconstructUser(String token);
 }
 ```
 

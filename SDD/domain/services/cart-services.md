@@ -44,7 +44,7 @@ Exposed in: `BuyerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the product. |
 | `variant` | `Variant` | Chosen variant (`null` if not applicable). |
 | `quantity` | `int` | Units (> 0). |
@@ -113,7 +113,7 @@ Exposed in: `BuyerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the product. |
 | `variant` | `Variant` | Variant of the line. |
 
@@ -177,7 +177,7 @@ Exposed in: `BuyerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the product. |
 | `variant` | `Variant` | Variant of the line. |
 | `quantity` | `int` | New quantity (> 0). |
@@ -243,7 +243,7 @@ Exposed in: `BuyerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `buyerId` | `String` | Identifier of the buyer owning the cart. |
 
 **Output:** `Cart`. Returns the cart.
@@ -304,7 +304,7 @@ Exposed in: `BuyerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 
 **Output:** `Cart`. Returns the empty cart.
 

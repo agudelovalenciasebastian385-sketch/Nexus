@@ -44,7 +44,7 @@ Exposed in: `BuyerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `orderId` | `String` | Identifier of the order. |
 | `reason` | `String` | Justification. |
 
@@ -112,7 +112,7 @@ Exposed in: `AdministratorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `returnRequestId` | `String` | Identifier of the return request. |
 
 **Output:** `ReturnRequest`. Returns the approved return request.
@@ -180,7 +180,7 @@ Exposed in: `AdministratorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `returnRequestId` | `String` | Identifier of the return request. |
 
 **Output:** `ReturnRequest`. Returns the rejected return request.
@@ -241,7 +241,7 @@ Exposed in: `AdministratorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `refundId` | `String` | Identifier of the refund. |
 
 **Output:** `Refund`. Returns the processed refund.
@@ -303,7 +303,7 @@ Exposed in: `AdministratorPort`, `BuyerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `returnRequestId` | `String` | Identifier of the return request. |
 
 **Output:** `ReturnRequest`. Returns the return request.
@@ -312,7 +312,7 @@ Exposed in: `AdministratorPort`, `BuyerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `returnRequestId` | `String` | Identifier of the return request. |
 
 **Output:** `Refund`. Returns the refund of the return request.

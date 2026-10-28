@@ -28,7 +28,7 @@ An order may generate one invoice, one or more shipments, and, eventually, assoc
 
 * **Identity:** entities with an `id` attribute compare equality by `id`. `Inventory` has no `id`: its identity is the pair (`product`, `warehouse`).
 * **Collections** are never exposed for direct modification: getters return unmodifiable views and changes go through domain methods (for example `Cart.addItem`, `Cart.removeItem`, `Seller.addWarehouse`).
-* **Rehydration constructors:** entities with a lifecycle provide a second constructor that receives the current status (and collections) to rebuild a persisted object. Users are rehydrated with their stored `authTokenVersion`.
+* **Rehydration constructors:** entities with a lifecycle provide a second constructor that receives the current status (and collections) to rebuild a persisted object. Users are rehydrated with their stored `authTokenVersion`. `CartItem` is rebuilt through the `CartItem.rehydrate(...)` factory, which skips the offer checks (see [CartItem](#cartitem)).
 * **Validation:** every rule violation raises a subclass of `DomainException` (see [Domain Exceptions](#domain-exceptions)). Required references that are `null` and required texts that are blank are rejected.
 
 ---
@@ -601,6 +601,15 @@ Represents a product selected within a cart, along with the chosen variant, quan
 | quantity  | int        | Selected quantity. Always positive.                  |
 | unitPrice | BigDecimal | Unit price captured when the product was added. Zero or positive. |
 
+## Construction
+
+| Form | Description |
+| ---- | ----------- |
+| `new CartItem(product, variant, quantity, unitPrice)` | New item. Applies every business rule below, including the offer checks (product `PUBLISHED`, variant offered). Used by `Cart.addItem`. |
+| `CartItem.rehydrate(product, variant, quantity, unitPrice)` | Rehydration of a stored item. Skips the two offer checks, because the product may have been suspended, discontinued or lost the variant after the item was added; product, quantity and unit price are still validated. |
+
+The rehydration form is a static factory instead of a second constructor because both forms take the same parameter types. An item kept this way stays in the cart (it is not lost when the cart is saved again) and `ConfirmOrderService` rejects it at checkout.
+
 ## Behavior
 
 | Method                                    | Description                                              |
@@ -611,8 +620,8 @@ Represents a product selected within a cart, along with the chosen variant, quan
 
 ## Business Rules
 
-* Only products in `PUBLISHED` status can be added → `InvalidProductStatusException`.
-* The chosen variant must be offered by the product → `InvalidCartException`.
+* Only products in `PUBLISHED` status can be added → `InvalidProductStatusException` (new items only).
+* The chosen variant must be offered by the product → `InvalidCartException` (new items only).
 * `quantity` must be positive and `unitPrice` zero or positive → `InvalidCartException`.
 
 ## Relationships

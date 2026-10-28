@@ -42,7 +42,7 @@ Exposed in: `AdministratorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `identificationNumber` | `String` | Identity document number. |
 | `fullName` | `String` | Official name. |
 | `email` | `String` | Access and communication email. |
@@ -117,7 +117,7 @@ Exposed in: `AdministratorPort`, `SellerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `sellerId` | `String` | Identifier of the seller. |
 
 **Output:** `Seller`. Returns the seller.
@@ -177,7 +177,7 @@ Exposed in: `AdministratorPort`, `SellerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `sellerId` | `String` | Identifier of the seller. |
 | `fullName` | `String` | New full name. |
 

@@ -100,7 +100,7 @@ Exposed in: `AdministratorPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 
 **Output:** `List<AuditLog>`. Returns all audit records.
 
@@ -108,7 +108,7 @@ Exposed in: `AdministratorPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `userId` | `String` | Identifier of the user who performed the operations. |
 
 **Output:** `List<AuditLog>`. Returns the records performed by the user.
@@ -117,7 +117,7 @@ Exposed in: `AdministratorPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `entityType` | `AuditEntityType` | Type of the entity. |
 | `entityId` | `String` | Identifier of the entity. |
 

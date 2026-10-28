@@ -42,7 +42,7 @@ Exposed in: `AdministratorPort`, `BuyerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `buyerId` | `String` | Identifier of the buyer. |
 
 **Output:** `Buyer`. Returns the buyer.
@@ -102,7 +102,7 @@ Exposed in: `BuyerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `fullName` | `String` | New full name. |
 | `primaryAddress` | `Address` | New primary address. |
 | `additionalAddresses` | `List<Address>` | New list of additional addresses (`null` = empty list). |
@@ -167,7 +167,7 @@ Exposed in: `AdministratorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `buyerId` | `String` | Identifier of the buyer. |
 | `newStatus` | `CommercialStatus` | New commercial status. |
 

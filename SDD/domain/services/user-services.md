@@ -117,7 +117,7 @@ Exposed in: `AdministratorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `role` | `SystemRole` | `LOGISTICS_OPERATOR` or `SUPERVISOR`. |
 | `identificationNumber` | `String` | Identity document number. |
 | `fullName` | `String` | Official name. |
@@ -196,7 +196,7 @@ Exposed in: `PublicAccessPort`.
 
 * The user is searched by email; the password is verified through `PasswordServicePort`.
 * Only `ACTIVE` users can log in.
-* The token is generated through `JwtServicePort`; it carries the user identifier and its current `authTokenVersion`, plus the data needed to rebuild the `User`.
+* The token is generated through `JwtServicePort`; it carries the user identifier and its current `authTokenVersion` (claims `sub`, `jti`, `ver`, `iat` and `exp`) and no other user data.
 
 ## Validations
 
@@ -249,7 +249,7 @@ Exposed in: `PublicAccessPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `user` | `User` | Authenticated user (reconstructed from the token). |
+| `user` | `User` | Authenticated user (loaded from the token by the JWT filter). |
 
 **Output:** No result.
 
@@ -359,7 +359,7 @@ Exposed in: `AdministratorPort`, `BuyerPort`, `LogisticsOperatorPort`, `SellerPo
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `userId` | `String` | Identifier of the user to consult. |
 
 **Output:** `User`. Returns the user.
@@ -418,7 +418,7 @@ Exposed in: `AdministratorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `userId` | `String` | Identifier of the target user. |
 | `newStatus` | `UserStatus` | New status. |
 
@@ -482,7 +482,7 @@ Exposed in: `AdministratorPort`, `BuyerPort`, `LogisticsOperatorPort`, `SellerPo
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `currentPassword` | `String` | Current plain password. |
 | `newPassword` | `String` | New plain password. |
 

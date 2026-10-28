@@ -15,14 +15,15 @@ This approach promotes maintainability, scalability, testability, and technology
 | Domain models, value objects and domain exceptions | Implemented |
 | Domain services (60, organized in 14 subdomains) | Implemented |
 | Input ports: 6 role ports | Implemented |
-| Output ports (16 interfaces) | Implemented (interfaces only) |
+| Output ports (16 interfaces) | Implemented |
 | Use case adapters (`adapters/useCases`, 6 classes) | Implemented |
-| REST input adapters (controllers, DTOs, mappers) | **Next phase** |
-| Persistence output adapters (MySQL / JPA, MongoDB) | **Next phase** |
-| Password hashing, JWT and payment gateway adapters | **Next phase** |
-| Security configuration (authentication filters, token validation) | **Next phase** |
+| Persistence output adapters (MySQL / JPA: 12 ports; MongoDB: audit log) | Implemented |
+| Password hashing (BCrypt), JWT (JJWT) and simulated payment gateway adapters | Implemented |
+| Initial Administrator seeder (`infrastructure/seed`) | Implemented |
+| REST input adapters (controllers, DTOs, mappers) | **REST API step** |
+| JWT authentication filter and `SecurityConfig` | **REST API step** |
 
-Until the output adapters exist, the application compiles but the Spring context cannot start, because no bean implements the output ports.
+Every output port has an implementation, so the Spring context starts against the MySQL and MongoDB containers of `docker-compose.yml`. No REST endpoint is exposed yet.
 
 ---
 
@@ -51,12 +52,12 @@ nexusmarket
 │
 ├── App.java          (entry point)
 │
-├── adapters          (use case adapters; REST and output adapters in the next phase)
+├── adapters          (use case adapters and output adapters; REST adapters in the REST API step)
 │
-└── domain            (models, value objects, exceptions, services, ports)
+├── domain            (models, value objects, exceptions, services, ports)
+│
+└── infrastructure    (technical startup tasks: initial data seed)
 ```
-
-An `infrastructure` component (technical configuration) is planned for the next phase; it does not exist yet.
 
 ---
 
@@ -71,7 +72,15 @@ application/src/main/java/
     ├── App.java
     │
     ├── adapters/
-    │   └── useCases/                 6 role port implementations
+    │   ├── useCases/                 6 role port implementations
+    │   ├── persistence/
+    │   │   ├── jpa/                  MySQL: entities, mappers, repositories, JpaAggregateLoader, 12 *JpaAdapter
+    │   │   └── mongodb/              MongoDB: AuditLogDocument, mapper, repository, AuditLogMongoAdapter
+    │   ├── security/                 JwtProvider, BCryptPasswordServiceAdapter, dtos/, mappers/
+    │   └── payment/                  SimulatedPaymentGatewayAdapter
+    │
+    ├── infrastructure/
+    │   └── seed/                     DatabaseSeeder (initial Administrator)
     │
     └── domain/
         ├── models/                   entities, authentication result and read-only reports (28 classes)
@@ -97,30 +106,46 @@ application/src/main/java/
             └── out/                  16 output ports
 ```
 
-Configuration lives in `application/src/main/resources/application.yml` (MySQL datasource, MongoDB connection, JWT properties). The root `docker-compose.yml` starts MySQL 8 (port 3306, database `nexusmarket`) and MongoDB 6 (port 27017).
+## Configuration and Local Environment
 
-## Planned Structure (Next Phase)
+Configuration lives in `application/src/main/resources/application.yml`:
+
+| Prefix | Content |
+| --- | --- |
+| `spring.datasource` | MySQL `jdbc:mysql://localhost:3306/nexusmarket?createDatabaseIfNotExist=true&...`, user `root` / `root` (overridable with `MYSQL_URL`, `MYSQL_USERNAME`, `MYSQL_PASSWORD`). |
+| `spring.jpa` | `ddl-auto: update` (Hibernate creates and updates the tables), `open-in-view: false`. |
+| `spring.mongodb.uri` | `mongodb://localhost:27017/nexusmarket` (Spring Boot 4 prefix; overridable with `MONGODB_URI`). |
+| `app.security.jwt` | JWT secret and expiration (see [Security Adapters](../Adapters/Security-adapters.md)). |
+| `app.payment.simulated` | Approval limit of the simulated payment gateway (see [Persistence Adapters](../Adapters/Persistence-adapters.md#81-paymentgatewayport--simulatedpaymentgatewayadapter)). |
+| `app.seed.admin` | Credentials of the initial Administrator. |
+
+The root `docker-compose.yml` starts:
+
+| Service | Image | Port | Purpose |
+| --- | --- | --- | --- |
+| `mysql-db` | `mysql:8.0` | 3306 | Business data (database `nexusmarket`, `root` / `root`). |
+| `mongo-db` | `mongo:6.0` | 27017 | Audit trail (database `nexusmarket`, collection `audit_logs`). |
+| `phpmyadmin` | `phpmyadmin:5.2` | 8081 | **Development tool:** web UI to browse MySQL (`http://localhost:8081`, `root` / `root`). |
+| `mongo-express` | `mongo-express:1.0.2` | 8082 | **Development tool:** web UI to browse MongoDB (`http://localhost:8082`, `admin` / `admin`). |
+
+phpMyAdmin and Mongo Express are development tools only; the application does not depend on them.
+
+## Planned Structure (REST API Step)
 
 ```text
 nexusmarket/
 ├── adapters/
-│   ├── in/
-│   │   └── rest/
-│   │       ├── controllers/
-│   │       ├── requests/
-│   │       ├── responses/
-│   │       └── mappers/
-│   └── out/
-│       ├── persistence/
-│       │   ├── mysql/                entities, repositories, mappers, adapters
-│       │   └── mongodb/              audit log documents, repositories, mappers, adapters
-│       ├── security/                 PasswordServicePort and JwtServicePort implementations
-│       └── payment/                  simulated PaymentGatewayPort implementation
+│   ├── rest/
+│   │   ├── controllers/
+│   │   ├── requests/
+│   │   ├── responses/
+│   │   └── mappers/
+│   └── security/
+│       └── JwtAuthenticationFilter       (see Security Adapters, section 5)
 │
 └── infrastructure/
-    ├── config/
-    ├── database/
     └── security/
+        └── SecurityConfig                filter chain, public routes, PasswordEncoder bean
 ```
 
 ---
@@ -135,7 +160,7 @@ nexusmarket/
 
 - Initialize the application.
 - Configure dependency injection (component scanning of services and adapters).
-- Start the web server (REST controllers will be added in the next phase).
+- Start the web server (REST controllers will be added in the REST API step).
 
 ---
 
@@ -236,26 +261,26 @@ Package `nexusmarket.domain.ports.in` (see [Input Ports](../domain/Input-ports.m
 
 ### Output Ports
 
-Package `nexusmarket.domain.ports.out` (see [Output Ports](../domain/Output-ports.md)). Interfaces only in this phase:
+Package `nexusmarket.domain.ports.out` (see [Output Ports](../domain/Output-ports.md)):
 
-| Output port | Responsibility | Planned adapter (next phase) |
+| Output port | Responsibility | Adapter |
 | --- | --- | --- |
-| `UserRepositoryPort` | Users of any role; email and identification uniqueness | MySQL |
-| `BuyerRepositoryPort` | Buyers | MySQL |
-| `SellerRepositoryPort` | Sellers | MySQL |
-| `WarehouseRepositoryPort` | Warehouses | MySQL |
-| `ProductRepositoryPort` | Physical and digital products | MySQL |
-| `InventoryRepositoryPort` | Inventory records and movements (also all records, for the inventory report) | MySQL |
-| `CartRepositoryPort` | Carts and cart items | MySQL |
-| `OrderRepositoryPort` | Orders and order items; orders created in a date range | MySQL |
-| `InvoiceRepositoryPort` | Invoices; invoices issued in a date range | MySQL |
-| `ShipmentRepositoryPort` | Shipments; shipments created in a date range | MySQL |
-| `ReturnRequestRepositoryPort` | Return requests | MySQL |
-| `RefundRepositoryPort` | Refunds; refunds processed in a date range | MySQL |
-| `AuditLogRepositoryPort` | Append-only audit records | MongoDB |
-| `PasswordServicePort` | Password encryption and verification | Hashing library |
-| `JwtServicePort` | Token generation and validation, extraction of the user id and token version, and `User` reconstruction | JWT library |
-| `PaymentGatewayPort` | Order payment processing (`PaymentResult`) | Simulated gateway |
+| `UserRepositoryPort` | Users of any role; email and identification uniqueness | `UserJpaAdapter` (MySQL) |
+| `BuyerRepositoryPort` | Buyers | `BuyerJpaAdapter` (MySQL) |
+| `SellerRepositoryPort` | Sellers | `SellerJpaAdapter` (MySQL) |
+| `WarehouseRepositoryPort` | Warehouses | `WarehouseJpaAdapter` (MySQL) |
+| `ProductRepositoryPort` | Physical and digital products | `ProductJpaAdapter` (MySQL) |
+| `InventoryRepositoryPort` | Inventory records and movements (also all records, for the inventory report) | `InventoryJpaAdapter` (MySQL) |
+| `CartRepositoryPort` | Carts and cart items | `CartJpaAdapter` (MySQL) |
+| `OrderRepositoryPort` | Orders and order items; orders created in a date range | `OrderJpaAdapter` (MySQL) |
+| `InvoiceRepositoryPort` | Invoices; invoices issued in a date range | `InvoiceJpaAdapter` (MySQL) |
+| `ShipmentRepositoryPort` | Shipments; shipments created in a date range | `ShipmentJpaAdapter` (MySQL) |
+| `ReturnRequestRepositoryPort` | Return requests | `ReturnRequestJpaAdapter` (MySQL) |
+| `RefundRepositoryPort` | Refunds; refunds processed in a date range | `RefundJpaAdapter` (MySQL) |
+| `AuditLogRepositoryPort` | Append-only audit records | `AuditLogMongoAdapter` (MongoDB) |
+| `PasswordServicePort` | Password encryption and verification | `BCryptPasswordServiceAdapter` (BCrypt) |
+| `JwtServicePort` | Token generation and validation, extraction of the user id and token version | `JwtProvider` (JJWT, HS256) |
+| `PaymentGatewayPort` | Order payment processing (`PaymentResult`) | `SimulatedPaymentGatewayAdapter` |
 
 Date-range methods (`findBy<Date>Between(LocalDateTime from, LocalDateTime toExclusive)`) use the half-open interval `[from, toExclusive)`: inclusive lower bound, exclusive upper bound (see [Output Ports](../domain/Output-ports.md)).
 
@@ -292,34 +317,34 @@ Package `nexusmarket.adapters.useCases` (see [Use Cases Adapters](../Adapters/Us
 | `AdministratorPort` | `AdministratorUseCaseImpl` |
 | `SupervisorPort` | `SupervisorUseCaseImpl` |
 
-## Input Adapters — REST (next phase)
+## Input Adapters — REST (REST API step)
 
 Will expose the role ports to external clients (buyers, sellers, logistics operators, administrators and supervisors).
 
-- **Controllers:** receive HTTP requests, obtain the `User` reconstructed from the token and call the corresponding role port. They must never implement business rules.
+- **Controllers:** receive HTTP requests, obtain the `User` loaded by the JWT filter and call the corresponding role port. They must never implement business rules.
 - **Requests / Responses:** DTOs for incoming and outgoing payloads; they never enter the domain.
 - **Mappers:** Request DTO ↔ domain data, domain model ↔ Response DTO.
 
-## Output Adapters (next phase)
+## Output Adapters (implemented)
 
-Will implement the output ports:
+Every output port is implemented:
 
-- **MySQL (Spring Data JPA):** persistence entities, repositories, mappers and adapters for every repository port except the audit log. A single relational store keeps the transactional data.
-- **MongoDB (Spring Data MongoDB):** documents, repository, mapper and adapter for `AuditLogRepositoryPort`.
-- **Security:** implementations of `PasswordServicePort` and `JwtServicePort`.
-- **Payment:** simulated implementation of `PaymentGatewayPort` returning `PaymentResult.APPROVED` or `PaymentResult.REJECTED`.
+- **MySQL (Spring Data JPA)** — `adapters/persistence/jpa`: flat entities, one mapper per entity, one Spring Data repository per table and one adapter per repository port; `JpaAggregateLoader` rebuilds cross-table references. See [Persistence Adapters](../Adapters/Persistence-adapters.md).
+- **MongoDB (Spring Data MongoDB)** — `adapters/persistence/mongodb`: `AuditLogDocument` in the `audit_logs` collection. See [Persistence Adapters](../Adapters/Persistence-adapters.md).
+- **Security** — `adapters/security`: `JwtProvider` (`JwtServicePort`, minimal token `sub`/`jti`/`ver`/`iat`/`exp`) and `BCryptPasswordServiceAdapter` (`PasswordServicePort`). See [Security Adapters](../Adapters/Security-adapters.md).
+- **Payment** — `adapters/payment`: `SimulatedPaymentGatewayAdapter` returns `PaymentResult.APPROVED` up to a configurable order total and `PaymentResult.REJECTED` above it.
 
-Persistence adapters are also responsible for transactional boundaries: domain services perform several port calls per operation and do not declare transactions themselves.
+Persistence adapters own the transactional boundaries they need (`@Transactional` on writes that span several rows); domain services do not declare transactions.
 
 ---
 
-# Infrastructure (next phase)
+# Infrastructure
 
-Will contain technical configuration without business logic:
+Technical components without business logic:
 
-- **Config:** REST configuration, serialization, environment configuration.
-- **Database:** connection pool and schema configuration (today `spring.jpa.hibernate.ddl-auto: update` in `application.yml`).
-- **Security:** authentication filters and token validation, aligned with RG-01 (every operation must be executed by an authenticated user). The JWT filter loads the user with `LoadAuthenticatedUserService` and rejects tokens whose version differs from `User.authTokenVersion` (logout, password change or status change).
+- **Seed (implemented)** — `infrastructure/seed/DatabaseSeeder`: creates the initial `Administrator` at startup when none exists (credentials in `app.seed.admin`, password hashed through `PasswordServicePort`).
+- **Database:** Hibernate `ddl-auto: update` creates and updates the MySQL schema; the database itself is created by `createDatabaseIfNotExist=true`.
+- **Security (REST API step):** `SecurityConfig` and the JWT authentication filter, aligned with RG-01 (every operation must be executed by an authenticated user). The filter validates the token, extracts the id with `extractUserId`, loads the user with `LoadAuthenticatedUserService`, verifies that it is `ACTIVE` and that `extractTokenVersion` equals its `authTokenVersion` (changed by logout, password change or status change); any failure is rejected with 401. See [Security Adapters](../Adapters/Security-adapters.md#5-jwt-filter-flow-rest-api-step).
 
 ---
 
@@ -328,7 +353,7 @@ Will contain technical configuration without business logic:
 Dependencies always point toward the domain.
 
 ```text
-REST Controller (next phase)
+REST Controller (REST API step)
         │
         ▼
 Role Port (domain/ports/in)  ◄── implemented by ── Use Case Adapter (adapters/useCases)
@@ -340,7 +365,7 @@ Role Port (domain/ports/in)  ◄── implemented by ── Use Case Adapter (a
         └────────────────────────────────── Output Port (domain/ports/out)
                                                             ▲
                                                             │ implemented by
-                                            Output Adapter (next phase: MySQL, MongoDB, security, payment)
+                                            Output Adapter (MySQL, MongoDB, security, payment)
 ```
 
 The domain never depends on adapters or infrastructure.

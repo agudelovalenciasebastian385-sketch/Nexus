@@ -46,7 +46,7 @@ Exposed in: `SellerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `type` | `ProductType` | `PHYSICAL` or `DIGITAL`. |
 | `name` | `String` | Commercial name. |
 | `description` | `String` | Functional description. |
@@ -114,7 +114,7 @@ Exposed in: `SellerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the product. |
 | `name` | `String` | New name. |
 | `description` | `String` | New description. |
@@ -182,7 +182,7 @@ Exposed in: `SellerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the product. |
 
 **Output:** `Product`. Returns the published product.
@@ -244,7 +244,7 @@ Exposed in: `SellerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the product. |
 
 **Output:** `Product`. Returns the suspended product.
@@ -306,7 +306,7 @@ Exposed in: `SellerPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `productId` | `String` | Identifier of the product. |
 
 **Output:** `Product`. Returns the discontinued product.
@@ -427,7 +427,7 @@ Exposed in: `AdministratorPort`, `SellerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `sellerId` | `String` | Identifier of the seller. |
 
 **Output:** `List<Product>`. Returns the seller's products.

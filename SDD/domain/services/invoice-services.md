@@ -100,7 +100,7 @@ Exposed in: `AdministratorPort`, `BuyerPort`, `SupervisorPort`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `requestingUser` | `User` | Authenticated user performing the operation (reconstructed from the token). |
+| `requestingUser` | `User` | Authenticated user performing the operation (loaded from the token by the JWT filter). |
 | `orderId` | `String` | Identifier of the invoiced order. |
 
 **Output:** `Invoice`. Returns the invoice.

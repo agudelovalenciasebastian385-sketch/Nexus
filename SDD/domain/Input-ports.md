@@ -31,7 +31,7 @@ A role port only contains the operations allowed to its role (RG-03); the servic
 
 ### 2.2 Parameters
 
-* Protected methods receive the authenticated `User` (reconstructed from the token) as `requestingUser`.
+* Protected methods receive the authenticated `User` (loaded from the token by the JWT filter) as `requestingUser`.
 * Existing aggregates are referenced by identifier (`String`), because NexusMarket entities validate their invariants on construction and cannot be built with only an identifier.
 * New information is received as primitives and Value Objects.
 

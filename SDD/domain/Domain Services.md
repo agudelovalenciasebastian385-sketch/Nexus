@@ -9,7 +9,7 @@ The detailed specification of every service (authorized roles, input, output, bu
 ## Service Design Principles
 
 * **One service per use case.** Each service is a concrete class `<Name>Service` annotated with `@Service` and `@RequiredArgsConstructor`; it implements no interface. Its operations are exposed through the role ports of `nexusmarket.domain.ports.in`, whose use case adapters inject the service class directly. Internal services (authorization, audit registration and loading of the authenticated user) are not exposed in any role port.
-* **Requesting user first.** Every protected operation receives the authenticated `User` (reconstructed from the token) as its first parameter.
+* **Requesting user first.** Every protected operation receives the authenticated `User` (loaded from the token by the JWT filter) as its first parameter.
 * **Authorization first.** Services validate RG-01 (authenticated and `ACTIVE` user), RG-02 (single role) and RG-03 (no information outside the role) through the authorization services before doing anything else.
 * **Output ports only.** Services read and store information exclusively through the output ports of `nexusmarket.domain.ports.out`; they never depend on databases, JPA, MongoDB, HTTP, JWT or hashing libraries.
 * **Rules in the entities.** Services orchestrate; invariants and state transitions are enforced by the domain entities, which raise domain exceptions.

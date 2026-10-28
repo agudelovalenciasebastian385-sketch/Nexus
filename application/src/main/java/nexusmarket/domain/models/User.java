@@ -1,5 +1,6 @@
 package nexusmarket.domain.models;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import nexusmarket.domain.exceptions.InvalidUserException;
@@ -56,13 +57,14 @@ public abstract class User {
         if (fullName == null || fullName.isBlank()) {
             throw new InvalidUserException("User fullName cannot be empty.");
         }
-        if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
+        String normalizedEmail = normalizeEmail(email);
+        if (normalizedEmail == null || !EMAIL_PATTERN.matcher(normalizedEmail).matches()) {
             throw new InvalidUserException("User email is not valid: " + email);
         }
         this.id = id;
         this.identificationNumber = identificationNumber;
         this.fullName = fullName;
-        this.email = email;
+        this.email = normalizedEmail;
         this.password = requirePassword(password);
         if (role == null) {
             throw new InvalidUserException("User role is required.");
@@ -76,6 +78,15 @@ public abstract class User {
             throw new InvalidUserException("User authTokenVersion must be greater than or equal to 1.");
         }
         this.authTokenVersion = authTokenVersion;
+    }
+
+    /**
+     * Canonical form of an email: trimmed and lower-cased, so "Juan@Gmail.com " and
+     * "juan@gmail.com" are the same user. Applied by the constructor and by every lookup or
+     * uniqueness check by email. Returns {@code null} for {@code null}.
+     */
+    public static String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
     }
 
     public String getId() {

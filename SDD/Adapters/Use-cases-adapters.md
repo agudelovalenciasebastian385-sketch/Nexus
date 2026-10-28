@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-Use case adapters live in `nexusmarket.adapters.useCases`. Each one is the concrete implementation of a role port of `nexusmarket.domain.ports.in` and bridges the incoming calls (REST controllers in a later phase) to the domain services of `nexusmarket.domain.services`.
+Use case adapters live in `nexusmarket.adapters.useCases`. Each one is the concrete implementation of a role port of `nexusmarket.domain.ports.in` and bridges the incoming calls of the REST controllers (`nexusmarket.adapters.rest.controllers`, see [Rest-adapters.md](Rest-adapters.md)) to the domain services of `nexusmarket.domain.services`. Requests reach the controllers only after `SecurityConfig` and `JwtAuthenticationFilter` have authenticated the user and checked the route role (see [Rest-security-cors.md](Rest-security-cors.md)).
 
 ## 2. Responsibilities
 
@@ -11,7 +11,7 @@ Use case adapters live in `nexusmarket.adapters.useCases`. Each one is the concr
 * Delegate every call directly to the corresponding service; they contain no business rules.
 
 ```text
-REST Controller (adapters/rest — later phase)
+REST Controller (adapters/rest/controllers)
       |
       v  calls
 Role Port (domain/ports/in)

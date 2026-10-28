@@ -13,8 +13,8 @@ Security adapters reside in `nexusmarket/adapters/security/`. They implement the
 | --------- | ------ |
 | `JwtProvider`, `BCryptPasswordServiceAdapter` | Implemented |
 | Initial Administrator (`infrastructure/seed/DatabaseSeeder`) | Implemented |
-| JWT authentication filter | **REST API step** |
-| `SecurityConfig` (filter chain, public routes, shared `PasswordEncoder` bean) | **REST API step** |
+| `JwtAuthenticationFilter` | Implemented |
+| `SecurityConfig` (filter chain, route rules, CORS, shared `PasswordEncoder` bean) | Implemented (see [Rest-security-cors.md](Rest-security-cors.md)) |
 
 ---
 
@@ -22,10 +22,13 @@ Security adapters reside in `nexusmarket/adapters/security/`. They implement the
 
 ```text
 adapters/security/
-├── dtos/JwtClaimsDTO.java              <-- claims carried by the token
-├── mappers/JwtClaimsMapper.java        <-- User <-> JwtClaimsDTO <-> JWT claims
-├── JwtProvider.java                    <-- implements JwtServicePort
-└── BCryptPasswordServiceAdapter.java   <-- implements PasswordServicePort
+├── dtos/JwtClaimsDTO.java                  <-- claims carried by the token
+├── dtos/AuthenticatedUserPrincipal.java    <-- Spring Security principal holding the domain User
+├── mappers/JwtClaimsMapper.java            <-- User <-> JwtClaimsDTO <-> JWT claims
+├── JwtProvider.java                        <-- implements JwtServicePort
+├── BCryptPasswordServiceAdapter.java       <-- implements PasswordServicePort
+├── JwtAuthenticationFilter.java            <-- authenticates each request (section 5)
+└── SecurityConfig.java                     <-- filter chain, route rules, CORS, PasswordEncoder bean
 ```
 
 ---
@@ -73,13 +76,13 @@ The token is **minimal**: it identifies the user and the version of its tokens, 
 | `encrypt(String rawPassword)` | BCrypt hash (random salt). |
 | `matches(String rawPassword, String encodedPassword)` | BCrypt verification; `false` when either value is `null`. |
 
-The adapter owns its `BCryptPasswordEncoder` until `SecurityConfig` (REST API step) exposes a shared `PasswordEncoder` bean.
+The adapter uses the `PasswordEncoder` bean (`BCryptPasswordEncoder`) declared in `SecurityConfig`.
 
 ---
 
-## 5. JWT Filter Flow (REST API step)
+## 5. JWT Filter Flow
 
-The JWT filter and `SecurityConfig` are added together with the REST controllers. For every protected request the filter will:
+`JwtAuthenticationFilter` (created by `SecurityConfig`, it runs only inside the Spring Security chain) does, for every request that carries a token:
 
 1. Read the `Authorization: Bearer <token>` header.
 2. Validate the token with `JwtServicePort.validateToken` (signature and expiration).
@@ -89,7 +92,7 @@ The JWT filter and `SecurityConfig` are added together with the REST controllers
 6. Verify that `JwtServicePort.extractTokenVersion` equals the user's `authTokenVersion`. The version changes on logout, password change and status change, which invalidates every token issued before.
 7. Put the loaded `User` in the security context; controllers pass it to the role ports as `requestingUser`.
 
-If any step fails (missing or malformed header, invalid or expired token, unknown user, user not `ACTIVE`, version mismatch), the request is rejected with **401 Unauthorized**. Domain services still validate RG-01/RG-02/RG-03 through the authorization services.
+If any step fails (missing or malformed header, invalid or expired token, unknown user, user not `ACTIVE`, version mismatch), the security context is left empty: the request continues unauthenticated and a protected route ends in **401 Unauthorized** through the `AuthenticationEntryPoint` of `SecurityConfig`. Domain services still validate RG-01/RG-02/RG-03 through the authorization services. Route rules, CORS and the 401/403 bodies are specified in [Rest-security-cors.md](Rest-security-cors.md).
 
 ---
 

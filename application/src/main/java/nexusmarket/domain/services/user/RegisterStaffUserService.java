@@ -58,8 +58,9 @@ public class RegisterStaffUserService {
             throw new UserAlreadyExistsException(
                     "A user with identification number " + identificationNumber + " is already registered.");
         }
-        if (email != null && userRepositoryPort.existsByEmail(email)) {
-            throw new UserAlreadyExistsException("A user with email " + email + " is already registered.");
+        String normalizedEmail = User.normalizeEmail(email);
+        if (normalizedEmail != null && userRepositoryPort.existsByEmail(normalizedEmail)) {
+            throw new UserAlreadyExistsException("A user with email " + normalizedEmail + " is already registered.");
         }
     }
 

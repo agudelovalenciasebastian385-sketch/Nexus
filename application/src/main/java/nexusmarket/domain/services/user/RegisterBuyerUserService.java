@@ -8,6 +8,7 @@ import nexusmarket.domain.exceptions.InvalidUserException;
 import nexusmarket.domain.exceptions.UserAlreadyExistsException;
 import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Cart;
+import nexusmarket.domain.models.User;
 import nexusmarket.domain.ports.out.BuyerRepositoryPort;
 import nexusmarket.domain.ports.out.CartRepositoryPort;
 import nexusmarket.domain.ports.out.PasswordServicePort;
@@ -56,8 +57,9 @@ public class RegisterBuyerUserService {
             throw new UserAlreadyExistsException(
                     "A user with identification number " + identificationNumber + " is already registered.");
         }
-        if (email != null && userRepositoryPort.existsByEmail(email)) {
-            throw new UserAlreadyExistsException("A user with email " + email + " is already registered.");
+        String normalizedEmail = User.normalizeEmail(email);
+        if (normalizedEmail != null && userRepositoryPort.existsByEmail(normalizedEmail)) {
+            throw new UserAlreadyExistsException("A user with email " + normalizedEmail + " is already registered.");
         }
     }
 

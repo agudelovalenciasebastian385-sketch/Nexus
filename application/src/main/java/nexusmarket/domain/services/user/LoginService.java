@@ -33,7 +33,8 @@ public class LoginService {
         if (email == null || rawPassword == null) {
             throw new InvalidCredentialsException();
         }
-        User user = userRepositoryPort.findByEmail(email).orElseThrow(InvalidCredentialsException::new);
+        User user = userRepositoryPort.findByEmail(User.normalizeEmail(email))
+                .orElseThrow(InvalidCredentialsException::new);
         if (!passwordServicePort.matches(rawPassword, user.getPassword())) {
             throw new InvalidCredentialsException();
         }

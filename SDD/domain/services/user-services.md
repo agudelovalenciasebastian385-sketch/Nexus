@@ -61,6 +61,7 @@ Exposed in: `PublicAccessPort`.
 * The password is encrypted through `PasswordServicePort`; the plain password is never stored.
 * A new `Cart` is created and assigned to the buyer (a buyer owns exactly one cart).
 * The role is always `BUYER` (RG-02: a single role per user).
+* The email is normalized with `User.normalizeEmail` (trimmed and lower-cased) before the uniqueness check, so `Juan@Gmail.com` and `juan@gmail.com` are the same email.
 
 ## Validations
 
@@ -131,6 +132,7 @@ Exposed in: `AdministratorPort`.
 * The user is created with `UserStatus.ACTIVE` as a `LogisticsOperator` or a `Supervisor` according to `role`.
 * Sellers are not registered here: they are onboarded with `RegisterSellerService`.
 * The password is encrypted through `PasswordServicePort`.
+* The email is normalized with `User.normalizeEmail` (trimmed and lower-cased) before the uniqueness check, so `Juan@Gmail.com` and `juan@gmail.com` are the same email.
 
 ## Validations
 
@@ -194,7 +196,7 @@ Exposed in: `PublicAccessPort`.
 
 ## Business Rules
 
-* The user is searched by email; the password is verified through `PasswordServicePort`.
+* The user is searched by its normalized email (`User.normalizeEmail`: trimmed and lower-cased), so the login is case-insensitive; the password is verified through `PasswordServicePort`.
 * Only `ACTIVE` users can log in.
 * The token is generated through `JwtServicePort`; it carries the user identifier and its current `authTokenVersion` (claims `sub`, `jti`, `ver`, `iat` and `exp`) and no other user data.
 

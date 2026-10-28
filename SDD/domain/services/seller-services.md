@@ -57,6 +57,7 @@ Exposed in: `AdministratorPort`.
 * Sellers cannot self-register; they are onboarded exclusively by the administrator.
 * The seller is created `ACTIVE` and its first `Warehouse` of type `SELLER` is created and associated.
 * The password is encrypted through `PasswordServicePort`.
+* The email is normalized with `User.normalizeEmail` (trimmed and lower-cased) before the uniqueness check, so `Juan@Gmail.com` and `juan@gmail.com` are the same email.
 
 ## Validations
 

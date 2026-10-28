@@ -20,10 +20,12 @@ This approach promotes maintainability, scalability, testability, and technology
 | Persistence output adapters (MySQL / JPA: 12 ports; MongoDB: audit log) | Implemented |
 | Password hashing (BCrypt), JWT (JJWT) and simulated payment gateway adapters | Implemented |
 | Initial Administrator seeder (`infrastructure/seed`) | Implemented |
-| REST input adapters (controllers, DTOs, mappers) | **REST API step** |
-| JWT authentication filter and `SecurityConfig` | **REST API step** |
+| JWT authentication filter and `SecurityConfig` | Implemented |
+| REST input adapters: `AuthRestController`, `PublicRestController`, `GlobalExceptionHandler` | Implemented (step 4A) |
+| REST input adapters: buyer and seller controllers | **Step 4B** |
+| REST input adapters: logistics operator, administrator and supervisor controllers | **Step 4C** |
 
-Every output port has an implementation, so the Spring context starts against the MySQL and MongoDB containers of `docker-compose.yml`. No REST endpoint is exposed yet.
+Every output port has an implementation, so the Spring context starts against the MySQL and MongoDB containers of `docker-compose.yml`. The REST API is specified in [Api-rest-endpoints.md](../Adapters/Api-rest-endpoints.md).
 
 ---
 
@@ -52,7 +54,7 @@ nexusmarket
 │
 ├── App.java          (entry point)
 │
-├── adapters          (use case adapters and output adapters; REST adapters in the REST API step)
+├── adapters          (REST input adapters, web security, use case adapters and output adapters)
 │
 ├── domain            (models, value objects, exceptions, services, ports)
 │
@@ -72,11 +74,16 @@ application/src/main/java/
     ├── App.java
     │
     ├── adapters/
+    │   ├── rest/
+    │   │   ├── controllers/          one controller per role port + AuthRestController
+    │   │   ├── dtos/                 requests/ (Jakarta validation), responses/ (ErrorResponseDTO, ...)
+    │   │   ├── mappers/              request DTO -> domain values, Domain Model -> response DTO
+    │   │   └── exception/            GlobalExceptionHandler
     │   ├── useCases/                 6 role port implementations
     │   ├── persistence/
     │   │   ├── jpa/                  MySQL: entities, mappers, repositories, JpaAggregateLoader, 12 *JpaAdapter
     │   │   └── mongodb/              MongoDB: AuditLogDocument, mapper, repository, AuditLogMongoAdapter
-    │   ├── security/                 JwtProvider, BCryptPasswordServiceAdapter, dtos/, mappers/
+    │   ├── security/                 SecurityConfig, JwtAuthenticationFilter, JwtProvider, BCryptPasswordServiceAdapter, dtos/, mappers/
     │   └── payment/                  SimulatedPaymentGatewayAdapter
     │
     ├── infrastructure/
@@ -116,6 +123,8 @@ Configuration lives in `application/src/main/resources/application.yml`:
 | `spring.jpa` | `ddl-auto: update` (Hibernate creates and updates the tables), `open-in-view: false`. |
 | `spring.mongodb.uri` | `mongodb://localhost:27017/nexusmarket` (Spring Boot 4 prefix; overridable with `MONGODB_URI`). |
 | `app.security.jwt` | JWT secret and expiration (see [Security Adapters](../Adapters/Security-adapters.md)). |
+| `app.security.cors` | Allowed CORS origins (see [REST Security and CORS](../Adapters/Rest-security-cors.md)). |
+| `spring.web` | `locale: en` with a fixed resolver: API and validation messages in English. |
 | `app.payment.simulated` | Approval limit of the simulated payment gateway (see [Persistence Adapters](../Adapters/Persistence-adapters.md#81-paymentgatewayport--simulatedpaymentgatewayadapter)). |
 | `app.seed.admin` | Credentials of the initial Administrator. |
 
@@ -130,24 +139,6 @@ The root `docker-compose.yml` starts:
 
 phpMyAdmin and Mongo Express are development tools only; the application does not depend on them.
 
-## Planned Structure (REST API Step)
-
-```text
-nexusmarket/
-├── adapters/
-│   ├── rest/
-│   │   ├── controllers/
-│   │   ├── requests/
-│   │   ├── responses/
-│   │   └── mappers/
-│   └── security/
-│       └── JwtAuthenticationFilter       (see Security Adapters, section 5)
-│
-└── infrastructure/
-    └── security/
-        └── SecurityConfig                filter chain, public routes, PasswordEncoder bean
-```
-
 ---
 
 # Layer Responsibilities
@@ -160,7 +151,7 @@ nexusmarket/
 
 - Initialize the application.
 - Configure dependency injection (component scanning of services and adapters).
-- Start the web server (REST controllers will be added in the REST API step).
+- Start the web server (REST controllers of `adapters/rest`).
 
 ---
 
@@ -317,13 +308,14 @@ Package `nexusmarket.adapters.useCases` (see [Use Cases Adapters](../Adapters/Us
 | `AdministratorPort` | `AdministratorUseCaseImpl` |
 | `SupervisorPort` | `SupervisorUseCaseImpl` |
 
-## Input Adapters — REST (REST API step)
+## Input Adapters — REST
 
-Will expose the role ports to external clients (buyers, sellers, logistics operators, administrators and supervisors).
+Package `nexusmarket.adapters.rest` exposes the role ports to external clients (see [Rest Adapters](../Adapters/Rest-adapters.md) and [API REST Endpoints](../Adapters/Api-rest-endpoints.md)).
 
-- **Controllers:** receive HTTP requests, obtain the `User` loaded by the JWT filter and call the corresponding role port. They must never implement business rules.
-- **Requests / Responses:** DTOs for incoming and outgoing payloads; they never enter the domain.
-- **Mappers:** Request DTO ↔ domain data, domain model ↔ Response DTO.
+- **Controllers:** one per role port (`AuthRestController` and `PublicRestController` for `PublicAccessPort`; buyer and seller controllers in step 4B; logistics operator, administrator and supervisor controllers in step 4C). Each injects only its role port, receives the `User` loaded by the JWT filter (`@AuthenticationPrincipal`) and never implements business rules.
+- **Requests / Responses:** DTOs in `dtos/requests` (Jakarta validation, see [Rest Validation](../Adapters/Rest-validation.md)) and `dtos/responses`; they never enter the domain, and responses never include passwords or hashes.
+- **Mappers:** request DTO → domain values, Domain Model → response DTO.
+- **Errors:** `GlobalExceptionHandler` maps every exception to the standard error body (see [Global Exception Handler](../Adapters/Global-exception-handler.md)).
 
 ## Output Adapters (implemented)
 
@@ -344,7 +336,7 @@ Technical components without business logic:
 
 - **Seed (implemented)** — `infrastructure/seed/DatabaseSeeder`: creates the initial `Administrator` at startup when none exists (credentials in `app.seed.admin`, password hashed through `PasswordServicePort`).
 - **Database:** Hibernate `ddl-auto: update` creates and updates the MySQL schema; the database itself is created by `createDatabaseIfNotExist=true`.
-- **Security (REST API step):** `SecurityConfig` and the JWT authentication filter, aligned with RG-01 (every operation must be executed by an authenticated user). The filter validates the token, extracts the id with `extractUserId`, loads the user with `LoadAuthenticatedUserService`, verifies that it is `ACTIVE` and that `extractTokenVersion` equals its `authTokenVersion` (changed by logout, password change or status change); any failure is rejected with 401. See [Security Adapters](../Adapters/Security-adapters.md#5-jwt-filter-flow-rest-api-step).
+- **Security (implemented, `adapters/security`):** `SecurityConfig` and the JWT authentication filter, aligned with RG-01 (every operation must be executed by an authenticated user). The filter validates the token, extracts the id with `extractUserId`, loads the user with `LoadAuthenticatedUserService`, verifies that it is `ACTIVE` and that `extractTokenVersion` equals its `authTokenVersion` (changed by logout, password change or status change); any failure is rejected with 401. See [Security Adapters](../Adapters/Security-adapters.md#5-jwt-filter-flow) and [REST Security and CORS](../Adapters/Rest-security-cors.md).
 
 ---
 
@@ -353,7 +345,7 @@ Technical components without business logic:
 Dependencies always point toward the domain.
 
 ```text
-REST Controller (REST API step)
+REST Controller (adapters/rest)
         │
         ▼
 Role Port (domain/ports/in)  ◄── implemented by ── Use Case Adapter (adapters/useCases)

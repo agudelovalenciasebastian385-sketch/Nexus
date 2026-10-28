@@ -148,7 +148,7 @@ This class cannot be instantiated directly.
 | id                   | String     | Uniquely identifies the user. Cannot be empty.                                       |
 | identificationNumber | String     | Identity document number. Cannot be empty. Unique across the platform.               |
 | fullName             | String     | Official name of the user. Cannot be empty.                                          |
-| email                | String     | Primary access and communication channel. Must have a valid format. Unique across the platform. |
+| email                | String     | Primary access and communication channel. Must have a valid format. Stored trimmed and lower-cased. Unique across the platform. |
 | password             | String     | Encrypted password (never the plain text). Cannot be empty.                          |
 | role                 | SystemRole | Defines the user's responsibilities and permissions. Fixed by the subclass.          |
 | status               | UserStatus | Operational condition of the user (Active, Blocked, Inactive).                       |
@@ -187,6 +187,7 @@ The new-user constructor delegates to the rehydration constructor with `authToke
 
 * A user holds exactly one `role`; it is assigned by the subclass constructor and cannot change.
 * `id`, `identificationNumber`, `fullName` and `password` cannot be empty; `email` must match `local@domain.tld` → `InvalidUserException`.
+* `email` is stored normalized: `User.normalizeEmail(String)` trims it and converts it to lower case (`Locale.ROOT`), and the constructor applies it before validating. Every lookup and uniqueness check by email (`LoginService`, `RegisterBuyerUserService`, `RegisterStaffUserService`, `RegisterSellerService`) normalizes the input the same way, so `Juan@Gmail.com` and `juan@gmail.com` are the same user.
 * `password` always holds the value produced by `PasswordServicePort.encrypt`; `identificationNumber` and `email` are immutable.
 * The uniqueness of `identificationNumber` and `email` across the platform is enforced at domain service level (it requires querying other users).
 * `authTokenVersion` is never supplied by the caller of a registration: new users always start at `1`. Every token carries the version it was issued with; a token whose version differs from the stored `authTokenVersion` is rejected (logout, blocking a user or changing its password invalidates the previous tokens).

@@ -2,6 +2,7 @@ package nexusmarket;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
 
 /**
  * NexusMarket application entry point.
@@ -20,12 +21,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *   <li>{@code infrastructure.seed}: the initial Administrator seeder.</li>
  * </ul>
  *
- * <p>REST API step (not implemented yet): REST input adapters, the JWT
- * authentication filter and the security configuration (RG-01).</p>
+ * <p>{@code adapters.rest} exposes the role ports over HTTP and
+ * {@code adapters.security} secures them with JWT (RG-01). Authentication is
+ * JWT-only, so Spring Boot's in-memory user (UserDetailsServiceAutoConfiguration,
+ * which prints a generated password) is excluded.</p>
  *
  * <p>The package structure follows the Software Architecture document.</p>
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 public class App {
 
 	public static void main(String[] args) {

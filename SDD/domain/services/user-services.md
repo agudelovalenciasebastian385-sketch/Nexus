@@ -430,10 +430,12 @@ Exposed in: `AdministratorPort`.
 
 * The change is applied by the `User` entity (`changeStatus`).
 * Changing the status advances the user's `authTokenVersion`, invalidating its previous tokens.
+* An administrator cannot change its own status (it could lock itself out and leave the platform without administration); another administrator must do it.
 
 ## Validations
 
 * RG-01 and role `ADMINISTRATOR`.
+* The target user must not be the requesting administrator.
 * The target user must exist.
 * `newStatus` is required.
 
@@ -441,7 +443,7 @@ Exposed in: `AdministratorPort`.
 
 | Exception | Raised when |
 | --- | --- |
-| `UnauthorizedOperationException` | The requesting user is not an active administrator. |
+| `UnauthorizedOperationException` | The requesting user is not an active administrator, or the administrator tries to change its own status (403). |
 | `EntityNotFoundException` | The target user does not exist. |
 | `InvalidUserException` | `newStatus` is not provided. |
 

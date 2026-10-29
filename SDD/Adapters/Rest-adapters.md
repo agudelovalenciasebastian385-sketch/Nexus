@@ -72,6 +72,10 @@ adapters/rest/
 | `PublicRestController` | `PublicAccessPort` | 2 |
 | `BuyerRestController` | `BuyerPort` | 17 |
 | `SellerRestController` | `SellerPort` | 20 |
+| `LogisticsOperatorRestController` | `LogisticsOperatorPort` | 17 |
+| `AdministratorRestController` | `AdministratorPort` | 27 |
+| `SupervisorRestController` | `SupervisorPort` | 22 |
+| **Total** | | **108** |
 
 | Mapper | Converts |
 | --- | --- |
@@ -79,15 +83,18 @@ adapters/rest/
 | `VariantRestMapper` | `VariantRequestDTO` (one or a list) or query parameters → `Variant`; `Variant` → `VariantResponseDTO` |
 | `UserRestMapper` | `User` → `UserResponseDTO`; `AuthenticationResult` → `LoginResponseDTO` |
 | `BuyerRestMapper` | `Buyer` → `BuyerResponseDTO` |
-| `SellerRestMapper` | `Seller` → `SellerResponseDTO` |
+| `SellerRestMapper` | `Seller` → `SellerResponseDTO`; new `Seller` → `SellerRegistrationResponseDTO` (with its first warehouse) |
+| `AuditLogRestMapper` | `AuditLog` → `AuditLogResponseDTO` |
 | `ProductRestMapper` | `Product` → `ProductResponseDTO` |
 | `CartRestMapper` | `Cart` → `CartResponseDTO` (with `CartItemResponseDTO`) |
-| `OrderRestMapper` | `Order` → `OrderResponseDTO` (items and shipments); `Shipment` → `ShipmentResponseDTO` |
+| `OrderRestMapper` | `Order` → `OrderResponseDTO` (items and shipments); `Shipment` (one or a list) → `ShipmentResponseDTO` |
 | `InvoiceRestMapper` | `Invoice` → `InvoiceResponseDTO` |
 | `ReturnRestMapper` | `ReturnRequest` → `ReturnRequestResponseDTO`; `Refund` → `RefundResponseDTO` |
 | `WarehouseRestMapper` | `Warehouse` → `WarehouseResponseDTO` |
 | `InventoryRestMapper` | `Inventory` → `InventoryResponseDTO` (with its movements) |
-| `ReportRestMapper` | `SellerPerformanceReport` → `SellerPerformanceReportResponseDTO` |
+| `ReportRestMapper` | `SellerPerformanceReport`, `CommercialReport`, `InventoryReport` and `LogisticsReport` → their response DTOs (catalog keys as codes) |
+
+Catalog codes received in bodies or paths (`role`, `status`, `commercialStatus`, `condition`, `type`, `entityType`) are converted by the controllers with `fromCode`; an unknown code raises `InvalidCatalogCodeException` (400). The type of a new warehouse is fixed by the role: `SELLER` in `SellerRestController`, `MARKETPLACE` in `AdministratorRestController`.
 
 Own resources (account, profile, cart, own lists and own reports) take no id in the path: the controller passes the id of the authenticated user (`User.getId()`), and the services still validate ownership (RG-03). Controllers never handle transactions: each port call runs in the transaction opened by its `*UseCaseImpl` (see [Use-cases-adapters.md](Use-cases-adapters.md), section 3).
 

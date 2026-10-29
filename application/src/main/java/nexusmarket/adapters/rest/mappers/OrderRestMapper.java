@@ -45,6 +45,10 @@ public final class OrderRestMapper {
         return dto;
     }
 
+    public static List<ShipmentResponseDTO> toShipmentResponses(List<Shipment> shipments) {
+        return shipments.stream().map(OrderRestMapper::toResponse).toList();
+    }
+
     private static OrderItemResponseDTO toResponse(OrderItem item) {
         OrderItemResponseDTO dto = new OrderItemResponseDTO();
         dto.setProductId(item.getProduct().getId());

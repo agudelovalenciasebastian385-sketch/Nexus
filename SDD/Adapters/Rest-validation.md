@@ -34,6 +34,8 @@ A failure stops processing; an invalid request never reaches the role port.
 | `reason` (return) | Required; at most 1000 characters. |
 | Variant `type` / `value` | Both required when a variant is sent; at most 60 / 120 characters. In a `DELETE` query, `variantType` and `variantValue` go together (only one → 400 from the `Variant` value object). |
 | Product `type` | Required; `PHYSICAL` or `DIGITAL` (another value → 400, `InvalidCatalogCodeException`). |
+| `lowStockThreshold` | Required query parameter; `@Positive` (the domain requires a threshold greater than 0): `0` or `-1` → 400 with `errors`. |
+| Catalog codes (`role`, `status`, `commercialStatus`, `condition`, `entityType`) | Required where declared (`@NotBlank`); exact catalog code; unknown → 400 (`InvalidCatalogCodeException`). |
 | Report dates (`startDate`, `endDate`) | Required query parameters in ISO format `YYYY-MM-DD`; missing or malformed → 400; `startDate` after `endDate` → 400 (`InvalidReportPeriodException`). |
 
 Sizes match the column lengths of the MySQL tables (see [Persistence-adapters.md](Persistence-adapters.md)).
@@ -48,6 +50,9 @@ Sizes match the column lengths of the MySQL tables (see [Persistence-adapters.md
 - **Warehouse** (`WarehouseRequestDTO`): `name` and `location` required; no `type` (fixed by the role).
 - **Product** (`RegisterProductRequestDTO`, `UpdateProductRequestDTO`): `name`, `description` and `price` required; `variants` optional (each one validated); `type` only on registration.
 - **Inventory** (`InitialStockRequestDTO`, `StockQuantityRequestDTO`): `productId` and `warehouseId` required on initial stock; positive `quantity`.
+- **Inventory adjustment** (`InventoryAdjustmentRequestDTO`): signed `quantity` (0 = none) and optional `condition` code; the domain requires at least one change and never allows negative stock (400).
+- **Staff user and seller registration** (`RegisterStaffUserRequestDTO`, `RegisterSellerRequestDTO`): same rules as buyer registration for identification, name, email (trimmed) and password; `role` required for staff; `warehouseName` (at most 150) and `warehouseLocation` required for sellers.
+- **Status changes** (`ChangeUserStatusRequestDTO`, `ChangeCommercialStatusRequestDTO`): the code is required. An administrator changing its own status is rejected by the domain (403).
 
 ## 5. Spring Implementation Requirements
 

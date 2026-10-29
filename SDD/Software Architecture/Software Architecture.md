@@ -23,7 +23,7 @@ This approach promotes maintainability, scalability, testability, and technology
 | JWT authentication filter and `SecurityConfig` | Implemented |
 | REST input adapters: `AuthRestController`, `PublicRestController`, `GlobalExceptionHandler` | Implemented (step 4A) |
 | REST input adapters: `BuyerRestController`, `SellerRestController` | Implemented (step 4B) |
-| REST input adapters: logistics operator, administrator and supervisor controllers | **Step 4C** |
+| REST input adapters: `LogisticsOperatorRestController`, `AdministratorRestController`, `SupervisorRestController` | Implemented (step 4C) |
 
 Every output port has an implementation, so the Spring context starts against the MySQL and MongoDB containers of `docker-compose.yml`. The REST API is specified in [Api-rest-endpoints.md](../Adapters/Api-rest-endpoints.md).
 
@@ -324,7 +324,7 @@ Package `nexusmarket.adapters.useCases` (see [Use Cases Adapters](../Adapters/Us
 
 Package `nexusmarket.adapters.rest` exposes the role ports to external clients (see [Rest Adapters](../Adapters/Rest-adapters.md) and [API REST Endpoints](../Adapters/Api-rest-endpoints.md)).
 
-- **Controllers:** one per role port (`AuthRestController` and `PublicRestController` for `PublicAccessPort`, `BuyerRestController`, `SellerRestController`; logistics operator, administrator and supervisor controllers in step 4C). Each injects only its role port, receives the `User` loaded by the JWT filter (`@AuthenticationPrincipal`) and never implements business rules.
+- **Controllers:** one per role port (`AuthRestController` and `PublicRestController` for `PublicAccessPort`, `BuyerRestController`, `SellerRestController`, `LogisticsOperatorRestController`, `AdministratorRestController`, `SupervisorRestController`; 108 endpoints in total). Each injects only its role port, receives the `User` loaded by the JWT filter (`@AuthenticationPrincipal`) and never implements business rules.
 - **Requests / Responses:** DTOs in `dtos/requests` (Jakarta validation, see [Rest Validation](../Adapters/Rest-validation.md)) and `dtos/responses`; they never enter the domain, and responses never include passwords or hashes.
 - **Mappers:** request DTO → domain values, Domain Model → response DTO.
 - **Errors:** `GlobalExceptionHandler` maps every exception to the standard error body (see [Global Exception Handler](../Adapters/Global-exception-handler.md)).

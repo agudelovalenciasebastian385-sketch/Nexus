@@ -4,6 +4,7 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
+import nexusmarket.domain.exceptions.UnauthorizedOperationException;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.ports.out.UserRepositoryPort;
 import nexusmarket.domain.services.audit.RegisterAuditLogService;
@@ -28,6 +29,9 @@ public class ChangeUserStatusService {
 
     public User changeUserStatus(User requestingUser, String userId, UserStatus newStatus) {
         User administrator = validateRoleAuthorizationService.execute(requestingUser, SystemRole.ADMINISTRATOR);
+        if (administrator.getId().equals(userId)) {
+            throw new UnauthorizedOperationException("An administrator cannot change its own status.");
+        }
         User user = userRepositoryPort.findById(userId).orElseThrow(() -> new EntityNotFoundException("User", userId));
 
         UserStatus previousStatus = user.getStatus();

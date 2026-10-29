@@ -44,7 +44,7 @@ Unexpected errors return a generic message and never expose stack traces, SQL, c
 | `InvalidAddressException`, `InvalidAuditLogException`, `InvalidCartException`, `InvalidCatalogCodeException`, `InvalidInventoryException`, `InvalidInvoiceException`, `InvalidOrderException`, `InvalidProductException`, `InvalidRefundException`, `InvalidReportParameterException`, `InvalidReportPeriodException`, `InvalidReturnRequestException`, `InvalidShipmentException`, `InvalidUserException`, `InvalidVariantException`, `InvalidWarehouseException` | 400 | Data that violates a domain rule |
 | `InvalidCredentialsException` | 401 | Unknown email or wrong password |
 | `AuthenticationException` (Spring Security entry point) | 401 | Missing, invalid or expired token; user not `ACTIVE`; token version changed |
-| `UnauthorizedOperationException` | 403 | The user cannot perform the operation (includes login of a `BLOCKED` or `INACTIVE` user) |
+| `UnauthorizedOperationException` | 403 | The user cannot perform the operation: ownership (RG-03), login of a `BLOCKED` or `INACTIVE` user, or an administrator changing its own status |
 | `AccessDeniedException` (Spring Security access-denied handler) | 403 | Role not allowed for the route |
 | `EntityNotFoundException` | 404 | Entity does not exist |
 | `NoResourceFoundException` | 404 | Route does not exist |
@@ -81,4 +81,8 @@ Unexpected errors return a generic message and never expose stack traces, SQL, c
 | Invalid email and missing address | 400 with `errors` |
 | Wrong password | 401 |
 | Unknown catalog product | 404 |
+| Resource of another buyer or seller (step 4C) | 403 with the RG-03 message |
+| Supervisor calling an administrator or seller route (step 4C) | 403 |
+| Administrator changing its own status (step 4C) | 403 |
+| `lowStockThreshold` 0 or -1; unknown `entityType` (step 4C) | 400 |
 | Two simultaneous reservations of the last unit (integration test) | one succeeds, the other fails with `ObjectOptimisticLockingFailureException` (409 through the API) |

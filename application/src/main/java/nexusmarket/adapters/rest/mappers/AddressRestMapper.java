@@ -20,6 +20,10 @@ public final class AddressRestMapper {
         return new Address(dto.getLine1(), dto.getLine2(), dto.getCity(), dto.getState(), dto.getCountry());
     }
 
+    public static List<Address> toDomain(List<AddressRequestDTO> dtos) {
+        return dtos == null ? List.of() : dtos.stream().map(AddressRestMapper::toDomain).toList();
+    }
+
     public static AddressResponseDTO toResponse(Address address) {
         if (address == null) {
             return null;

@@ -27,6 +27,14 @@ A failure stops processing; an invalid request never reaches the role port.
 | Address `line2` | Optional; at most 200 characters. |
 | Address `city`, `state`, `country` | Required; at most 100 characters each. |
 | Path identifiers (`{productId}`, …) | Free text; an unknown id returns 404 from the service. |
+| `newPassword` | Required; 8-72 characters. `currentPassword` required, at most 72. |
+| `quantity` | `@Positive` (cart items, initial stock, inbound). |
+| `price` | Required; `@PositiveOrZero`; at most 17 integer digits and 2 decimals (`@Digits`), matching the `price` column. |
+| Product `name` / `description` | Required; at most 200 / 2000 characters. |
+| `reason` (return) | Required; at most 1000 characters. |
+| Variant `type` / `value` | Both required when a variant is sent; at most 60 / 120 characters. In a `DELETE` query, `variantType` and `variantValue` go together (only one → 400 from the `Variant` value object). |
+| Product `type` | Required; `PHYSICAL` or `DIGITAL` (another value → 400, `InvalidCatalogCodeException`). |
+| Report dates (`startDate`, `endDate`) | Required query parameters in ISO format `YYYY-MM-DD`; missing or malformed → 400; `startDate` after `endDate` → 400 (`InvalidReportPeriodException`). |
 
 Sizes match the column lengths of the MySQL tables (see [Persistence-adapters.md](Persistence-adapters.md)).
 
@@ -34,6 +42,12 @@ Sizes match the column lengths of the MySQL tables (see [Persistence-adapters.md
 
 - **Login** (`LoginRequestDTO`): `email` and `password` required. Unknown email and wrong password return the same 401 "Invalid credentials."
 - **Buyer registration** (`RegisterBuyerRequestDTO`): `identificationNumber`, `fullName`, `email`, `password` and `primaryAddress` required; the address is validated as a nested object (`@NotNull @Valid`).
+- **Buyer profile** (`UpdateBuyerProfileRequestDTO`): `fullName` and `primaryAddress` required; `additionalAddresses` optional (each one validated); duplicates are rejected by the domain (400).
+- **Cart** (`AddCartItemRequestDTO`, `UpdateCartItemQuantityRequestDTO`): `productId` required when adding; positive `quantity`; optional nested `variant`. Whether the product is published and offers the variant is checked by the domain (409 / 400).
+- **Seller profile** (`UpdateSellerRequestDTO`): `fullName` required.
+- **Warehouse** (`WarehouseRequestDTO`): `name` and `location` required; no `type` (fixed by the role).
+- **Product** (`RegisterProductRequestDTO`, `UpdateProductRequestDTO`): `name`, `description` and `price` required; `variants` optional (each one validated); `type` only on registration.
+- **Inventory** (`InitialStockRequestDTO`, `StockQuantityRequestDTO`): `productId` and `warehouseId` required on initial stock; positive `quantity`.
 
 ## 5. Spring Implementation Requirements
 

@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,4 +38,13 @@ public class OrderJpaEntity {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    /**
+     * Optimistic lock version. The adapter writes onto the entity loaded at the start of the use case,
+     * so the commit fails (409) if another transaction changed the row meanwhile. DEFAULT 0 lets
+     * ddl-auto add the column to existing rows.
+     */
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT NOT NULL DEFAULT 0")
+    private Long version;
 }

@@ -27,6 +27,16 @@ public final class CartJpaMapper {
         return entity;
     }
 
+    /**
+     * Copies the domain state onto the managed entity loaded in the current transaction, so Hibernate
+     * keeps the version read at the start of the use case (optimistic locking). Buyer and id never
+     * change; the items live in cart_items.
+     */
+    public static CartJpaEntity copyToEntity(Cart domain, CartJpaEntity entity) {
+        entity.setBuyerId(domain.getBuyer().getId());
+        return entity;
+    }
+
     public static Cart toDomain(CartJpaEntity entity, Buyer buyer, List<CartItem> items) {
         if (entity == null) {
             return null;

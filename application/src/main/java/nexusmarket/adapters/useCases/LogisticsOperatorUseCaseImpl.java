@@ -27,13 +27,18 @@ import nexusmarket.domain.services.user.ConsultUserService;
 import nexusmarket.domain.services.warehouse.ConsultWarehouseService;
 import nexusmarket.domain.valueobjects.InventoryCondition;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use case adapter of {@link LogisticsOperatorPort}: delegates every operation to the
  * corresponding domain service (Use-cases-adapters.md). It contains no business
  * rules.
+ *
+ * <p>It is the transaction boundary of every use case: each operation runs in one
+ * transaction (all or nothing); queries and reports are read-only.</p>
  */
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class LogisticsOperatorUseCaseImpl implements LogisticsOperatorPort {
 
@@ -54,6 +59,7 @@ public class LogisticsOperatorUseCaseImpl implements LogisticsOperatorPort {
     private final ConsultInventoryReportService consultInventoryReportService;
 
     @Override
+    @Transactional(readOnly = true)
     public User consultUser(User requestingUser, String userId) {
         return consultUserService.consultUser(requestingUser, userId);
     }
@@ -64,11 +70,13 @@ public class LogisticsOperatorUseCaseImpl implements LogisticsOperatorPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Warehouse consultWarehouse(User requestingUser, String warehouseId) {
         return consultWarehouseService.consultWarehouse(requestingUser, warehouseId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Warehouse> consultWarehouses(User requestingUser) {
         return consultWarehouseService.consultWarehouses(requestingUser);
     }
@@ -104,16 +112,19 @@ public class LogisticsOperatorUseCaseImpl implements LogisticsOperatorPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Inventory> consultProductInventory(User requestingUser, String productId) {
         return consultInventoryService.consultProductInventory(requestingUser, productId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Inventory> consultWarehouseInventory(User requestingUser, String warehouseId) {
         return consultInventoryService.consultWarehouseInventory(requestingUser, warehouseId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Order consultOrder(User requestingUser, String orderId) {
         return consultOrderService.consultOrder(requestingUser, orderId);
     }
@@ -139,6 +150,7 @@ public class LogisticsOperatorUseCaseImpl implements LogisticsOperatorPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public InventoryReport consultInventoryReport(User requestingUser, int lowStockThreshold) {
         return consultInventoryReportService.consultInventoryReport(requestingUser, lowStockThreshold);
     }

@@ -33,6 +33,15 @@ public final class OrderJpaMapper {
         return entity;
     }
 
+    /**
+     * Copies the mutable domain state onto the managed entity loaded in the current transaction, so
+     * Hibernate keeps the version read at the start of the use case (optimistic locking).
+     */
+    public static OrderJpaEntity copyToEntity(Order domain, OrderJpaEntity entity) {
+        entity.setStatus(domain.getStatus().getCode());
+        return entity;
+    }
+
     public static Order toDomain(OrderJpaEntity entity, Buyer buyer, List<OrderItem> items,
                                  List<Shipment> shipments) {
         if (entity == null) {

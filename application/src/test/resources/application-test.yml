@@ -1,0 +1,13 @@
+# Test profile (@ActiveProfiles("test")): same docker-compose containers, separate databases, so
+# integration-test data never appears in the development databases (nexusmarket) or in its reports.
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/nexusmarket_test?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+  mongodb:
+    uri: mongodb://localhost:27017/nexusmarket_test
+
+app:
+  payment:
+    simulated:
+      # Low limit so a test can trigger a rejected payment with an ordinary order.
+      approval-limit: 1000.00

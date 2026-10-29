@@ -11,7 +11,11 @@ import nexusmarket.domain.models.AuditLog;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.ports.out.AuditLogRepositoryPort;
 import nexusmarket.domain.valueobjects.AuditEntityType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Output persistence adapter for the audit trail backed by Spring Data MongoDB
@@ -25,6 +29,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class AuditLogMongoAdapter implements AuditLogRepositoryPort {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuditLogMongoAdapter.class);
+
     private final AuditLogMongoRepository auditLogRepository;
     private final JpaAggregateLoader loader;
 
@@ -33,9 +39,32 @@ public class AuditLogMongoAdapter implements AuditLogRepositoryPort {
         this.loader = loader;
     }
 
+    /**
+     * The JPA transaction does not cover MongoDB, so inside a transaction the record is written only
+     * after the commit: a rolled-back operation leaves no audit record. A failure of MongoDB at that
+     * point is logged (with the data needed to rebuild the record) without failing the already
+     * committed operation. Without a transaction the record is written immediately.
+     */
     @Override
     public AuditLog save(AuditLog auditLog) {
-        auditLogRepository.save(AuditLogMongoMapper.toDocument(auditLog));
+        AuditLogDocument document = AuditLogMongoMapper.toDocument(auditLog);
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            auditLogRepository.save(document);
+            return auditLog;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    auditLogRepository.save(document);
+                } catch (RuntimeException e) {
+                    LOGGER.error("Audit record lost after commit: id={} action={} entityType={} entityId={} "
+                                    + "performedBy={} occurredAt={} details={}", document.getId(),
+                            document.getAction(), document.getEntityType(), document.getEntityId(),
+                            document.getPerformedById(), document.getOccurredAt(), document.getDetails(), e);
+                }
+            }
+        });
         return auditLog;
     }
 

@@ -22,7 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
  * Output persistence adapter for Inventory backed by Spring Data JPA (MySQL).
  *
  * <p>Inventory is keyed by (product_id, warehouse_id). The domain only appends movements, so
- * writing an inventory inserts the movements that are not stored yet.
+ * writing an inventory inserts the movements that are not stored yet. The inventory row carries an
+ * optimistic lock version: two concurrent reservations of the same stock cannot both commit.
  */
 @Repository
 public class InventoryJpaAdapter implements InventoryRepositoryPort {
@@ -101,8 +102,16 @@ public class InventoryJpaAdapter implements InventoryRepositoryPort {
         return loader.toInventory(entity, product, warehouse);
     }
 
+    /**
+     * Writes onto the managed entity loaded earlier in the same transaction (findById returns it from
+     * the persistence context, still holding the version read at the start of the use case). The commit
+     * then runs UPDATE ... WHERE version = v and fails with an optimistic lock exception if another
+     * transaction changed the row meanwhile. A new inventory is persisted with version 0.
+     */
     private void persist(Inventory inventory) {
-        InventoryJpaEntity entity = InventoryJpaMapper.toEntity(inventory);
+        InventoryJpaEntity entity = inventoryRepository.findById(InventoryJpaMapper.idOf(inventory))
+                .map(managed -> InventoryJpaMapper.copyToEntity(inventory, managed))
+                .orElseGet(() -> InventoryJpaMapper.toEntity(inventory));
         inventoryRepository.save(entity);
         String productId = entity.getId().getProductId();
         String warehouseId = entity.getId().getWarehouseId();

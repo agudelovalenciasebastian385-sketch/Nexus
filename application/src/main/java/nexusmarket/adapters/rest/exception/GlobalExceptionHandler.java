@@ -1,5 +1,6 @@
 package nexusmarket.adapters.rest.exception;
 
+import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +20,7 @@ import nexusmarket.domain.exceptions.UserAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -153,6 +155,19 @@ public class GlobalExceptionHandler {
         LOGGER.warn("Data integrity violation on {} {}: {}", request.getMethod(), request.getRequestURI(),
                 ex.getMostSpecificCause().getMessage());
         return body(HttpStatus.CONFLICT, "The record already exists.", request, null);
+    }
+
+    /**
+     * Optimistic lock failure: the row (inventory, order or cart) was changed by another transaction
+     * after this use case read it; the whole use case was rolled back. Covers Spring's
+     * ObjectOptimisticLockingFailureException and an untranslated JPA OptimisticLockException.
+     */
+    @ExceptionHandler({OptimisticLockingFailureException.class, OptimisticLockException.class})
+    public ResponseEntity<ErrorResponseDTO> handleConcurrentModification(Exception ex, HttpServletRequest request) {
+        LOGGER.warn("Concurrent modification on {} {}: {}", request.getMethod(), request.getRequestURI(),
+                ex.getMessage());
+        return body(HttpStatus.CONFLICT, "The resource was modified by another operation; please try again.",
+                request, null);
     }
 
     @ExceptionHandler(PaymentRejectedException.class)

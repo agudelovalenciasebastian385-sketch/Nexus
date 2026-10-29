@@ -55,6 +55,7 @@ Unexpected errors return a generic message and never expose stack traces, SQL, c
 | `OrderAlreadyFinalizedException` | 409 | A `DELIVERED` order cannot be modified |
 | `InvalidOrderStatusTransitionException`, `InvalidStatusTransitionException`, `InvalidProductStatusException` | 409 | The current state does not allow the operation |
 | `InsufficientInventoryException` | 409 | Current stock does not allow the reservation |
+| `OptimisticLockingFailureException` (includes `ObjectOptimisticLockingFailureException`), `OptimisticLockException` | 409 | Concurrent modification: the inventory, order or cart was changed by another operation after this one read it; the whole use case was rolled back. Message "The resource was modified by another operation; please try again." (see [Persistence-adapters.md](Persistence-adapters.md), section 5.6) |
 | `PaymentRejectedException` | 422 | Request and order state are valid, but the payment gateway refused the payment. It is not a conflict with the resource state, and repeating it with the same data fails again |
 | `DomainException` (fallback for future subclasses) | 400 | Business rule without a specific mapping |
 | `Exception` | 500 | "Unexpected error." |
@@ -65,7 +66,8 @@ Unexpected errors return a generic message and never expose stack traces, SQL, c
 
 - `GlobalExceptionHandler` is a `@RestControllerAdvice`; Spring selects the most specific handler, so the explicit 409/422 mappings take precedence over the `DomainException` fallback.
 - Spring Security failures happen in the filter chain, outside the controllers. `SecurityConfig` configures the `AuthenticationEntryPoint` (401) and the `AccessDeniedHandler` (403) to delegate to Spring MVC's `HandlerExceptionResolver`, so the same advice writes them with the same body.
-- `DataIntegrityViolationException` logs the most specific cause at `WARN`; unexpected exceptions are logged at `ERROR` with the stack trace.
+- `DataIntegrityViolationException` and optimistic lock failures log the cause at `WARN`; unexpected exceptions are logged at `ERROR` with the stack trace.
+- Optimistic lock failures are raised when the use case transaction commits, so they reach the handler from the use case adapter like any other exception.
 - API messages are in English regardless of the OS locale (`spring.web.locale: en`, `spring.web.locale-resolver: fixed`), including Jakarta validation messages.
 
 ## 5. Verified Behavior (step 4A)
@@ -79,3 +81,4 @@ Unexpected errors return a generic message and never expose stack traces, SQL, c
 | Invalid email and missing address | 400 with `errors` |
 | Wrong password | 401 |
 | Unknown catalog product | 404 |
+| Two simultaneous reservations of the last unit (integration test) | one succeeds, the other fails with `ObjectOptimisticLockingFailureException` (409 through the API) |

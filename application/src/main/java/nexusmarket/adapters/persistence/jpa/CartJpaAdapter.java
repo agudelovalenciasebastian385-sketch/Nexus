@@ -1,6 +1,9 @@
 package nexusmarket.adapters.persistence.jpa;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import java.util.Optional;
+import nexusmarket.adapters.persistence.jpa.entities.CartJpaEntity;
 import nexusmarket.adapters.persistence.jpa.mappers.CartItemJpaMapper;
 import nexusmarket.adapters.persistence.jpa.mappers.CartJpaMapper;
 import nexusmarket.adapters.persistence.jpa.repositories.SpringDataJpaCartItemRepository;
@@ -17,6 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Cart items change freely (add, remove, change quantity, clear), so writing a cart replaces
  * its rows in cart_items.
+ *
+ * <p>Optimistic locking: an existing cart is written onto the managed entity loaded at the start of
+ * the use case with a forced version increment ({@code OPTIMISTIC_FORCE_INCREMENT}), because its own
+ * row never changes (the items live in cart_items). Two concurrent changes of the same cart, or a
+ * change racing with ConfirmOrderService, cannot both commit.
  */
 @Repository
 public class CartJpaAdapter implements CartRepositoryPort {
@@ -24,13 +32,16 @@ public class CartJpaAdapter implements CartRepositoryPort {
     private final SpringDataJpaCartRepository cartRepository;
     private final SpringDataJpaCartItemRepository cartItemRepository;
     private final JpaAggregateLoader loader;
+    private final EntityManager entityManager;
 
     public CartJpaAdapter(SpringDataJpaCartRepository cartRepository,
                           SpringDataJpaCartItemRepository cartItemRepository,
-                          JpaAggregateLoader loader) {
+                          JpaAggregateLoader loader,
+                          EntityManager entityManager) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.loader = loader;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -56,7 +67,13 @@ public class CartJpaAdapter implements CartRepositoryPort {
     }
 
     private void persist(Cart cart) {
-        cartRepository.save(CartJpaMapper.toEntity(cart));
+        Optional<CartJpaEntity> managed = cartRepository.findById(cart.getId());
+        if (managed.isPresent()) {
+            CartJpaMapper.copyToEntity(cart, managed.get());
+            entityManager.lock(managed.get(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
+        } else {
+            cartRepository.save(CartJpaMapper.toEntity(cart));
+        }
         cartItemRepository.deleteByCartId(cart.getId());
         for (CartItem item : cart.getItems()) {
             cartItemRepository.save(CartItemJpaMapper.toEntity(item, cart.getId()));

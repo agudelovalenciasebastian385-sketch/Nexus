@@ -139,6 +139,18 @@ The root `docker-compose.yml` starts:
 
 phpMyAdmin and Mongo Express are development tools only; the application does not depend on them.
 
+### Test profile
+
+Integration tests (`application/src/test`) run with `@ActiveProfiles("test")`, which loads `src/test/resources/application-test.yml`:
+
+| Setting | Value |
+| --- | --- |
+| MySQL | same container, database `nexusmarket_test` (`createDatabaseIfNotExist=true`) |
+| MongoDB | same container, database `nexusmarket_test` |
+| `app.payment.simulated.approval-limit` | `1000.00`, so a test can trigger a rejected payment |
+
+Test data (users and products with the `itest-` prefix) therefore never appears in the development databases or in their reports. `TransactionalConsistencyTest` verifies the transaction boundary, the after-commit audit and the optimistic locking of inventory against these databases (`./mvnw test` with the containers running).
+
 ---
 
 # Layer Responsibilities
@@ -326,7 +338,7 @@ Every output port is implemented:
 - **Security** — `adapters/security`: `JwtProvider` (`JwtServicePort`, minimal token `sub`/`jti`/`ver`/`iat`/`exp`) and `BCryptPasswordServiceAdapter` (`PasswordServicePort`). See [Security Adapters](../Adapters/Security-adapters.md).
 - **Payment** — `adapters/payment`: `SimulatedPaymentGatewayAdapter` returns `PaymentResult.APPROVED` up to a configurable order total and `PaymentResult.REJECTED` above it.
 
-Persistence adapters own the transactional boundaries they need (`@Transactional` on writes that span several rows); domain services do not declare transactions.
+**Transactions:** the use case adapters (`adapters/useCases`) are the transaction boundary: each use case runs in one transaction (all or nothing), queries and reports are read-only, and a rejected payment commits so its audit record survives (see [Use Cases Adapters](../Adapters/Use-cases-adapters.md), section 3). Domain services declare no transactions; persistence adapters join the transaction of the use case. Audit records are written to MongoDB after the commit, and inventories, orders and carts use optimistic locking (`@Version`), answering 409 on a concurrent modification (see [Persistence Adapters](../Adapters/Persistence-adapters.md), sections 5.6 and 7).
 
 ---
 

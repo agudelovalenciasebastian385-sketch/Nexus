@@ -32,6 +32,17 @@ public final class InventoryJpaMapper {
         return entity;
     }
 
+    /**
+     * Copies the mutable domain state onto the managed entity loaded in the current transaction, so
+     * Hibernate keeps the version read at the start of the use case (optimistic locking).
+     */
+    public static InventoryJpaEntity copyToEntity(Inventory domain, InventoryJpaEntity entity) {
+        entity.setQuantity(domain.getQuantity());
+        entity.setReservedQuantity(domain.getReservedQuantity());
+        entity.setCondition(domain.getCondition().getCode());
+        return entity;
+    }
+
     public static Inventory toDomain(InventoryJpaEntity entity, PhysicalProduct product, Warehouse warehouse,
                                      List<InventoryMovement> movements) {
         if (entity == null) {

@@ -36,13 +36,18 @@ import nexusmarket.domain.valueobjects.ReportPeriod;
 import nexusmarket.domain.valueobjects.Variant;
 import nexusmarket.domain.valueobjects.WarehouseType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use case adapter of {@link SellerPort}: delegates every operation to the
  * corresponding domain service (Use-cases-adapters.md). It contains no business
  * rules.
+ *
+ * <p>It is the transaction boundary of every use case: each operation runs in one
+ * transaction (all or nothing); queries and reports are read-only.</p>
  */
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class SellerUseCaseImpl implements SellerPort {
 
@@ -66,6 +71,7 @@ public class SellerUseCaseImpl implements SellerPort {
     private final ConsultSellerPerformanceReportService consultSellerPerformanceReportService;
 
     @Override
+    @Transactional(readOnly = true)
     public User consultUser(User requestingUser, String userId) {
         return consultUserService.consultUser(requestingUser, userId);
     }
@@ -76,6 +82,7 @@ public class SellerUseCaseImpl implements SellerPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Seller consultSeller(User requestingUser, String sellerId) {
         return consultSellerService.consultSeller(requestingUser, sellerId);
     }
@@ -92,11 +99,13 @@ public class SellerUseCaseImpl implements SellerPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Warehouse consultWarehouse(User requestingUser, String warehouseId) {
         return consultWarehouseService.consultWarehouse(requestingUser, warehouseId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Warehouse> consultWarehouses(User requestingUser) {
         return consultWarehouseService.consultWarehouses(requestingUser);
     }
@@ -134,6 +143,7 @@ public class SellerUseCaseImpl implements SellerPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Product> consultSellerProducts(User requestingUser, String sellerId) {
         return consultSellerProductsService.consultSellerProducts(requestingUser, sellerId);
     }
@@ -151,21 +161,25 @@ public class SellerUseCaseImpl implements SellerPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Inventory> consultProductInventory(User requestingUser, String productId) {
         return consultInventoryService.consultProductInventory(requestingUser, productId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Inventory> consultWarehouseInventory(User requestingUser, String warehouseId) {
         return consultInventoryService.consultWarehouseInventory(requestingUser, warehouseId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Order consultOrder(User requestingUser, String orderId) {
         return consultOrderService.consultOrder(requestingUser, orderId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SellerPerformanceReport consultSellerPerformanceReport(User requestingUser, String sellerId,
                                                                   ReportPeriod period) {
         return consultSellerPerformanceReportService.consultSellerPerformanceReport(requestingUser, sellerId, period);

@@ -3,6 +3,7 @@ package nexusmarket.adapters.useCases;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import nexusmarket.domain.exceptions.PaymentRejectedException;
 import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Cart;
 import nexusmarket.domain.models.Invoice;
@@ -30,13 +31,18 @@ import nexusmarket.domain.services.user.ConsultUserService;
 import nexusmarket.domain.valueobjects.Address;
 import nexusmarket.domain.valueobjects.Variant;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use case adapter of {@link BuyerPort}: delegates every operation to the
  * corresponding domain service (Use-cases-adapters.md). It contains no business
  * rules.
+ *
+ * <p>It is the transaction boundary of every use case: each operation runs in one
+ * transaction (all or nothing); queries and reports are read-only.</p>
  */
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class BuyerUseCaseImpl implements BuyerPort {
 
@@ -58,6 +64,7 @@ public class BuyerUseCaseImpl implements BuyerPort {
     private final ConsultReturnService consultReturnService;
 
     @Override
+    @Transactional(readOnly = true)
     public User consultUser(User requestingUser, String userId) {
         return consultUserService.consultUser(requestingUser, userId);
     }
@@ -68,6 +75,7 @@ public class BuyerUseCaseImpl implements BuyerPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Buyer consultBuyer(User requestingUser, String buyerId) {
         return consultBuyerService.consultBuyer(requestingUser, buyerId);
     }
@@ -94,6 +102,7 @@ public class BuyerUseCaseImpl implements BuyerPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Cart consultCart(User requestingUser, String buyerId) {
         return consultCartService.consultCart(requestingUser, buyerId);
     }
@@ -109,21 +118,25 @@ public class BuyerUseCaseImpl implements BuyerPort {
     }
 
     @Override
+    @Transactional(noRollbackFor = PaymentRejectedException.class)
     public Order validatePayment(User requestingUser, String orderId) {
         return validatePaymentService.validatePayment(requestingUser, orderId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Order consultOrder(User requestingUser, String orderId) {
         return consultOrderService.consultOrder(requestingUser, orderId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Order> consultBuyerOrders(User requestingUser, String buyerId) {
         return consultBuyerOrdersService.consultBuyerOrders(requestingUser, buyerId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Invoice consultInvoice(User requestingUser, String orderId) {
         return consultInvoiceService.consultInvoice(requestingUser, orderId);
     }
@@ -134,11 +147,13 @@ public class BuyerUseCaseImpl implements BuyerPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ReturnRequest consultReturn(User requestingUser, String returnRequestId) {
         return consultReturnService.consultReturn(requestingUser, returnRequestId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Refund consultRefund(User requestingUser, String returnRequestId) {
         return consultReturnService.consultRefund(requestingUser, returnRequestId);
     }

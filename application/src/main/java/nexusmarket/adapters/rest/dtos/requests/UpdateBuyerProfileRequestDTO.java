@@ -22,6 +22,5 @@ public class UpdateBuyerProfileRequestDTO {
     @Valid
     private AddressRequestDTO primaryAddress;
 
-    @Valid
-    private List<AddressRequestDTO> additionalAddresses = new ArrayList<>();
+    private List<@Valid AddressRequestDTO> additionalAddresses = new ArrayList<>();
 }

@@ -30,6 +30,5 @@ public class UpdateProductRequestDTO {
     @Digits(integer = 17, fraction = 2)
     private BigDecimal price;
 
-    @Valid
-    private List<VariantRequestDTO> variants = new ArrayList<>();
+    private List<@Valid VariantRequestDTO> variants = new ArrayList<>();
 }

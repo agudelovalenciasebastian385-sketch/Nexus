@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class EndToEndPurchaseFlowTest {
+class EndToEndPurchaseFlowIT {
 
     private static final String ADDRESS = """
             {"line1": "Calle 1 # 2-3", "city": "Medellin", "state": "Antioquia", "country": "Colombia"}""";

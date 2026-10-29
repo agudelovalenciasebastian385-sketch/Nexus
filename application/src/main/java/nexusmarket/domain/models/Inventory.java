@@ -22,7 +22,10 @@ import nexusmarket.domain.valueobjects.MovementType;
  *
  * <p><b>Constraint:</b> negative stock is never allowed under any
  * circumstance; every operation that would produce a negative quantity is
- * rejected. Damaged inventory can never be reserved.</p>
+ * rejected. Only inventory in condition {@code AVAILABLE} can be reserved
+ * (never {@code RESERVED}, {@code OUT_OF_STOCK} or {@code DAMAGED}); the rule
+ * lives in one place and is shared by {@link #canReserve} and
+ * {@link #registerMovement}.</p>
  *
  * <p>It has no id of its own: its identity is the pair (product, warehouse),
  * so equality is determined by that pair.</p>
@@ -97,14 +100,19 @@ public class Inventory {
 
     /** Indicates whether the record can be reserved for the given quantity. */
     public boolean canReserve(int quantity) {
-        return condition == InventoryCondition.AVAILABLE && this.quantity >= quantity;
+        return isReservable() && this.quantity >= quantity;
+    }
+
+    /** Single reservation rule: only inventory in condition {@code AVAILABLE} can be reserved. */
+    private boolean isReservable() {
+        return condition == InventoryCondition.AVAILABLE;
     }
 
     /**
      * Records a stock movement and applies its effect:
      * <ul>
      *   <li>{@code INBOUND} and {@code RETURN}: available + quantity.</li>
-     *   <li>{@code RESERVATION}: available → reserved (never on damaged stock).</li>
+     *   <li>{@code RESERVATION}: available → reserved (only when the condition is {@code AVAILABLE}).</li>
      *   <li>{@code RESERVATION_RELEASE}: reserved → available.</li>
      *   <li>{@code SALE_OUTBOUND}: consumes reserved stock.</li>
      *   <li>{@code ADJUSTMENT}: signed manual correction of the available stock.</li>
@@ -112,7 +120,8 @@ public class Inventory {
      *
      * @return the recorded movement
      * @throws InsufficientInventoryException if the available stock would become negative
-     * @throws InvalidInventoryException if the reserved stock would become negative or the stock is damaged
+     * @throws InvalidInventoryException if the reserved stock would become negative or a reservation is
+     *         requested on inventory whose condition is not {@code AVAILABLE}
      */
     public InventoryMovement registerMovement(MovementType type, int quantity, LocalDateTime date) {
         InventoryMovement movement = new InventoryMovement(type, quantity, date);
@@ -122,8 +131,9 @@ public class Inventory {
             case INBOUND, RETURN -> available += quantity;
             case ADJUSTMENT -> available += quantity;
             case RESERVATION -> {
-                if (condition == InventoryCondition.DAMAGED) {
-                    throw new InvalidInventoryException("Damaged inventory can never be reserved.");
+                if (!isReservable()) {
+                    throw new InvalidInventoryException("Only AVAILABLE inventory can be reserved; current condition is "
+                            + condition.getCode() + ".");
                 }
                 available -= quantity;
                 reserved += quantity;

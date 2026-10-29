@@ -502,7 +502,7 @@ Represents the available stock of a physical product in a specific warehouse. In
 | ---------------------------------------------------------------- | -------------------------------------------------------------- |
 | `registerMovement(MovementType type, int quantity, LocalDateTime date)` | Records a movement, applies its effect to `quantity` / `reservedQuantity` and returns the new `InventoryMovement`. |
 | `setCondition(InventoryCondition)`                               | Changes the operational condition of the record.               |
-| `canReserve(int quantity)`                                       | `true` when the record is `AVAILABLE` and has enough available stock. |
+| `canReserve(int quantity)`                                       | `true` when the record is reservable (condition `AVAILABLE`) and has enough available stock. Uses the same rule as a `RESERVATION` movement. |
 
 ## Business Rules
 
@@ -514,7 +514,7 @@ Represents the available stock of a physical product in a specific warehouse. In
   * `SALE_OUTBOUND`: `reservedQuantity - n` (a sale always consumes a previous reservation).
   * `ADJUSTMENT`: `quantity + n` (signed, non-zero).
 * A movement that would leave the available stock below zero is rejected → `InsufficientInventoryException`; one that would leave the reserved stock below zero → `InvalidInventoryException`.
-* A record in condition `DAMAGED` can never be reserved → `InvalidInventoryException`.
+* Only a record in condition `AVAILABLE` can be reserved; a `RESERVATION` on a record in `RESERVED`, `OUT_OF_STOCK` or `DAMAGED` → `InvalidInventoryException`. The rule lives in a single place, shared by `registerMovement` and `canReserve`.
 * Identity is the pair (`product`, `warehouse`).
 
 ## Relationships

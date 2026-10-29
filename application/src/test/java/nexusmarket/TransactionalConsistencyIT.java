@@ -67,7 +67,7 @@ import org.springframework.test.context.ActiveProfiles;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-class TransactionalConsistencyTest {
+class TransactionalConsistencyIT {
 
     @Autowired private PublicAccessPort publicAccessPort;
     @Autowired private AdministratorPort administratorPort;

@@ -261,7 +261,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 ## Business Rules
 
-* Inventory that does not exist or is `DAMAGED` can never be reserved.
+* Only inventory in condition `AVAILABLE` can be reserved; a record that does not exist or is `RESERVED`, `OUT_OF_STOCK` or `DAMAGED` can never be reserved (`InvalidInventoryException`).
 * `ConfirmOrderService` selects the warehouse of each order item and reserves it through the internal method `execute(Inventory inventory, int quantity, User performedBy)`, which applies the movement, stores the record and audits it without a role check (the buyer is authorized by `ConfirmOrderService`).
 
 ## Validations
@@ -277,7 +277,7 @@ Exposed in: `LogisticsOperatorPort`.
 | `UnauthorizedOperationException` | The requesting user is not an active logistics operator. |
 | `EntityNotFoundException` | The product, the warehouse or the inventory record does not exist. |
 | `InsufficientInventoryException` | Not enough available stock in any warehouse. |
-| `InvalidInventoryException` | The record is `DAMAGED` or the quantity is invalid. |
+| `InvalidInventoryException` | The record is not `AVAILABLE` (`RESERVED`, `OUT_OF_STOCK` or `DAMAGED`) or the quantity is invalid. |
 
 ## Output Ports Used
 

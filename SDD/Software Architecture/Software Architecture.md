@@ -153,8 +153,8 @@ Test data (users and products with the `itest-` prefix) therefore never appears 
 
 | Test | Verifies |
 | --- | --- |
-| `TransactionalConsistencyTest` | Transaction boundary of the use cases, after-commit audit, optimistic locking of inventory and the audited payment rejection, calling the role ports directly. |
-| `EndToEndPurchaseFlowTest` | The REST API through MockMvc and the real security chain: full purchase flow with the inventory at each stage (10/0 → 8/2 → 8/0 → 10/0 with `RETURN`), refund and reports; digital order delivered on payment without shipments; duplicate seller registration (409); blocked user (old token 401, login 403) and reactivation; an administrator cannot change its own status (403); ownership between buyers and between sellers (403); supervisor read-only (403); invalid parameters (400). |
+| `TransactionalConsistencyIT` | Transaction boundary of the use cases, after-commit audit, optimistic locking of inventory and the audited payment rejection, calling the role ports directly. |
+| `EndToEndPurchaseFlowIT` | The REST API through MockMvc and the real security chain: full purchase flow with the inventory at each stage (10/0 → 8/2 → 8/0 → 10/0 with `RETURN`), refund and reports; digital order delivered on payment without shipments; duplicate seller registration (409); blocked user (old token 401, login 403) and reactivation; an administrator cannot change its own status (403); ownership between buyers and between sellers (403); supervisor read-only (403); invalid parameters (400). |
 
 `tools/e2e_4c.py` runs the same end-to-end flow manually against a running application (`python tools/e2e_4c.py`); it creates its own users with a unique suffix, so it also works on a clean database.
 

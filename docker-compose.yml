@@ -11,7 +11,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      # 127.0.0.1 fuerza TCP: el servidor temporal de la primera inicializacion solo responde por socket.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -24,6 +25,42 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # API REST: http://localhost:8080 (salud en /actuator/health)
+  nexusmarket-app:
+    build:
+      context: ./application
+      dockerfile: Dockerfile
+    container_name: nexusmarket-app
+    restart: unless-stopped
+    ports:
+      - "${HOST_SERVER_PORT:-8080}:8080"
+    environment:
+      TZ: America/Bogota
+      MYSQL_URL: "${MYSQL_URL:-jdbc:mysql://mysql-db:3306/nexusmarket?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bogota}"
+      MYSQL_USERNAME: ${MYSQL_USERNAME:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo-db:27017/nexusmarket}
+      # Valores por defecto publicos, aceptables solo para uso academico (ver README.md).
+      JWT_SECRET: ${JWT_SECRET:-NexusMarket-Development-Secret-Key-Please-Change-In-Production-2026}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@nexusmarket.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Admin123*}
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      mongo-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   # Interfaz visual para MySQL: http://localhost:8081 (usuario root / root)
   phpmyadmin:

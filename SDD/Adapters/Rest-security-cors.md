@@ -20,6 +20,7 @@ This document defines the web security boundary of the NexusMarket API: route au
 | `POST /api/v1/auth/register/**` | open |
 | `GET /api/v1/public/**` | open |
 | `OPTIONS /**` (CORS preflight) | open |
+| `GET /actuator/health` | open (see below) |
 | `/error` | open |
 | `/api/v1/auth/logout` | authenticated (any role) |
 | `/api/v1/buyer/**` | `hasRole("BUYER")` |
@@ -30,6 +31,8 @@ This document defines the web security boundary of the NexusMarket API: route au
 | any other route | authenticated |
 
 The authority of the authenticated user is `ROLE_` followed by its `SystemRole` code (`AuthenticatedUserPrincipal`). Route rules are a first barrier: domain services still validate RG-01/RG-02/RG-03.
+
+**Health endpoint.** `GET /actuator/health` is open so the Docker healthcheck and an operator can call it without a token. It answers `UP` (200) only when MySQL and MongoDB respond, and `DOWN` (503) otherwise. `application.yml` exposes only this actuator endpoint (`management.endpoints.web.exposure.include`), without details (`management.endpoint.health.show-details`), so the response does not reveal the components. Other actuator paths fall under "any other route": anonymous requests answer 401, and authenticated ones answer 404 because those endpoints are not exposed (`ActuatorHealthIT`).
 
 ## 4. 401 and 403 Responses
 

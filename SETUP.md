@@ -1,0 +1,223 @@
+# Guía paso a paso: poner en marcha NexusMarket
+
+Probado en Windows 11 con PowerShell 5.1. Todos los comandos se ejecutan desde la raíz del repositorio, salvo que se indique otra carpeta. Los comandos de `curl.exe`, `docker` y `mvnw.cmd` también funcionan en CMD; los pasos que usan variables o funciones, como la prueba de humo, son solo para PowerShell.
+
+## 0. Prerrequisitos
+
+1. **Docker Desktop** en ejecución. Compruébalo con `docker --version` y `docker compose version`.
+2. **JDK 17 o superior**, solo si vas a correr las pruebas o ejecutar la aplicación fuera de Docker. Maven no hace falta: el proyecto trae `mvnw.cmd`, y dentro de Docker todo se compila en la imagen.
+3. Puertos libres en el equipo: **8080** (aplicación), **3306** (MySQL), **27017** (MongoDB), **8081** (phpMyAdmin) y **8082** (Mongo Express). Compruébalo con:
+   ```powershell
+   Get-NetTCPConnection -LocalPort 8080,3306,27017,8081,8082 -State Listen -ErrorAction SilentlyContinue | Select-Object LocalPort, OwningProcess
+   ```
+   Si no muestra nada, todos están libres. Si ya tienes los contenedores de este proyecto corriendo, los puertos aparecerán ocupados por ellos, y eso es normal.
+
+## 1. Levantar todo con un comando
+
+```powershell
+docker compose up -d --build
+```
+
+La primera vez tarda unos minutos, porque descarga las imágenes y las dependencias de Maven. Compose arranca MySQL y MongoDB, espera a que estén sanos y solo entonces inicia la aplicación. Al arrancar con la base vacía, la aplicación crea las tablas y el administrador inicial.
+
+Comprueba el estado de los contenedores:
+
+```powershell
+docker ps --format "{{.Names}} | {{.Status}}"
+```
+
+`nexusmarket-app`, `nexusmarket-mysql` y `nexusmarket-mongo` deben aparecer como `(healthy)`. La aplicación puede tardar cerca de un minuto en pasar de `(health: starting)` a `(healthy)`.
+
+## 2. Verificar que funciona
+
+Salud de la aplicación, sin token. Debe responder `UP` y solo estará así si MySQL y MongoDB responden:
+
+```powershell
+curl.exe -s http://localhost:8080/actuator/health
+# {"groups":["liveness","readiness"],"status":"UP"}
+```
+
+Login del administrador inicial (`admin@nexusmarket.com` / `Admin123*`). Debe responder **HTTP 200** con un `token`:
+
+```powershell
+Set-Content "$env:TEMP\login.json" -Value '{"email":"admin@nexusmarket.com","password":"Admin123*"}' -NoNewline
+curl.exe -s -w "`nHTTP:%{http_code}`n" -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: application/json" -d "@$env:TEMP\login.json"
+```
+
+> En PowerShell, pasar JSON directamente a `curl.exe` suele dañar las comillas. Por eso los cuerpos van en un archivo, con `-d "@archivo.json"`.
+
+## 3. Zona horaria
+
+La aplicación usa siempre **`America/Bogota`**, así que todas las fechas de pedidos, facturas, envíos y reportes están en hora de Colombia, sin importar la zona del equipo:
+
+| Dónde | Configuración |
+| --- | --- |
+| Imagen Docker | `-Duser.timezone=America/Bogota` en el `ENTRYPOINT` y `TZ=America/Bogota` en `docker-compose.yml` |
+| Fuera de Docker (`mvnw.cmd spring-boot:run`) | `-Duser.timezone=America/Bogota` en el `spring-boot-maven-plugin` de `pom.xml` |
+| MySQL | `serverTimezone=America/Bogota` en la URL y `hibernate.jdbc.time_zone` en `application.yml` |
+
+Las columnas de fecha de MySQL guardan la misma hora de Colombia que devuelve la API. MongoDB guarda instantes en UTC, así que en Mongo Express las fechas de auditoría aparecen con 5 horas más (terminan en `Z`). Es el mismo instante, y la API las devuelve en hora de Colombia.
+
+Si ejecutas el jar directamente con `java -jar`, agrega tú mismo `-Duser.timezone=America/Bogota`.
+
+## 4. Compilar y correr las pruebas
+
+Desde la carpeta `application`:
+
+```powershell
+cd application
+.\mvnw.cmd test
+```
+
+Ejecuta las **1386 pruebas unitarias**, sin Docker. Resultado esperado: `BUILD SUCCESS`.
+
+```powershell
+.\mvnw.cmd verify
+```
+
+Ejecuta las unitarias y las **13 de integración**, y necesita los contenedores de MySQL y MongoDB corriendo. Usan bases separadas (`nexusmarket_test`), así que no tocan los datos de la aplicación, y pueden correr con `nexusmarket-app` encendida.
+
+## 5. Reportes de cobertura
+
+`mvnw.cmd verify` genera tres reportes. Abre el `index.html` de cada carpeta en un navegador:
+
+| Reporte | Carpeta | Refleja |
+| --- | --- | --- |
+| Unitarias | `application/target/site/jacoco` | Las pruebas unitarias (también lo genera `mvnw.cmd test`) |
+| Integración | `application/target/site/jacoco-it` | Las pruebas de integración |
+| Combinado | `application/target/site/jacoco-merged` | Ambas. Es la cobertura real del proyecto |
+
+Los datos de cobertura se acumulan entre ejecuciones. Antes de medir, bórralos con `Remove-Item target\*.exec` desde `application`. Los detalles están en [Testing-strategy.md](SDD/Testing/Testing-strategy.md).
+
+## 6. Prueba de humo con curl
+
+Recorre el flujo principal con la aplicación en Docker: el administrador registra un vendedor, el vendedor publica un producto con stock y un comprador nuevo lo compra. Copia los bloques en la misma ventana de PowerShell, en orden. Los correos y documentos usan la hora actual, así que se puede repetir sin errores de duplicados.
+
+**Preparación:**
+
+```powershell
+$api = "http://localhost:8080/api/v1"
+$tmp = "$env:TEMP\nexusmarket-smoke"
+New-Item -ItemType Directory -Path $tmp -Force | Out-Null
+$id = Get-Date -Format "yyMMddHHmmss"
+$address = '{"line1":"Calle 10 # 20-30","city":"Medellin","state":"Antioquia","country":"Colombia"}'
+
+function Call($method, $path, $token, $body) {
+    $curlArgs = @("-s", "-w", "`n%{http_code}", "-X", $method, "$api$path")
+    if ($token) { $curlArgs += @("-H", "Authorization: Bearer $token") }
+    if ($body) {
+        Set-Content "$tmp\body.json" -Value $body -NoNewline
+        $curlArgs += @("-H", "Content-Type: application/json", "-d", "@$tmp\body.json")
+    }
+    $lines = curl.exe @curlArgs
+    Write-Host "$($lines[-1])  $method $path"
+    ($lines[0..($lines.Count - 2)] -join "`n") | ConvertFrom-Json
+}
+```
+
+**1. El administrador inicia sesión y registra un vendedor con su primera bodega** (esperado: `200` y `201`):
+
+```powershell
+$admin = (Call POST "/auth/login" $null '{"email":"admin@nexusmarket.com","password":"Admin123*"}').token
+$seller = Call POST "/admin/sellers" $admin "{`"identificationNumber`":`"S$id`",`"fullName`":`"Tech Store`",`"email`":`"seller$id@example.com`",`"password`":`"Seller123*`",`"warehouseName`":`"Bodega Principal`",`"warehouseLocation`":$address}"
+```
+
+**2. El vendedor inicia sesión, registra un producto, lo publica y carga stock** (esperado: `200`, `201`, `200` y `201`):
+
+```powershell
+$sellerToken = (Call POST "/auth/login" $null "{`"email`":`"seller$id@example.com`",`"password`":`"Seller123*`"}").token
+$product = Call POST "/seller/products" $sellerToken '{"type":"PHYSICAL","name":"Mouse inalambrico","description":"Mouse ergonomico","price":100.00,"variants":[]}'
+$published = Call PATCH "/seller/products/$($product.id)/publish" $sellerToken $null
+$stock = Call POST "/seller/inventories" $sellerToken "{`"productId`":`"$($product.id)`",`"warehouseId`":`"$($seller.firstWarehouse.id)`",`"quantity`":10}"
+```
+
+**3. Un comprador se registra e inicia sesión** (esperado: `201` y `200`):
+
+```powershell
+$buyer = Call POST "/auth/register/buyers" $null "{`"identificationNumber`":`"B$id`",`"fullName`":`"Maria Gomez`",`"email`":`"buyer$id@example.com`",`"password`":`"Buyer123*`",`"primaryAddress`":$address}"
+$buyerToken = (Call POST "/auth/login" $null "{`"email`":`"buyer$id@example.com`",`"password`":`"Buyer123*`"}").token
+```
+
+**4. El comprador agrega al carrito, confirma el pedido y paga** (esperado: `200`, `201` y `200`):
+
+```powershell
+$cart = Call POST "/buyer/cart/items" $buyerToken "{`"productId`":`"$($product.id)`",`"quantity`":2}"
+$order = Call POST "/buyer/orders" $buyerToken $null
+$paid = Call POST "/buyer/orders/$($order.id)/payment" $buyerToken $null
+"Pedido $($paid.id): estado $($paid.status), total $($paid.totalAmount), creado $($paid.createdAt)"
+```
+
+El estado debe ser `PAID`, el total `200.00` y la fecha, la hora actual de Colombia.
+
+**5. Comprueba lo que quedó guardado:**
+
+```powershell
+docker exec nexusmarket-mysql mysql -uroot -proot --batch -e "SELECT id, status, created_at FROM nexusmarket.orders ORDER BY created_at DESC LIMIT 1;"
+docker exec nexusmarket-mongo mongosh --quiet nexusmarket --eval "db.audit_logs.countDocuments()"
+```
+
+MySQL debe mostrar en `created_at` la misma hora que la API, y el conteo de auditoría debe ser mayor que cero.
+
+## 7. phpMyAdmin y Mongo Express
+
+Son herramientas de desarrollo para ver los datos; la aplicación no depende de ellas.
+
+| Herramienta | URL | Usuario / contraseña | Qué mirar |
+| --- | --- | --- | --- |
+| phpMyAdmin | <http://localhost:8081> | `root` / `root` | Base `nexusmarket`: usuarios, productos, pedidos, inventario |
+| Mongo Express | <http://localhost:8082> | `admin` / `admin` | Base `nexusmarket`, colección `audit_logs` |
+
+## 8. Apagar todo
+
+```powershell
+docker compose down
+```
+
+Detiene y elimina los contenedores, pero **conserva los datos**. Para borrarlos también:
+
+```powershell
+docker compose down -v
+```
+
+El siguiente arranque empieza con las bases vacías y vuelve a crear el administrador inicial.
+
+## 9. Ejecutar la aplicación fuera de Docker
+
+Levanta solo las bases de datos y detén la aplicación de Docker, para liberar el puerto 8080:
+
+```powershell
+docker compose up -d mysql-db mongo-db
+docker compose stop nexusmarket-app
+cd application
+.\mvnw.cmd spring-boot:run
+```
+
+Se detiene con `Ctrl+C`. Para volver a la aplicación en Docker: `docker compose up -d nexusmarket-app`.
+
+## 10. Variables de entorno
+
+Todas tienen un valor por defecto. Defínelas antes de `docker compose up` para cambiarlas, por ejemplo `$env:JWT_SECRET = "..."`.
+
+| Variable | Uso |
+| --- | --- |
+| `HOST_SERVER_PORT` | Puerto del equipo donde se publica la aplicación (por defecto 8080). Solo en Docker |
+| `MYSQL_URL`, `MYSQL_USERNAME`, `MYSQL_PASSWORD` | Conexión a MySQL |
+| `MONGODB_URI` | Conexión a MongoDB |
+| `JWT_SECRET` | Clave de firma de los tokens. El valor por defecto es público (ver la nota de seguridad en [README.md](README.md)) |
+| `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Administrador inicial. Solo se aplican si la base no tiene ningún administrador |
+
+## 11. Solución de problemas
+
+| Síntoma | Causa probable | Solución |
+| --- | --- | --- |
+| `Bind for 0.0.0.0:8080 failed: port is already allocated` o `Port 8080 was already in use` | Otro proceso usa el 8080, a menudo la aplicación corriendo fuera de Docker | Detén ese proceso, o ejecuta `$env:HOST_SERVER_PORT="8090"` antes de `docker compose up -d --build`. Para ver quién lo usa: `Get-NetTCPConnection -LocalPort 8080 -State Listen` |
+| `Bind for 0.0.0.0:3306 failed: port is already allocated`, o el login falla en `spring-boot:run` | Un MySQL instalado en Windows ocupa el 3306 | Abre PowerShell como administrador, busca el servicio con `Get-Service *mysql*` y detenlo con `Stop-Service MySQL80`, usando el nombre que aparezca |
+| `error during connect` o `failed to connect to the docker API` | Docker Desktop no está iniciado | Abre Docker Desktop, espera a que indique que está corriendo y repite el comando |
+| Docker Desktop no arranca o menciona `WSL` | WSL 2 ausente o desactualizado | En PowerShell como administrador: `wsl --install` si no está instalado, o `wsl --update` si ya lo está. Reinicia el equipo y abre Docker Desktop |
+| `nexusmarket-app` sigue en `(unhealthy)` o se reinicia | La aplicación no logró arrancar | Mira la causa con `docker compose logs nexusmarket-app` |
+| `/actuator/health` responde `DOWN` | MySQL o MongoDB no responden | `docker ps` para ver cuál está caído, y `docker compose up -d`. La aplicación se recupera sola |
+| El login del administrador responde `401` | La base ya tenía un administrador con otra contraseña, porque `SEED_ADMIN_PASSWORD` solo se aplica con la base vacía | En desarrollo: `docker compose down -v` y vuelve a levantar. **Borra todos los datos** |
+| `400` al usar `curl.exe` con JSON | PowerShell dañó las comillas | Usa un archivo: `-d "@archivo.json"`, como en los pasos 2 y 6 |
+| `curl` responde con un error de `Invoke-WebRequest` | En PowerShell 5.1, `curl` es un alias | Escribe `curl.exe` |
+| `.\mvnw.cmd verify` falla con `Communications link failure` | MySQL o MongoDB están apagados | `docker compose up -d mysql-db mongo-db` y repite |
+| Los pedidos antiguos muestran una hora desplazada 5 horas | Se crearon antes de fijar la zona horaria, cuando MySQL guardaba en UTC | En desarrollo: `docker compose down -v`. **Borra todos los datos** |

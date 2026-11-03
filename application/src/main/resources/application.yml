@@ -4,7 +4,7 @@ spring:
   # MySQL (business aggregates). Default: host-local run against docker-compose (root / root).
   # Under Docker Compose use MYSQL_URL=jdbc:mysql://mysql-db:3306/nexusmarket?... .
   datasource:
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/nexusmarket?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/nexusmarket?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bogota}
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -19,6 +19,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        # Same zone as the JVM (-Duser.timezone) and the MySQL URL (serverTimezone), so the DATETIME
+        # columns hold the Colombian wall-clock time that the domain produces with LocalDateTime.now().
+        jdbc:
+          time_zone: America/Bogota
   # MongoDB (audit trail). Spring Boot 4 uses the spring.mongodb prefix.
   # Under Docker Compose use MONGODB_URI=mongodb://mongo-db:27017/nexusmarket.
   mongodb:
@@ -31,6 +35,16 @@ spring:
 
 server:
   port: 8080
+
+# Only the health endpoint is exposed (open in SecurityConfig), without details.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 app:
   security:

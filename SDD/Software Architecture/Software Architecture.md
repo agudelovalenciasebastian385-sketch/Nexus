@@ -24,7 +24,8 @@ This approach promotes maintainability, scalability, testability, and technology
 | REST input adapters: `AuthRestController`, `PublicRestController`, `GlobalExceptionHandler` | Implemented (step 4A) |
 | REST input adapters: `BuyerRestController`, `SellerRestController` | Implemented (step 4B) |
 | REST input adapters: `LogisticsOperatorRestController`, `AdministratorRestController`, `SupervisorRestController` | Implemented (step 4C) |
-| Automated tests: 1386 unit and 11 integration, with three JaCoCo reports | Implemented (step 5), see [Testing Strategy](../Testing/Testing-strategy.md) |
+| Automated tests: 1386 unit and 13 integration, with three JaCoCo reports | Implemented (step 5), see [Testing Strategy](../Testing/Testing-strategy.md) |
+| Docker image, Compose service of the application and health endpoint | Implemented (step 6), see [SETUP.md](../../SETUP.md) |
 
 Every output port has an implementation, so the Spring context starts against the MySQL and MongoDB containers of `docker-compose.yml`. The REST API is specified in [Api-rest-endpoints.md](../Adapters/Api-rest-endpoints.md).
 
@@ -121,7 +122,8 @@ Configuration lives in `application/src/main/resources/application.yml`:
 | Prefix | Content |
 | --- | --- |
 | `spring.datasource` | MySQL `jdbc:mysql://localhost:3306/nexusmarket?createDatabaseIfNotExist=true&...`, user `root` / `root` (overridable with `MYSQL_URL`, `MYSQL_USERNAME`, `MYSQL_PASSWORD`). |
-| `spring.jpa` | `ddl-auto: update` (Hibernate creates and updates the tables), `open-in-view: false`. |
+| `spring.jpa` | `ddl-auto: update` (Hibernate creates and updates the tables), `open-in-view: false`, `hibernate.jdbc.time_zone` (see [Time zone](#time-zone)). |
+| `management` | Exposes only `/actuator/health`, without details (see [REST Security and CORS](../Adapters/Rest-security-cors.md)). |
 | `spring.mongodb.uri` | `mongodb://localhost:27017/nexusmarket` (Spring Boot 4 prefix; overridable with `MONGODB_URI`). |
 | `app.security.jwt` | JWT secret and expiration (see [Security Adapters](../Adapters/Security-adapters.md)). |
 | `app.security.cors` | Allowed CORS origins (see [REST Security and CORS](../Adapters/Rest-security-cors.md)). |
@@ -135,10 +137,27 @@ The root `docker-compose.yml` starts:
 | --- | --- | --- | --- |
 | `mysql-db` | `mysql:8.0` | 3306 | Business data (database `nexusmarket`, `root` / `root`). |
 | `mongo-db` | `mongo:6.0` | 27017 | Audit trail (database `nexusmarket`, collection `audit_logs`). |
+| `nexusmarket-app` | built from `application/Dockerfile` | 8080 | The application. It starts once `mysql-db` and `mongo-db` are healthy, and its healthcheck calls `/actuator/health`. |
 | `phpmyadmin` | `phpmyadmin:5.2` | 8081 | **Development tool:** web UI to browse MySQL (`http://localhost:8081`, `root` / `root`). |
 | `mongo-express` | `mongo-express:1.0.2` | 8082 | **Development tool:** web UI to browse MongoDB (`http://localhost:8082`, `admin` / `admin`). |
 
 phpMyAdmin and Mongo Express are development tools only; the application does not depend on them.
+
+`application/Dockerfile` is multi-stage: Maven with JDK 17 builds the jar without running the tests, and the final image holds only the JRE 17 and the jar, run by a non-root user. To run the application outside Docker, start only the databases and use `mvnw spring-boot:run`. See [SETUP.md](../../SETUP.md).
+
+### Time zone
+
+The application always runs in `America/Bogota`, so a date means the same thing wherever it runs and the reports can use today's date. The domain produces its dates with `LocalDateTime.now()`, which depends on the zone of the JVM.
+
+| Layer | Setting |
+| --- | --- |
+| JVM in Docker | `-Duser.timezone=America/Bogota` in the `ENTRYPOINT` of the image, and `TZ` in the `nexusmarket-app` service |
+| JVM outside Docker | `-Duser.timezone=America/Bogota` in the `spring-boot-maven-plugin` configuration, used by `mvnw spring-boot:run` |
+| MySQL | `serverTimezone=America/Bogota` in the URL and `hibernate.jdbc.time_zone` in `application.yml` |
+
+The JVM, the URL and Hibernate must use the same zone, so that the `DATETIME` columns hold the same Colombian wall-clock time that the API returns. MongoDB stores instants in UTC: Spring Data converts them from and to the zone of the JVM, so a tool such as Mongo Express shows them 5 hours ahead, while the API returns Colombian time. JWT dates use `Instant` and do not depend on the zone.
+
+A jar started directly with `java -jar` needs the same `-Duser.timezone` argument.
 
 ### Test profile
 
@@ -155,6 +174,7 @@ Test data (users and products with the `itest-` prefix) therefore never appears 
 | Test | Verifies |
 | --- | --- |
 | `TransactionalConsistencyIT` | Transaction boundary of the use cases, after-commit audit, optimistic locking of inventory and the audited payment rejection, calling the role ports directly. |
+| `ActuatorHealthIT` | `/actuator/health` answers `UP` without a token, and other actuator endpoints are not exposed. |
 | `EndToEndPurchaseFlowIT` | The REST API through MockMvc and the real security chain: full purchase flow with the inventory at each stage (10/0 → 8/2 → 8/0 → 10/0 with `RETURN`), refund and reports; digital order delivered on payment without shipments; duplicate seller registration (409); blocked user (old token 401, login 403) and reactivation; an administrator cannot change its own status (403); ownership between buyers and between sellers (403); supervisor read-only (403); invalid parameters (400). |
 
 `tools/e2e_4c.py` runs the same end-to-end flow manually against a running application (`python tools/e2e_4c.py`); it creates its own users with a unique suffix, so it also works on a clean database.
@@ -367,7 +387,7 @@ The domain is tested without infrastructure, as constraint 10 requires. The full
 | Group | Tests | Command | Needs Docker |
 | --- | --- | --- | --- |
 | Domain, services, adapters and web (`*Test`) | 1386 | `./mvnw test` | No |
-| Integration (`*IT`) | 11 | `./mvnw verify` | Yes |
+| Integration (`*IT`) | 13 | `./mvnw verify` | Yes |
 
 - Service tests use in-memory repositories that return the same instance they store, so only the `*IT` classes detect a forgotten `update()`.
 - Mockito is used only in the `*WebTest` classes, which run the web layer with mocked role ports and no database.

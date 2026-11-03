@@ -33,7 +33,7 @@ application/src/main/java/nexusmarket/
 └── infrastructure/seed/     → 10 (DatabaseSeeder)
 ```
 
-Regla transversal: **las dependencias apuntan al dominio**. Una petición recorre `rest → ports/in → useCases → services → ports/out → persistence`, y el dominio nunca importa Spring, JPA, MongoDB, HTTP ni JSON.
+Regla transversal: **las dependencias apuntan al dominio**. Una petición recorre `rest → ports/in → useCases → services → ports/out → persistence`, y el dominio no importa JPA, MongoDB, HTTP, JSON ni Spring Security. De Spring y Lombok solo usa `@Service` y `@RequiredArgsConstructor` en los servicios.
 
 ## Convenciones
 

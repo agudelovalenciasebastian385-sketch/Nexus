@@ -34,7 +34,7 @@ Además, cualquier visitante puede consultar el catálogo público sin iniciar s
 
 ## Arquitectura hexagonal
 
-El dominio contiene toda la lógica de negocio y no depende de ningún framework: se puede probar sin Spring y sin bases de datos. Se comunica con el exterior solo a través de puertos, y las dependencias siempre apuntan hacia él.
+El dominio contiene toda la lógica de negocio y no depende de la web, la persistencia ni la seguridad: no usa HTTP, JSON, JPA, SQL, MongoDB, JWT ni librerías de hash. Sus únicas anotaciones de framework son `@Service` (Spring) y `@RequiredArgsConstructor` (Lombok) en los servicios, para la inyección de dependencias; los modelos, objetos de valor, excepciones y puertos no usan ninguna. Sus pruebas corren sin arrancar Spring y sin bases de datos. Se comunica con el exterior solo a través de puertos, y las dependencias siempre apuntan hacia él.
 
 ```text
 Petición HTTP → Controlador REST → Puerto por rol → Caso de uso → Servicio de dominio → Puerto de salida → Adaptador → MySQL / MongoDB

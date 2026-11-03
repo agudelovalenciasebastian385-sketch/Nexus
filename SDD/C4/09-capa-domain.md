@@ -1,6 +1,6 @@
 # Capa — Dominio
 
-Paquete: `nexusmarket.domain`. Contiene toda la lógica de negocio, sin dependencias de Spring, JPA, MongoDB, HTTP ni JSON, y se prueba sin infraestructura. Especificación en [Domain Model](../domain/Domain%20Model.md), [Domain Value Objects](../domain/Domain%20Value%20Objects.md) y [Domain Services](../domain/Domain%20Services.md).
+Paquete: `nexusmarket.domain`. Contiene toda la lógica de negocio, sin dependencias de JPA, MongoDB, HTTP, JSON, JWT ni Spring Security. Sus únicas anotaciones de framework son `@Service` y `@RequiredArgsConstructor` en los servicios, para la inyección de dependencias; los modelos, objetos de valor, excepciones y puertos no usan ninguna. Se prueba sin arrancar Spring y sin infraestructura. Especificación en [Domain Model](../domain/Domain%20Model.md), [Domain Value Objects](../domain/Domain%20Value%20Objects.md) y [Domain Services](../domain/Domain%20Services.md).
 
 ## Estructura
 

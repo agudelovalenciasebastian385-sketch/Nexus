@@ -19,7 +19,7 @@ C4Component
         Component(rest, "7 controladores REST", "Spring MVC", "Auth, Public, Buyer, Seller, LogisticsOperator, Administrator y Supervisor")
         Component(seed, "DatabaseSeeder", "CommandLineRunner", "Crea el administrador inicial")
         Component(usecases, "6 casos de uso", "Service, Transactional", "Implementan los puertos y abren la transacción")
-        Component(services, "60 servicios de dominio", "Java puro", "14 subdominios con las reglas de negocio")
+        Component(services, "60 servicios de dominio", "Java, Service, RequiredArgsConstructor", "14 subdominios con las reglas de negocio")
         Component(jpa, "12 adaptadores JPA", "Spring Data JPA", "Implementan los repositorios sobre MySQL")
         Component(portsout, "16 puertos de salida", "Interfaces", "Repositorios, JwtServicePort, PasswordServicePort y PaymentGatewayPort")
         Component(audit, "AuditLogMongoAdapter", "Spring Data MongoDB", "Escribe la auditoría tras el commit")

@@ -47,7 +47,7 @@ classDiagram
 | `@Transactional(readOnly = true)` | Métodos `consult*` | Las consultas no escriben |
 | `@Transactional(noRollbackFor = PaymentRejectedException.class)` | `BuyerUseCaseImpl.validatePayment` | El pago rechazado no se revierte, así que la auditoría de `PAYMENT_REJECTED` sí se escribe |
 
-Los servicios de dominio no conocen las transacciones, porque el dominio no depende de Spring.
+Los servicios de dominio no declaran transacciones: `@Transactional` solo aparece en los casos de uso.
 
 ## Secuencia — Transacción de un pago rechazado
 

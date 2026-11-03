@@ -26,6 +26,7 @@ This approach promotes maintainability, scalability, testability, and technology
 | REST input adapters: `LogisticsOperatorRestController`, `AdministratorRestController`, `SupervisorRestController` | Implemented (step 4C) |
 | Automated tests: 1386 unit and 13 integration, with three JaCoCo reports | Implemented (step 5), see [Testing Strategy](../Testing/Testing-strategy.md) |
 | Docker image, Compose service of the application and health endpoint | Implemented (step 6), see [SETUP.md](../../SETUP.md) |
+| C4 model: 4 levels, one document per layer and the main flows | Implemented (step 6), see [C4](../C4/README.md) |
 
 Every output port has an implementation, so the Spring context starts against the MySQL and MongoDB containers of `docker-compose.yml`. The REST API is specified in [Api-rest-endpoints.md](../Adapters/Api-rest-endpoints.md).
 
@@ -44,6 +45,12 @@ The architecture is based on the following principles:
 - Explicit boundaries between layers.
 
 The domain contains all business rules and never depends on external technologies.
+
+---
+
+# C4 Model
+
+The architecture is also documented as a C4 model with Mermaid diagrams, in Spanish, using the real names of classes and routes: [context, containers, components, code, one document per layer and the main flows](../C4/README.md).
 
 ---
 
@@ -154,6 +161,7 @@ The application always runs in `America/Bogota`, so a date means the same thing 
 | JVM in Docker | `-Duser.timezone=America/Bogota` in the `ENTRYPOINT` of the image, and `TZ` in the `nexusmarket-app` service |
 | JVM outside Docker | `-Duser.timezone=America/Bogota` in the `spring-boot-maven-plugin` configuration, used by `mvnw spring-boot:run` |
 | MySQL | `serverTimezone=America/Bogota` in the URL and `hibernate.jdbc.time_zone` in `application.yml` |
+| Tests | `-Duser.timezone=America/Bogota` in the `argLine` of `maven-surefire-plugin` and `maven-failsafe-plugin` |
 
 The JVM, the URL and Hibernate must use the same zone, so that the `DATETIME` columns hold the same Colombian wall-clock time that the API returns. MongoDB stores instants in UTC: Spring Data converts them from and to the zone of the JVM, so a tool such as Mongo Express shows them 5 hours ahead, while the API returns Colombian time. JWT dates use `Instant` and do not depend on the zone.
 

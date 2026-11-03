@@ -64,6 +64,8 @@ NexusMarket/
 │       │   └── payment/           Pasarela de pago simulada
 │       └── infrastructure/seed/   Administrador inicial
 ├── SDD/                           Especificación del sistema
+├── postman/                       Colección y entorno de Postman
+├── tools/                         Verificación del SDD y generadores
 ├── docker-compose.yml
 ├── SETUP.md
 └── README.md
@@ -106,9 +108,9 @@ Cobertura del reporte combinado (`application/target/site/jacoco-merged`):
 
 | Área | Líneas | Ramas |
 | --- | ---: | ---: |
-| `adapters` | 91,8 % | 61,0 % |
-| `domain` | 90,1 % | 78,3 % |
-| **Total** | **90,7 %** | **73,9 %** |
+| `adapters` | 91,7 % | 61,0 % |
+| `domain` | 90,5 % | 78,3 % |
+| **Total** | **90,7 %** | **73,7 %** |
 
 La estrategia completa, sus límites y los tres reportes están en [Testing-strategy.md](SDD/Testing/Testing-strategy.md).
 
@@ -121,10 +123,13 @@ curl.exe -s http://localhost:8080/actuator/health
 
 Los prerrequisitos, las pruebas, la prueba de humo, cómo ejecutarlo fuera de Docker y la solución de problemas están en [`SETUP.md`](SETUP.md).
 
+La carpeta [`postman/`](postman/) trae una colección con el flujo completo ejecutable y los 108 endpoints por rol ([cómo usarla](SETUP.md#11-colección-de-postman)).
+
 ## Mapa del SDD
 
 | Documento | Contenido |
 | --- | --- |
+| [Modelo C4](SDD/C4/README.md) | Contexto, contenedores, componentes, código, una ficha por capa y los flujos con diagramas |
 | [Software Architecture](SDD/Software%20Architecture/Software%20Architecture.md) | Principios, capas, estructura y configuración |
 | [Domain Model](SDD/domain/Domain%20Model.md) | Entidades y sus reglas |
 | [Domain Value Objects](SDD/domain/Domain%20Value%20Objects.md) | Catálogos y objetos de valor |
@@ -136,6 +141,8 @@ Los prerrequisitos, las pruebas, la prueba de humo, cómo ejecutarlo fuera de Do
 | [Rest-security-cors](SDD/Adapters/Rest-security-cors.md) y [Security-adapters](SDD/Adapters/Security-adapters.md) | Rutas, JWT, BCrypt y CORS |
 | [Persistence-adapters](SDD/Adapters/Persistence-adapters.md) | MySQL, MongoDB y pago simulado |
 | [Testing-strategy](SDD/Testing/Testing-strategy.md) | Tipos de pruebas, cobertura y límites |
+
+Las herramientas que verifican y generan estos documentos están en [`tools/`](tools/README.md).
 
 ## Nota de seguridad
 

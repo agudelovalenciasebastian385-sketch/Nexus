@@ -55,6 +55,7 @@ La aplicación usa siempre **`America/Bogota`**, así que todas las fechas de pe
 | Imagen Docker | `-Duser.timezone=America/Bogota` en el `ENTRYPOINT` y `TZ=America/Bogota` en `docker-compose.yml` |
 | Fuera de Docker (`mvnw.cmd spring-boot:run`) | `-Duser.timezone=America/Bogota` en el `spring-boot-maven-plugin` de `pom.xml` |
 | MySQL | `serverTimezone=America/Bogota` en la URL y `hibernate.jdbc.time_zone` en `application.yml` |
+| Pruebas (`mvnw.cmd test` y `verify`) | `-Duser.timezone=America/Bogota` en el `argLine` de surefire y failsafe, en `pom.xml` |
 
 Las columnas de fecha de MySQL guardan la misma hora de Colombia que devuelve la API. MongoDB guarda instantes en UTC, así que en Mongo Express las fechas de auditoría aparecen con 5 horas más (terminan en `Z`). Es el mismo instante, y la API las devuelve en hora de Colombia.
 
@@ -87,7 +88,7 @@ Ejecuta las unitarias y las **13 de integración**, y necesita los contenedores 
 | Integración | `application/target/site/jacoco-it` | Las pruebas de integración |
 | Combinado | `application/target/site/jacoco-merged` | Ambas. Es la cobertura real del proyecto |
 
-Los datos de cobertura se acumulan entre ejecuciones. Antes de medir, bórralos con `Remove-Item target\*.exec` desde `application`. Los detalles están en [Testing-strategy.md](SDD/Testing/Testing-strategy.md).
+Los datos de cobertura se acumulan entre ejecuciones. Antes de medir, bórralos con `Remove-Item target\*.exec` desde `application`. Si VS Code o Eclipse tienen el proyecto abierto, también compilan sobre `target/`, así que puedes ver `Unresolved compilation problem` o cifras algo distintas: borra `target\classes` y `target\test-classes` y repite. Los detalles están en [Testing-strategy.md](SDD/Testing/Testing-strategy.md).
 
 ## 6. Prueba de humo con curl
 
@@ -206,7 +207,39 @@ Todas tienen un valor por defecto. Defínelas antes de `docker compose up` para 
 | `JWT_SECRET` | Clave de firma de los tokens. El valor por defecto es público (ver la nota de seguridad en [README.md](README.md)) |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Administrador inicial. Solo se aplican si la base no tiene ningún administrador |
 
-## 11. Solución de problemas
+## 11. Colección de Postman
+
+La carpeta `postman/` trae la colección y su entorno:
+
+| Carpeta de la colección | Para qué sirve |
+| --- | --- |
+| **Flujo completo** | 41 peticiones en orden, de principio a fin, con 72 verificaciones. Se ejecuta con el Collection Runner |
+| Autenticacion, Publico, Comprador, Vendedor, Operador logistico, Administrador, Supervisor | Los 108 endpoints por rol, para explorar a mano |
+
+El flujo recorre: login del administrador, registro del vendedor, del operador y del supervisor, productos físico y digital, stock, compra y pago, factura, envío, devolución y reembolso, los 4 reportes con la fecha de hoy en Colombia y el logout. Incluye casos negativos: duplicado (409), otro rol (403), sin token (401) y token tras el logout (401). Cada ejecución usa correos y documentos nuevos, así que se puede repetir sin errores de duplicados.
+
+### En Postman
+
+1. Con la aplicación corriendo, abre Postman y usa **Import** para cargar los dos archivos de `postman/`: `NexusMarket.postman_collection.json` y `NexusMarket.postman_environment.json`.
+2. Arriba a la derecha, selecciona el entorno **NexusMarket**. Sin él, las variables no se guardan y el flujo falla.
+3. En la colección, abre el menú de la carpeta **Flujo completo**, elige **Run folder** y pulsa **Run**. Conserva el orden de las peticiones.
+4. Todas las verificaciones deben aparecer en verde.
+
+Las carpetas por rol usan las variables que deja el flujo, así que ejecuta el flujo una vez antes de explorarlas. Cada carpeta de rol empieza con **Iniciar sesion**, que renueva su token. En esas carpetas, un 400, 404 o 409 puede ser correcto según el estado de los datos: por ejemplo, un pedido ya entregado no se puede pagar. El código de éxito de cada endpoint aparece en el nombre de la petición.
+
+Si cambiaste el puerto o las credenciales del administrador, ajusta `baseUrl`, `adminEmail` y `adminPassword` en el entorno.
+
+### Desde la consola, con newman
+
+No hace falta instalar Node: newman corre en un contenedor, conectado a la red de la aplicación. Ejecuta esto desde la raíz del repositorio, con PowerShell:
+
+```powershell
+docker run --rm --network container:nexusmarket-app -v "${PWD}\postman:/etc/newman" postman/newman:6-alpine run NexusMarket.postman_collection.json -e NexusMarket.postman_environment.json --folder "Flujo completo"
+```
+
+Resultado esperado: `requests 41` y `assertions 72`, con 0 fallos.
+
+## 12. Solución de problemas
 
 | Síntoma | Causa probable | Solución |
 | --- | --- | --- |

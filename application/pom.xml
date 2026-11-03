@@ -28,6 +28,8 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		<!-- Filled by the JaCoCo agent; empty so @{argLine} still resolves when JaCoCo is skipped. -->
+		<argLine></argLine>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -149,10 +151,21 @@
 			</plugin>
 
 			<!-- Integration tests (*IT): run by `mvnw verify` with the docker-compose containers running.
-			     `mvnw test` runs only the unit tests (surefire: *Test), without Docker. -->
+			     `mvnw test` runs only the unit tests (surefire: *Test), without Docker.
+			     Both use the time zone of the application; @{argLine} keeps the JaCoCo agent. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>@{argLine} -Duser.timezone=America/Bogota</argLine>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<argLine>@{argLine} -Duser.timezone=America/Bogota</argLine>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>

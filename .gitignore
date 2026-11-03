@@ -23,5 +23,5 @@
 hs_err_pid*
 replay_pid*
 
-# Local tooling (not published)
-tools/
+# Python
+__pycache__/

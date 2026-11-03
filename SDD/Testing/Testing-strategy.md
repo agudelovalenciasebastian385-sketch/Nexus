@@ -39,6 +39,8 @@ For the same reason, service tests do not exercise transaction rollback or `@Ver
 
 Integration tests use `@ActiveProfiles("test")`, which loads `src/test/resources/application-test.yml`. They use the same containers as development, with a separate database named `nexusmarket_test` in both MySQL and MongoDB, so test data never reaches the development databases. The profile also sets `app.payment.simulated.approval-limit` to `1000.00`, so a test can trigger a rejected payment.
 
+**Time zone:** unit and integration tests run in `America/Bogota`, the zone of the application, whatever the zone of the machine. `pom.xml` sets `-Duser.timezone=America/Bogota` in the `argLine` of `maven-surefire-plugin` and `maven-failsafe-plugin`. The value starts with `@{argLine}`, which keeps the JaCoCo agent; without it the coverage data would no longer be generated. The `argLine` property defaults to empty, so the reference still resolves when JaCoCo is skipped.
+
 ## 5. Mockito only in web tests
 
 Mockito is used only by the web tests. `RolePortsWebTestBase` replaces the six role ports with mocks, and `SecuredWebTestBase` and `SecurityConfigWebTest` also mock `UserRepositoryPort`. Everything else uses the real class or an in-memory fake.
@@ -130,16 +132,20 @@ Line coverage, with branch coverage in parentheses, measured on 2026-11-03 with 
 | Area | Unit | Integration | Combined |
 | --- | --- | --- | --- |
 | `nexusmarket.adapters.useCases` | 100% (no branches) | 27.2% (no branches) | 100% (no branches) |
-| `nexusmarket.adapters.rest.controllers` | 100% (100%) | 41.7% (0%) | 100% (100%) |
-| `adapters` | 66.8% (36.2%) | 73.8% (52.1%) | 91.8% (61.0%) |
-| `domain` | 90.1% (78.3%) | 63.5% (46.2%) | 90.1% (78.3%) |
-| Total | 80.8% (67.5%) | 67.5% (47.8%) | 90.7% (73.9%) |
+| `nexusmarket.adapters.rest.controllers` | 100% (100%) | 42.3% (0%) | 100% (100%) |
+| `adapters` | 66.6% (36.2%) | 73.8% (52.1%) | 91.7% (61.0%) |
+| `domain` | 90.5% (78.3%) | 63.7% (46.2%) | 90.5% (78.3%) |
+| Total | 80.9% (67.5%) | 67.4% (47.5%) | 90.7% (73.7%) |
 
 The first two rows are part of `adapters`. The total covers all of `nexusmarket`, including `infrastructure` and `App`, so it is not an average of the rows above it.
 
-**Measuring again:** the JaCoCo agent appends to existing `.exec` files, so repeated runs accumulate. Delete `target/*.exec` before a `./mvnw verify` whose numbers you plan to report.
+**Measuring again:** the JaCoCo agent appends to existing `.exec` files, so repeated runs accumulate. Delete `target/*.exec` before a `./mvnw verify` whose numbers you plan to report. An IDE with Java support also compiles into `target`, which can change the line counts or cause an `Unresolved compilation problem` at run time, so these numbers come from a clean copy built only by Maven.
 
 **Counting tests:** use the Maven console totals. `target/surefire-reports` can keep XML files from renamed classes until the folder is cleaned.
+
+### API collection
+
+`postman/NexusMarket.postman_collection.json` is not part of the Maven build and does not count toward coverage. Its "Flujo completo" folder runs the whole purchase flow against a running application, with real databases, and verifies each status code. It is run by hand or with newman, as described in [SETUP.md](../../SETUP.md).
 
 ### What this coverage does not show
 

@@ -24,7 +24,7 @@ This approach promotes maintainability, scalability, testability, and technology
 | REST input adapters: `AuthRestController`, `PublicRestController`, `GlobalExceptionHandler` | Implemented (step 4A) |
 | REST input adapters: `BuyerRestController`, `SellerRestController` | Implemented (step 4B) |
 | REST input adapters: `LogisticsOperatorRestController`, `AdministratorRestController`, `SupervisorRestController` | Implemented (step 4C) |
-| Automated tests: 833 unit and 11 integration, with three JaCoCo reports | Implemented (step 5), see [Testing Strategy](../Testing/Testing-strategy.md) |
+| Automated tests: 1386 unit and 11 integration, with three JaCoCo reports | Implemented (step 5), see [Testing Strategy](../Testing/Testing-strategy.md) |
 
 Every output port has an implementation, so the Spring context starts against the MySQL and MongoDB containers of `docker-compose.yml`. The REST API is specified in [Api-rest-endpoints.md](../Adapters/Api-rest-endpoints.md).
 
@@ -366,11 +366,13 @@ The domain is tested without infrastructure, as constraint 10 requires. The full
 
 | Group | Tests | Command | Needs Docker |
 | --- | --- | --- | --- |
-| Domain, services, adapters and web (`*Test`) | 833 | `./mvnw test` | No |
+| Domain, services, adapters and web (`*Test`) | 1386 | `./mvnw test` | No |
 | Integration (`*IT`) | 11 | `./mvnw verify` | Yes |
 
 - Service tests use in-memory repositories that return the same instance they store, so only the `*IT` classes detect a forgotten `update()`.
 - Mockito is used only in the `*WebTest` classes, which run the web layer with mocked role ports and no database.
+- Each of the 108 endpoints has a test of its successful path, and `EndpointCoverageGuardWebTest` fails if an endpoint registered by Spring MVC has none.
+- Each `*UseCaseImpl` is tested over the real services and in-memory repositories, and `UseCaseTransactionalAnnotationsTest` checks its `@Transactional` configuration by reflection.
 - `./mvnw verify` writes the unit, integration and combined coverage reports to `target/site/jacoco`, `target/site/jacoco-it` and `target/site/jacoco-merged`.
 
 ---

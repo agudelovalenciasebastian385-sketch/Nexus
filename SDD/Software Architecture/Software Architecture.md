@@ -24,6 +24,7 @@ This approach promotes maintainability, scalability, testability, and technology
 | REST input adapters: `AuthRestController`, `PublicRestController`, `GlobalExceptionHandler` | Implemented (step 4A) |
 | REST input adapters: `BuyerRestController`, `SellerRestController` | Implemented (step 4B) |
 | REST input adapters: `LogisticsOperatorRestController`, `AdministratorRestController`, `SupervisorRestController` | Implemented (step 4C) |
+| Automated tests: 833 unit and 11 integration, with three JaCoCo reports | Implemented (step 5), see [Testing Strategy](../Testing/Testing-strategy.md) |
 
 Every output port has an implementation, so the Spring context starts against the MySQL and MongoDB containers of `docker-compose.yml`. The REST API is specified in [Api-rest-endpoints.md](../Adapters/Api-rest-endpoints.md).
 
@@ -149,7 +150,7 @@ Integration tests (`application/src/test`) run with `@ActiveProfiles("test")`, w
 | MongoDB | same container, database `nexusmarket_test` |
 | `app.payment.simulated.approval-limit` | `1000.00`, so a test can trigger a rejected payment |
 
-Test data (users and products with the `itest-` prefix) therefore never appears in the development databases or in their reports. Integration tests (`./mvnw test` with the containers running):
+Test data (users and products with the `itest-` prefix) therefore never appears in the development databases or in their reports. Integration tests (`./mvnw verify` with the containers running):
 
 | Test | Verifies |
 | --- | --- |
@@ -356,6 +357,21 @@ Technical components without business logic:
 - **Seed (implemented)** — `infrastructure/seed/DatabaseSeeder`: creates the initial `Administrator` at startup when none exists (credentials in `app.seed.admin`, password hashed through `PasswordServicePort`).
 - **Database:** Hibernate `ddl-auto: update` creates and updates the MySQL schema; the database itself is created by `createDatabaseIfNotExist=true`.
 - **Security (implemented, `adapters/security`):** `SecurityConfig` and the JWT authentication filter, aligned with RG-01 (every operation must be executed by an authenticated user). The filter validates the token, extracts the id with `extractUserId`, loads the user with `LoadAuthenticatedUserService`, verifies that it is `ACTIVE` and that `extractTokenVersion` equals its `authTokenVersion` (changed by logout, password change or status change); any failure is rejected with 401. See [Security Adapters](../Adapters/Security-adapters.md#5-jwt-filter-flow) and [REST Security and CORS](../Adapters/Rest-security-cors.md).
+
+---
+
+# Testing
+
+The domain is tested without infrastructure, as constraint 10 requires. The full strategy, commands and coverage are in [Testing Strategy](../Testing/Testing-strategy.md).
+
+| Group | Tests | Command | Needs Docker |
+| --- | --- | --- | --- |
+| Domain, services, adapters and web (`*Test`) | 833 | `./mvnw test` | No |
+| Integration (`*IT`) | 11 | `./mvnw verify` | Yes |
+
+- Service tests use in-memory repositories that return the same instance they store, so only the `*IT` classes detect a forgotten `update()`.
+- Mockito is used only in the `*WebTest` classes, which run the web layer with mocked role ports and no database.
+- `./mvnw verify` writes the unit, integration and combined coverage reports to `target/site/jacoco`, `target/site/jacoco-it` and `target/site/jacoco-merged`.
 
 ---
 

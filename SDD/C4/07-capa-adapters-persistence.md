@@ -89,6 +89,56 @@ sequenceDiagram
     R->>M: Inserta en audit_logs
 ```
 
+## Perfil `memory`
+
+Con este perfil, los 13 adaptadores de `adapters/persistence/memory` reemplazan a los de JPA y MongoDB, que solo existen fuera de él. El detalle y sus limitaciones están en [Persistence-adapters.md](../Adapters/Persistence-adapters.md#9-memory-adapters-adapterspersistencememory).
+
+| Puerto | Con MySQL y MongoDB | Con `memory` |
+| --- | --- | --- |
+| `UserRepositoryPort` | `UserJpaAdapter` | `UserMemoryAdapter` |
+| `BuyerRepositoryPort` | `BuyerJpaAdapter` | `BuyerMemoryAdapter` |
+| `SellerRepositoryPort` | `SellerJpaAdapter` | `SellerMemoryAdapter` |
+| `WarehouseRepositoryPort` | `WarehouseJpaAdapter` | `WarehouseMemoryAdapter` |
+| `ProductRepositoryPort` | `ProductJpaAdapter` | `ProductMemoryAdapter` |
+| `InventoryRepositoryPort` | `InventoryJpaAdapter` | `InventoryMemoryAdapter` |
+| `CartRepositoryPort` | `CartJpaAdapter` | `CartMemoryAdapter` |
+| `OrderRepositoryPort` | `OrderJpaAdapter` | `OrderMemoryAdapter` |
+| `InvoiceRepositoryPort` | `InvoiceJpaAdapter` | `InvoiceMemoryAdapter` |
+| `ShipmentRepositoryPort` | `ShipmentJpaAdapter` | `ShipmentMemoryAdapter` |
+| `ReturnRequestRepositoryPort` | `ReturnRequestJpaAdapter` | `ReturnRequestMemoryAdapter` |
+| `RefundRepositoryPort` | `RefundJpaAdapter` | `RefundMemoryAdapter` |
+| `AuditLogRepositoryPort` | `AuditLogMongoAdapter` | `AuditLogMemoryAdapter` |
+
+```mermaid
+classDiagram
+    class OrderRepositoryPort {
+        <<interface>>
+    }
+    class OrderJpaAdapter
+    class OrderMemoryAdapter
+    class MemoryStore
+    class MemoryTransactionManager {
+        #doBegin(Object transaction, TransactionDefinition definition) void
+        #doCommit(DefaultTransactionStatus status) void
+        #doRollback(DefaultTransactionStatus status) void
+    }
+    class AbstractPlatformTransactionManager {
+        <<abstract>>
+    }
+    class MemoryRequestSerializationFilter
+    class OncePerRequestFilter {
+        <<abstract>>
+    }
+    OrderJpaAdapter ..|> OrderRepositoryPort : sin memory
+    OrderMemoryAdapter ..|> OrderRepositoryPort : con memory
+    OrderMemoryAdapter --> MemoryStore
+    MemoryTransactionManager --|> AbstractPlatformTransactionManager
+    MemoryRequestSerializationFilter --|> OncePerRequestFilter
+```
+
+- **Transacciones:** `MemoryTransactionManager` acepta los `@Transactional` de los casos de uso y dispara `afterCommit`, así que la auditoría funciona igual. No puede deshacer cambios: si una operación fallara después de modificar un objeto, ese cambio se quedaría. Los servicios que modifican varios objetos validan antes de cambiar.
+- **Concurrencia:** `@Version` no aplica, porque todos comparten las mismas instancias. `MemoryRequestSerializationFilter` atiende las peticiones de una en una, y por eso no se vende dos veces la misma unidad.
+
 ## Pago simulado
 
 `SimulatedPaymentGatewayAdapter` aprueba cualquier pedido cuyo total no supere `app.payment.simulated.approval-limit`, y rechaza los demás. Así se puede probar el camino de rechazo sin una pasarela real.

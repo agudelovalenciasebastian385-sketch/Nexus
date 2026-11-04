@@ -8,12 +8,14 @@ import nexusmarket.adapters.persistence.jpa.repositories.SpringDataJpaInvoiceRep
 import nexusmarket.domain.models.Invoice;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.ports.out.InvoiceRepositoryPort;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 /**
  * Output persistence adapter for Invoice backed by Spring Data JPA (MySQL).
  */
 @Repository
+@Profile("!memory")
 public class InvoiceJpaAdapter implements InvoiceRepositoryPort {
 
     private final SpringDataJpaInvoiceRepository invoiceRepository;

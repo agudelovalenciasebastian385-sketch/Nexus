@@ -50,7 +50,7 @@ Exposed in: `SellerPort`.
 | `type` | `ProductType` | `PHYSICAL` or `DIGITAL`. |
 | `name` | `String` | Commercial name. |
 | `description` | `String` | Functional description. |
-| `price` | `BigDecimal` | Current unit price. |
+| `price` | `BigDecimal` | Current unit price; greater than zero. |
 | `variants` | `List<Variant>` | Offered variants (may be empty). |
 
 **Output:** `Product`. Returns the registered product.
@@ -72,7 +72,7 @@ Exposed in: `SellerPort`.
 | --- | --- |
 | `UnauthorizedOperationException` | The requesting user is not an active seller. |
 | `EntityNotFoundException` | The requesting seller does not exist. |
-| `InvalidProductException` | Invalid product data. |
+| `InvalidProductException` | Invalid product data, including a price that is not greater than zero. |
 
 ## Output Ports Used
 
@@ -118,7 +118,7 @@ Exposed in: `SellerPort`.
 | `productId` | `String` | Identifier of the product. |
 | `name` | `String` | New name. |
 | `description` | `String` | New description. |
-| `price` | `BigDecimal` | New unit price. |
+| `price` | `BigDecimal` | New unit price; greater than zero. |
 | `variants` | `List<Variant>` | New list of variants. |
 
 **Output:** `Product`. Returns the updated product.
@@ -140,7 +140,7 @@ Exposed in: `SellerPort`.
 | --- | --- |
 | `UnauthorizedOperationException` | Role not allowed or product of another seller. |
 | `EntityNotFoundException` | The product does not exist. |
-| `InvalidProductException` | Invalid product data. |
+| `InvalidProductException` | Invalid product data, including a price that is not greater than zero. |
 
 ## Output Ports Used
 

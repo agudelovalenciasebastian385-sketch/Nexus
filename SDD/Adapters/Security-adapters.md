@@ -107,4 +107,4 @@ At startup (`CommandLineRunner`), when **no** user with role `ADMINISTRATOR` exi
 | `app.seed.admin.email` (`SEED_ADMIN_EMAIL`) | `admin@nexusmarket.com` |
 | `app.seed.admin.password` (`SEED_ADMIN_PASSWORD`) | `Admin123*` |
 
-`UserRepositoryPort` has no query by role, so the "any Administrator exists" check uses `SpringDataJpaUserRepository.existsByRole` directly; the seeder is technical infrastructure, outside the domain.
+The "any Administrator exists" check uses `UserRepositoryPort.existsByRole`, so the seeder works with the JPA adapters and with the memory adapters.

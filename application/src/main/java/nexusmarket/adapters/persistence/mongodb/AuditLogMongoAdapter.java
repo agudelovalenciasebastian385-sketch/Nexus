@@ -13,6 +13,7 @@ import nexusmarket.domain.ports.out.AuditLogRepositoryPort;
 import nexusmarket.domain.valueobjects.AuditEntityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -27,6 +28,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * user and per query. findByPerformedBy reuses the User supplied by the caller.
  */
 @Repository
+@Profile("!memory")
 public class AuditLogMongoAdapter implements AuditLogRepositoryPort {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditLogMongoAdapter.class);

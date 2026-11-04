@@ -48,6 +48,24 @@ C4Container
 
 phpMyAdmin y Mongo Express son herramientas de desarrollo. La aplicación no depende de ellas.
 
+## Perfil `memory`: un solo proceso
+
+Con `mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=memory`, la aplicación es el único proceso: no hay contenedores ni bases de datos, y los datos viven en la memoria de la JVM. Es para demostraciones y pruebas; los datos se pierden al detenerla. Ver [la capa de persistencia](07-capa-adapters-persistence.md#perfil-memory).
+
+```mermaid
+%%{init: {"c4": {"width": 280}}}%%
+C4Container
+    title Contenedores — perfil memory
+
+    Person(usuarios, "Público y los 5 roles", "Clientes HTTP de la API")
+
+    System_Boundary(sistema, "NexusMarket") {
+        Container(app, "Aplicación con el perfil memory", "Java 17, Spring Boot 4.1", "API REST, adaptadores en memoria y datos de ejemplo. Puerto 8080")
+    }
+
+    Rel(usuarios, app, "HTTP/JSON, Authorization: Bearer", "8080")
+```
+
 ## Imagen de la aplicación
 
 `application/Dockerfile` tiene dos etapas: Maven con JDK 17 compila el jar sin ejecutar pruebas, y la imagen final solo trae el JRE 17 y el jar, con un usuario sin privilegios de root. Arranca con `-Duser.timezone=America/Bogota`.

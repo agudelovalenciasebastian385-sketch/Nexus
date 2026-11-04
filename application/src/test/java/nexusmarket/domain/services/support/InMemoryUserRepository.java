@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.ports.out.UserRepositoryPort;
+import nexusmarket.domain.valueobjects.SystemRole;
 
 /**
  * In-memory UserRepositoryPort. Its map is also the store of InMemoryBuyerRepository and
@@ -44,5 +45,10 @@ public class InMemoryUserRepository implements UserRepositoryPort {
     @Override
     public boolean existsByIdentificationNumber(String identificationNumber) {
         return users.values().stream().anyMatch(user -> user.getIdentificationNumber().equals(identificationNumber));
+    }
+
+    @Override
+    public boolean existsByRole(SystemRole role) {
+        return users.values().stream().anyMatch(user -> user.getRole() == role);
     }
 }

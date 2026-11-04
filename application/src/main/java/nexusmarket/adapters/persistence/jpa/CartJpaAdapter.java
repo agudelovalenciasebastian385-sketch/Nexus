@@ -12,6 +12,7 @@ import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Cart;
 import nexusmarket.domain.models.CartItem;
 import nexusmarket.domain.ports.out.CartRepositoryPort;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
  * change racing with ConfirmOrderService, cannot both commit.
  */
 @Repository
+@Profile("!memory")
 public class CartJpaAdapter implements CartRepositoryPort {
 
     private final SpringDataJpaCartRepository cartRepository;

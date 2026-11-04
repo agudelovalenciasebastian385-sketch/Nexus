@@ -70,6 +70,7 @@ public interface UserRepositoryPort {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
     boolean existsByIdentificationNumber(String identificationNumber);
+    boolean existsByRole(SystemRole role);
 }
 ```
 

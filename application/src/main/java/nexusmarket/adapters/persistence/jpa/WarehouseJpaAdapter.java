@@ -7,12 +7,14 @@ import nexusmarket.adapters.persistence.jpa.repositories.SpringDataJpaWarehouseR
 import nexusmarket.domain.models.Seller;
 import nexusmarket.domain.models.Warehouse;
 import nexusmarket.domain.ports.out.WarehouseRepositoryPort;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 /**
  * Output persistence adapter for Warehouse backed by Spring Data JPA (MySQL).
  */
 @Repository
+@Profile("!memory")
 public class WarehouseJpaAdapter implements WarehouseRepositoryPort {
 
     private final SpringDataJpaWarehouseRepository warehouseRepository;

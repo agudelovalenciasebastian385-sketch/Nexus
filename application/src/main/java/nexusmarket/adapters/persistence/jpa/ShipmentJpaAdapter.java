@@ -10,6 +10,7 @@ import nexusmarket.adapters.persistence.jpa.repositories.SpringDataJpaShipmentRe
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.Shipment;
 import nexusmarket.domain.ports.out.ShipmentRepositoryPort;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Repository;
  * supplied by the caller.
  */
 @Repository
+@Profile("!memory")
 public class ShipmentJpaAdapter implements ShipmentRepositoryPort {
 
     private final SpringDataJpaShipmentRepository shipmentRepository;

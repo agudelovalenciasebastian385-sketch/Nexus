@@ -6,6 +6,7 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
+import nexusmarket.domain.exceptions.InvalidInventoryException;
 import nexusmarket.domain.exceptions.UnauthorizedOperationException;
 import nexusmarket.domain.models.Inventory;
 import nexusmarket.domain.models.Order;
@@ -22,6 +23,7 @@ import nexusmarket.domain.valueobjects.AuditAction;
 import nexusmarket.domain.valueobjects.AuditEntityType;
 import nexusmarket.domain.valueobjects.MovementType;
 import nexusmarket.domain.valueobjects.OrderStatus;
+import nexusmarket.domain.valueobjects.ShipmentStatus;
 import nexusmarket.domain.valueobjects.SystemRole;
 import org.springframework.stereotype.Service;
 
@@ -65,6 +67,11 @@ public class DispatchShipmentService {
             }
         }
 
+        // Any other status is rejected by markInTransit, which keeps priority over the stock check.
+        if (shipment.getStatus() == ShipmentStatus.PACKED) {
+            validateReservedStock(saleOutbounds);
+        }
+
         shipment.markInTransit();
         if (order.getStatus() == OrderStatus.PAID) {
             order.markShipped();
@@ -81,5 +88,15 @@ public class DispatchShipmentService {
         registerAuditLogService.execute(operator, AuditAction.SHIPMENT_DISPATCHED, AuditEntityType.SHIPMENT,
                 shipmentId, Map.of("order", orderId, "orderStatus", order.getStatus().getCode()));
         return shipment;
+    }
+
+    private void validateReservedStock(Map<Inventory, Integer> saleOutbounds) {
+        for (Map.Entry<Inventory, Integer> saleOutbound : saleOutbounds.entrySet()) {
+            Inventory inventory = saleOutbound.getKey();
+            if (!inventory.hasReserved(saleOutbound.getValue())) {
+                throw new InvalidInventoryException("Not enough reserved stock: requested " + saleOutbound.getValue()
+                        + ", reserved " + inventory.getReservedQuantity() + ".");
+            }
+        }
     }
 }

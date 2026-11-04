@@ -395,7 +395,7 @@ This class cannot be instantiated directly.
 | id          | String          | Uniquely identifies the product. Cannot be empty.                  |
 | name        | String          | Commercial name of the product. Cannot be empty.                   |
 | description | String          | Functional description of the product. Cannot be empty.            |
-| price       | BigDecimal      | Current unit price. Zero or positive. Copied to `CartItem.unitPrice` when added to a cart. |
+| price       | BigDecimal      | Current unit price. Greater than zero. Copied to `CartItem.unitPrice` when added to a cart. |
 | seller      | Seller          | Seller responsible for the product. Required.                      |
 | variants    | List\<Variant\> | Differences such as color, size, model. Empty by default. No duplicates. |
 | status      | ProductStatus   | `DRAFT`, `PUBLISHED`, `SUSPENDED`, or `DISCONTINUED`. A new product starts in `DRAFT`. |
@@ -418,6 +418,7 @@ The product **type** is not stored: it is derived from the specialization throug
 ## Business Rules
 
 * Invalid data or duplicated variants → `InvalidProductException`.
+* `price` must be greater than zero, when creating and when updating → `InvalidProductException`. The same constructor rebuilds stored products, so a stored row with price 0 cannot be loaded.
 * Status transitions not listed above → `InvalidProductStatusException`.
 
 ## Relationships

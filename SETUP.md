@@ -4,7 +4,7 @@ Probado en Windows 11 con PowerShell 5.1. Todos los comandos se ejecutan desde l
 
 ## 0. Prerrequisitos
 
-1. **Docker Desktop** en ejecución. Compruébalo con `docker --version` y `docker compose version`.
+1. **Docker Desktop** en ejecución. Compruébalo con `docker --version` y `docker compose version`. Si no quieres usar Docker, ve a [Ejecutar sin Docker](#13-ejecutar-sin-docker).
 2. **JDK 17 o superior**, solo si vas a correr las pruebas o ejecutar la aplicación fuera de Docker. Maven no hace falta: el proyecto trae `mvnw.cmd`, y dentro de Docker todo se compila en la imagen.
 3. Puertos libres en el equipo: **8080** (aplicación), **3306** (MySQL), **27017** (MongoDB), **8081** (phpMyAdmin) y **8082** (Mongo Express). Compruébalo con:
    ```powershell
@@ -70,7 +70,7 @@ cd application
 .\mvnw.cmd test
 ```
 
-Ejecuta las **2371 pruebas unitarias**, sin Docker. Resultado esperado: `BUILD SUCCESS`.
+Ejecuta las **2493 pruebas unitarias**, sin Docker. Resultado esperado: `BUILD SUCCESS`.
 
 ```powershell
 .\mvnw.cmd verify
@@ -263,7 +263,56 @@ Para probar una ruta protegida con el administrador:
 
 Los valores de ejemplo de los esquemas, como `user@example.com`, son genéricos: las credenciales reales no se publican en la especificación. El token se conserva al recargar la página, hasta que venza o cierres la sesión con **Authorize** y **Logout**.
 
-## 13. Solución de problemas
+## 13. Ejecutar sin Docker
+
+Con el perfil `memory`, la aplicación arranca sin MySQL ni MongoDB y sin Docker. Solo necesitas JDK 17 o superior. Es la forma más rápida de probar el sistema.
+
+Si la aplicación de Docker está corriendo, primero libera el puerto 8080 con `docker compose stop nexusmarket-app`. Luego, desde la carpeta `application`:
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=memory"
+```
+
+En CMD, el comando es el mismo, sin comillas. Se detiene con `Ctrl+C`. Comprueba que arrancó con `curl.exe -s http://localhost:8080/actuator/health`. Swagger UI y Postman funcionan igual que en Docker.
+
+### Datos de ejemplo
+
+Se crean al arrancar, para poder probar de inmediato:
+
+| Rol | Correo | Contraseña |
+| --- | --- | --- |
+| Administrador | `admin@nexusmarket.com` | `Admin123*` |
+| Vendedor | `vendedor@example.com` | `Seller123*` |
+| Operador logístico | `operador@example.com` | `Operator123*` |
+| Supervisor | `supervisor@example.com` | `Supervisor123*` |
+| Comprador | `comprador@example.com` | `Buyer123*` |
+
+El vendedor tiene una bodega con dos productos físicos publicados con stock (Wireless Mouse y Mechanical Keyboard) y un producto digital publicado (Java Guide).
+
+Para arrancar solo con el administrador, en PowerShell:
+
+```powershell
+$env:SEED_DEMO_ENABLED = "false"
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=memory"
+```
+
+### Colección de Postman contra este perfil
+
+En Postman, no cambia nada: `baseUrl` ya apunta a `http://localhost:8080`. Con newman en un contenedor, `localhost` sería el propio contenedor, así que se usa la dirección del equipo. Desde la raíz del repositorio:
+
+```powershell
+docker run --rm -v "${PWD}\postman:/etc/newman" postman/newman:6-alpine run NexusMarket.postman_collection.json -e NexusMarket.postman_environment.json --folder "Flujo completo" --env-var "baseUrl=http://host.docker.internal:8080"
+```
+
+### Limitaciones
+
+Este perfil sirve para demostraciones y pruebas, no para datos reales:
+
+- **Los datos se pierden** al detener la aplicación.
+- **Atiende las peticiones de una en una**, así que no escala. A cambio, dos compras simultáneas de la última unidad no la venden dos veces: una responde `201` y la otra `409` por stock insuficiente, no por el bloqueo optimista, que solo existe con MySQL.
+- **No hay rollback.** Si una operación fallara después de modificar un objeto, ese cambio se quedaría. Los servicios que modifican varios objetos validan antes de cambiar; la revisión está en [Persistence-adapters.md](SDD/Adapters/Persistence-adapters.md#9-memory-adapters-adapterspersistencememory).
+
+## 14. Solución de problemas
 
 | Síntoma | Causa probable | Solución |
 | --- | --- | --- |

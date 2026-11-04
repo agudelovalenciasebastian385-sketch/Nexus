@@ -15,6 +15,7 @@ import nexusmarket.domain.models.InventoryMovement;
 import nexusmarket.domain.models.PhysicalProduct;
 import nexusmarket.domain.models.Warehouse;
 import nexusmarket.domain.ports.out.InventoryRepositoryPort;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * optimistic lock version: two concurrent reservations of the same stock cannot both commit.
  */
 @Repository
+@Profile("!memory")
 public class InventoryJpaAdapter implements InventoryRepositoryPort {
 
     private final SpringDataJpaInventoryRepository inventoryRepository;

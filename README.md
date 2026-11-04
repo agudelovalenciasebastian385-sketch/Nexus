@@ -60,7 +60,7 @@ NexusMarket/
 │       ├── adapters/
 │       │   ├── rest/              7 controladores, DTO, mappers y manejo de errores
 │       │   ├── useCases/          Implementación de los puertos por rol y límite transaccional
-│       │   ├── persistence/       jpa/ (MySQL) y mongodb/ (auditoría)
+│       │   ├── persistence/       jpa/ (MySQL), mongodb/ (auditoría) y memory/ (perfil sin bases de datos)
 │       │   ├── security/          SecurityConfig, filtro JWT, JwtProvider, BCrypt
 │       │   └── payment/           Pasarela de pago simulada
 │       └── infrastructure/seed/   Administrador inicial
@@ -94,13 +94,15 @@ NexusMarket/
 | **Normalización del correo** | El dominio lo recorta y lo pasa a minúsculas antes de validarlo | `Maria@Gmail.com` y `maria@gmail.com` son el mismo usuario |
 | **Autobloqueo del administrador** | Un administrador no puede cambiar su propio estado (403) | Evita que la plataforma quede sin administradores activos por error |
 | **Invalidación de tokens** | Cada token lleva la versión del usuario, que cambia con logout, cambio de contraseña o de estado | Un token ya emitido deja de servir de inmediato, y el filtro recarga al usuario en cada petición |
+| **Perfil en memoria** | Con `memory`, 13 adaptadores en memoria reemplazan a JPA y MongoDB, sin tocar el dominio ni los casos de uso | Demuestra la arquitectura hexagonal: cambiar la persistencia no toca el negocio. Los mismos 8 escenarios de punta a punta pasan en ambos perfiles |
 | **Zona horaria fija** | La aplicación usa siempre `America/Bogota`, en Docker y fuera de él | Las fechas y los reportes no dependen del equipo donde se ejecuta ([detalle](SETUP.md#3-zona-horaria)) |
 
 ## Pruebas y cobertura
 
 | Grupo | Pruebas | Comando | Necesita Docker |
 | --- | ---: | --- | --- |
-| Unitarias: dominio, servicios, adaptadores y web | 2371 | `mvnw.cmd test` | No |
+| Unitarias de lógica y API: dominio, servicios, adaptadores, endpoints y perfil en memoria | 1508 | `mvnw.cmd test` | No |
+| Unitarias de documentación: cada operación de la especificación OpenAPI | 985 | `mvnw.cmd test` | No |
 | Integración | 13 | `mvnw.cmd verify` | Sí |
 
 Los 108 endpoints tienen prueba de su camino exitoso, y una prueba guardiana falla si aparece un endpoint sin ella. Otra prueba compara la especificación OpenAPI con esos mismos endpoints.
@@ -109,9 +111,9 @@ Cobertura del reporte combinado (`application/target/site/jacoco-merged`):
 
 | Área | Líneas | Ramas |
 | --- | ---: | ---: |
-| `adapters` | 91,7 % | 61,0 % |
-| `domain` | 90,5 % | 78,3 % |
-| **Total** | **90,7 %** | **73,7 %** |
+| `adapters` | 92,3 % | 64,8 % |
+| `domain` | 90,7 % | 78,6 % |
+| **Total** | **91,5 %** | **74,4 %** |
 
 La estrategia completa, sus límites y los tres reportes están en [Testing-strategy.md](SDD/Testing/Testing-strategy.md).
 
@@ -123,6 +125,15 @@ curl.exe -s http://localhost:8080/actuator/health
 ```
 
 Los prerrequisitos, las pruebas, la prueba de humo, cómo ejecutarlo fuera de Docker y la solución de problemas están en [`SETUP.md`](SETUP.md).
+
+**Sin Docker ni bases de datos**, con datos de ejemplo listos para probar:
+
+```powershell
+cd application
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=memory"
+```
+
+Los datos se pierden al detenerla y no hay rollback, así que sirve para demostraciones, no para datos reales ([credenciales y limitaciones](SETUP.md#13-ejecutar-sin-docker)).
 
 Con la aplicación corriendo, la documentación interactiva está en [Swagger UI](http://localhost:8080/swagger-ui.html) ([cómo autorizarse](SETUP.md#12-swagger-ui)).
 

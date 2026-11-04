@@ -13,15 +13,14 @@ Paquete: `nexusmarket.infrastructure`. Contiene componentes técnicos sin lógic
 ```mermaid
 sequenceDiagram
     participant D as DatabaseSeeder
-    participant R as SpringDataJpaUserRepository
     participant U as UserRepositoryPort
     participant P as PasswordServicePort
-    D->>R: existsByRole(ADMINISTRATOR)
+    D->>U: existsByRole(ADMINISTRATOR)
     alt Ya hay un administrador
-        R-->>D: true
+        U-->>D: true
         Note over D: No hace nada
     else No hay ninguno
-        R-->>D: false
+        U-->>D: false
         D->>U: existsByEmail(email)
         D->>U: existsByIdentificationNumber(identificationNumber)
         D->>P: encrypt(password)
@@ -31,6 +30,8 @@ sequenceDiagram
 ```
 
 Por eso, `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD` solo se aplican con la base sin administradores. Si el correo o el documento ya los usa otro usuario, registra una advertencia y no lo crea.
+
+Con el perfil `memory`, `MemoryDemoDataSeeder` corre después y crea datos de ejemplo mediante los servicios reales: un vendedor con su bodega y productos publicados con stock, un operador, un supervisor y un comprador. Se desactiva con `app.seed.demo.enabled=false`.
 
 ## Configuración
 

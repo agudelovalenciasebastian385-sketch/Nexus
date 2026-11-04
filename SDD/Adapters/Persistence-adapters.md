@@ -163,7 +163,7 @@ The protection relies on the transaction of the use case: outside a transaction 
 | Columns | `id` PK, `identification_number` UK, `full_name`, `email` UK, `password`, `role`, `status`, `auth_token_version`; Buyer only: `commercial_status`, `primary_address_line1/line2/city/state/country` |
 | Collection table | `buyer_additional_addresses` (`buyer_id`, `address_order`, `line1`, `line2`, `city`, `state`, `country`) |
 | Mapper | `UserJpaMapper` (+ `AddressJpaMapper`) — rebuilds `Administrator`, `Supervisor`, `LogisticsOperator`, `Seller` or `Buyer` from `role` with `authTokenVersion` |
-| Repository | `SpringDataJpaUserRepository`: `findByIdAndRole`, `findByEmail`, `existsByEmail`, `existsByIdentificationNumber` |
+| Repository | `SpringDataJpaUserRepository`: `findByIdAndRole`, `findByEmail`, `existsByEmail`, `existsByRole`, `existsByIdentificationNumber` |
 
 ### 6.2 `BuyerRepositoryPort` → `BuyerJpaAdapter`
 
@@ -322,3 +322,53 @@ There is no external payment provider in this phase. The adapter applies one con
 | `app.payment.simulated.approval-limit` (`PAYMENT_APPROVAL_LIMIT`) | `10000000.00` |
 
 To test the rejection path, confirm an order whose total exceeds the limit, or start the application with a low limit (for example `PAYMENT_APPROVAL_LIMIT=1`). Each decision is logged with the order id, total, limit and result. `AuditLog` requires a fully built `User` as `performedBy`, which cannot be rebuilt from the document alone (`User` validates identification, email and password). The document keeps `performedById` plus the denormalized email and role for readability; on read the adapter loads the `User` from the MySQL `users` table through `JpaAggregateLoader.requireUser` (once per user per query). `findByPerformedBy(user)` reuses the supplied user.
+
+## 9. Memory Adapters (`adapters/persistence/memory/`)
+
+With the `memory` profile, the application runs without MySQL or MongoDB. Each of the 13 persistence ports has a memory adapter annotated with `@Profile("memory")`, and the JPA and MongoDB adapters and `JpaAggregateLoader` are annotated with `@Profile("!memory")`. `application-memory.yml` excludes the auto-configuration of the data source, JPA and MongoDB. The domain and the use cases do not change.
+
+| Port | Adapter |
+| --- | --- |
+| `UserRepositoryPort` | `UserMemoryAdapter` |
+| `BuyerRepositoryPort` | `BuyerMemoryAdapter`, over the table of `UserMemoryAdapter` |
+| `SellerRepositoryPort` | `SellerMemoryAdapter`, over the table of `UserMemoryAdapter` |
+| `WarehouseRepositoryPort` | `WarehouseMemoryAdapter` |
+| `ProductRepositoryPort` | `ProductMemoryAdapter` |
+| `InventoryRepositoryPort` | `InventoryMemoryAdapter` |
+| `CartRepositoryPort` | `CartMemoryAdapter` |
+| `OrderRepositoryPort` | `OrderMemoryAdapter` |
+| `InvoiceRepositoryPort` | `InvoiceMemoryAdapter` |
+| `ShipmentRepositoryPort` | `ShipmentMemoryAdapter` |
+| `ReturnRequestRepositoryPort` | `ReturnRequestMemoryAdapter` |
+| `RefundRepositoryPort` | `RefundMemoryAdapter` |
+| `AuditLogRepositoryPort` | `AuditLogMemoryAdapter` |
+
+`JwtServicePort`, `PasswordServicePort` and `PaymentGatewayPort` use the same adapters in both profiles.
+
+**Same semantics as the JPA and MongoDB adapters:** date ranges exclude the upper limit, null arguments find nothing, orders and shipments come oldest first, and the audit trail comes ordered by `occurredAt`. `MemoryStore` is a thread-safe table that keeps the insertion order and reads over a copy.
+
+**Transactions.** `MemoryTransactionManager` extends `AbstractPlatformTransactionManager` and has no resource to open, commit or roll back. It lets the `@Transactional` use cases run unchanged and fires the transaction synchronizations, so `AuditLogMemoryAdapter` writes in `afterCommit` like `AuditLogMongoAdapter`: an operation that fails leaves no audit record, and a rejected payment keeps its record because of `noRollbackFor`.
+
+**Concurrency.** `@Version` cannot apply: it detects stale copies, and the memory adapters return the same instances to every request. `MemoryRequestSerializationFilter` attends the `/api/` requests one at a time, before the security chain and including the response mappers, which read those instances after the transaction. Two simultaneous purchases of the last unit therefore sell it once: one answers 201 and the other 409, with the insufficient stock message instead of the optimistic lock message. This holds for one application instance, which is the only possible deployment of this profile.
+
+### Limitations
+
+- **The data is lost** when the application stops.
+- **No rollback.** A rollback does not undo changes, because the adapters keep the same objects they return. An object changed before a failure stays changed.
+
+Services that change several objects, reviewed against this limitation:
+
+| Service | Result in memory | Why |
+| --- | --- | --- |
+| `RegisterSellerService` | Safe | It validates and builds the seller and the warehouse before storing anything. |
+| `ConfirmOrderService` | Safe | It allocates all the stock with `canReserve` before the first reservation, so a line without stock fails before any change. |
+| `CreateShipmentsService` | Safe | It validates the order status, its physical items and the absence of shipments before the first change. |
+| `ValidatePaymentService` | Safe through the API | A rejected payment changes only the audit trail. After `markPaid`, `GenerateInvoiceService` only fails if the unpaid order already has an invoice, and the API cannot produce that state. |
+| `DispatchShipmentService` | Safe | It validates the status and the reserved stock of every item before changing the shipment, the order or the inventory. |
+| `ApproveReturnService` | Safe through the API | It loads the invoice and the inventory records before `approve`. It creates the refund after approving, and that only fails if the invoice total is zero, which the API cannot produce since the price of a product must be greater than zero. |
+
+None of these six can stay half done through the API, and `MemoryProfileFlowTest` covers the failed dispatch. The limitation remains for any failure after a change: the other services were not reviewed one by one.
+
+### Sample data
+
+`MemoryDemoDataSeeder` runs after `DatabaseSeeder` and creates a seller with a warehouse and published products with stock, a logistics operator, a supervisor and a buyer, through the real services. `app.seed.demo.enabled` (`SEED_DEMO_ENABLED`) turns it off, and it does not exist outside the `memory` profile. The credentials are in [SETUP.md](../../SETUP.md).

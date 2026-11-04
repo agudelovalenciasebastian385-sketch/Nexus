@@ -7,6 +7,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))).replace(os.se
 JAVA = glob.glob(ROOT + "/application/src/main/java/**/*.java", recursive=True) \
     + glob.glob(ROOT + "/application/src/test/java/**/*.java", recursive=True)
 YML = [ROOT + "/application/src/main/resources/application.yml",
+       ROOT + "/application/src/main/resources/application-memory.yml",
        ROOT + "/application/src/test/resources/application-test.yml"]
 
 classes, methods, fields, constants, packages = set(), set(), set(), set(), set()
@@ -155,6 +156,7 @@ for md in glob.glob(ROOT + "/SDD/**/*.md", recursive=True):
 # Library names written inside diagrams that the project code does not import by that exact name.
 DIAGRAM_ALLOW = {"ResponseEntity", "HttpSecurity", "LocalDateTime", "LocalDate", "BigDecimal",
                  "C4Context", "C4Container", "C4Component", "SystemDb", "ContainerDb", "UpdateLayoutConfig", "UpdateRelStyle",  # Mermaid C4
+                 "AbstractPlatformTransactionManager", "OncePerRequestFilter", "TransactionDefinition", "DefaultTransactionStatus",
                  "MySQL", "MongoDB", "NexusMarket"}  # product names
 # Mermaid syntax and words that look like a method call in a diagram.
 # corsConfigurationSource exists, but its @Value("${...}") parameter hides it from the method pattern.

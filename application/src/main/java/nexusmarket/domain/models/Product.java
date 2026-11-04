@@ -123,8 +123,8 @@ public abstract class Product {
     }
 
     private static BigDecimal requirePrice(BigDecimal price) {
-        if (price == null || price.signum() < 0) {
-            throw new InvalidProductException("Product price must be zero or positive.");
+        if (price == null || price.signum() <= 0) {
+            throw new InvalidProductException("Product price must be greater than zero.");
         }
         return price;
     }

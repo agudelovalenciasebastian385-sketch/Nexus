@@ -13,7 +13,7 @@ Modelo C4 en 4 niveles, una ficha por cada capa del proyecto y la matriz de fluj
 | L4 | [04-nivel-4-codigo.md](04-nivel-4-codigo.md) | Clases clave y cómo colaboran |
 | Capa | [05-capa-adapters-rest.md](05-capa-adapters-rest.md) | Controladores, DTO, mappers y errores |
 | Capa | [06-capa-adapters-usecases.md](06-capa-adapters-usecases.md) | Casos de uso y límite transaccional |
-| Capa | [07-capa-adapters-persistence.md](07-capa-adapters-persistence.md) | JPA (MySQL), MongoDB (auditoría) y pago simulado |
+| Capa | [07-capa-adapters-persistence.md](07-capa-adapters-persistence.md) | JPA (MySQL), MongoDB (auditoría), perfil en memoria y pago simulado |
 | Capa | [08-capa-adapters-security.md](08-capa-adapters-security.md) | JWT, filtro, `SecurityConfig`, BCrypt y principal |
 | Capa | [09-capa-domain.md](09-capa-domain.md) | Modelos, objetos de valor, servicios, puertos y excepciones |
 | Capa | [10-capa-infrastructure.md](10-capa-infrastructure.md) | `DatabaseSeeder`, arranque y despliegue |

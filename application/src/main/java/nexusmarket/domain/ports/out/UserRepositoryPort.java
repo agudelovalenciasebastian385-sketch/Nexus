@@ -3,6 +3,7 @@ package nexusmarket.domain.ports.out;
 import java.util.Optional;
 
 import nexusmarket.domain.models.User;
+import nexusmarket.domain.valueobjects.SystemRole;
 
 /**
  * Output port: Persistence and queries of every {@code User} (any subclass); uniqueness checks of email and identification number.
@@ -20,4 +21,6 @@ public interface UserRepositoryPort {
     boolean existsByEmail(String email);
 
     boolean existsByIdentificationNumber(String identificationNumber);
+
+    boolean existsByRole(SystemRole role);
 }

@@ -1,7 +1,6 @@
 package nexusmarket.infrastructure.seed;
 
 import java.util.UUID;
-import nexusmarket.adapters.persistence.jpa.repositories.SpringDataJpaUserRepository;
 import nexusmarket.domain.models.Administrator;
 import nexusmarket.domain.ports.out.PasswordServicePort;
 import nexusmarket.domain.ports.out.UserRepositoryPort;
@@ -11,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,11 +22,11 @@ import org.springframework.stereotype.Component;
  * directly (technical infrastructure, outside the domain).
  */
 @Component
+@Order(1)
 public class DatabaseSeeder implements CommandLineRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseSeeder.class);
 
-    private final SpringDataJpaUserRepository userJpaRepository;
     private final UserRepositoryPort userRepositoryPort;
     private final PasswordServicePort passwordServicePort;
     private final String identificationNumber;
@@ -34,14 +34,12 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final String email;
     private final String password;
 
-    public DatabaseSeeder(SpringDataJpaUserRepository userJpaRepository,
-                          UserRepositoryPort userRepositoryPort,
+    public DatabaseSeeder(UserRepositoryPort userRepositoryPort,
                           PasswordServicePort passwordServicePort,
                           @Value("${app.seed.admin.identification-number}") String identificationNumber,
                           @Value("${app.seed.admin.full-name}") String fullName,
                           @Value("${app.seed.admin.email}") String email,
                           @Value("${app.seed.admin.password}") String password) {
-        this.userJpaRepository = userJpaRepository;
         this.userRepositoryPort = userRepositoryPort;
         this.passwordServicePort = passwordServicePort;
         this.identificationNumber = identificationNumber;
@@ -52,7 +50,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (userJpaRepository.existsByRole(SystemRole.ADMINISTRATOR.getCode())) {
+        if (userRepositoryPort.existsByRole(SystemRole.ADMINISTRATOR)) {
             LOGGER.info("DatabaseSeeder: an Administrator already exists; nothing to seed.");
             return;
         }

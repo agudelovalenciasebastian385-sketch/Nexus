@@ -7,12 +7,14 @@ import nexusmarket.adapters.persistence.jpa.repositories.SpringDataJpaReturnRequ
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.ReturnRequest;
 import nexusmarket.domain.ports.out.ReturnRequestRepositoryPort;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 /**
  * Output persistence adapter for ReturnRequest backed by Spring Data JPA (MySQL).
  */
 @Repository
+@Profile("!memory")
 public class ReturnRequestJpaAdapter implements ReturnRequestRepositoryPort {
 
     private final SpringDataJpaReturnRequestRepository returnRequestRepository;

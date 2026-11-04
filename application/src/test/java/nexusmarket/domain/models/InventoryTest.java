@@ -207,4 +207,20 @@ class InventoryTest {
     void inventoriesOfTheSameProductAndWarehouseAreEqual() {
         assertThat(available(1)).isEqualTo(available(9));
     }
+
+    private Inventory withTwoReserved() {
+        Inventory inventory = available(5);
+        inventory.registerMovement(MovementType.RESERVATION, 2, NOW);
+        return inventory;
+    }
+
+    @Test
+    void reservationsThatCoverTheQuantityAreEnough() {
+        assertThat(withTwoReserved().hasReserved(2)).isTrue();
+    }
+
+    @Test
+    void reservationsBelowTheQuantityAreNotEnough() {
+        assertThat(withTwoReserved().hasReserved(3)).isFalse();
+    }
 }

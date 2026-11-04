@@ -99,6 +99,11 @@ public class Inventory {
     }
 
     /** Indicates whether the record can be reserved for the given quantity. */
+    /** Whether the reservations cover a sale outbound of the given quantity. */
+    public boolean hasReserved(int quantity) {
+        return this.reservedQuantity >= quantity;
+    }
+
     public boolean canReserve(int quantity) {
         return isReservable() && this.quantity >= quantity;
     }

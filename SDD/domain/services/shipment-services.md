@@ -180,6 +180,7 @@ Exposed in: `LogisticsOperatorPort`.
 
 * For each physical item whose origin warehouse is the shipment's warehouse, a `SALE_OUTBOUND` movement consumes the reserved stock.
 * The order goes `PAID` → `SHIPPED` when its first shipment is dispatched.
+* The reserved stock of every item is validated before the shipment, the order or the inventory change.
 
 ## Validations
 

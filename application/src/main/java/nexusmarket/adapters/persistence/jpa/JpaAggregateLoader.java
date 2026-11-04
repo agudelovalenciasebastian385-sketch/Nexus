@@ -43,6 +43,7 @@ import nexusmarket.domain.models.Seller;
 import nexusmarket.domain.models.Shipment;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.models.Warehouse;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -68,6 +69,7 @@ import org.springframework.stereotype.Component;
  * {@link IllegalStateException}.
  */
 @Component
+@Profile("!memory")
 public class JpaAggregateLoader {
 
     private final SpringDataJpaUserRepository userRepository;

@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import nexusmarket.domain.exceptions.EntityNotFoundException;
+import nexusmarket.domain.exceptions.InvalidInventoryException;
 import nexusmarket.domain.exceptions.InvalidShipmentException;
 import nexusmarket.domain.exceptions.InvalidStatusTransitionException;
 import nexusmarket.domain.exceptions.UnauthorizedOperationException;
@@ -178,6 +179,72 @@ class ShipmentServicesTest {
         dispatchedShipment(h.paidOrder(buyer, mouse, 1));
 
         assertThat(h.audit.last(AuditAction.SHIPMENT_DISPATCHED).getDetails()).containsEntry("orderStatus", "SHIPPED");
+    }
+
+    /** A packed shipment of 2 units whose reservation the operator released: nothing is left to sell. */
+    private Shipment packedShipmentWithoutReservation(Order order) {
+        Shipment shipment = createdShipment(order);
+        h.packShipment.packShipment(operator, shipment.getId());
+        h.releaseInventoryReservation.releaseInventoryReservation(operator, mouse.getId(), warehouse.getId(), 2);
+        return shipment;
+    }
+
+    @Test
+    void dispatchingWithoutReservedStockIsRejected() {
+        Shipment shipment = packedShipmentWithoutReservation(h.paidOrder(buyer, mouse, 2));
+
+        assertThatThrownBy(() -> h.dispatchShipment.dispatchShipment(operator, shipment.getId()))
+                .isInstanceOf(InvalidInventoryException.class);
+    }
+
+    @Test
+    void aFailedDispatchLeavesTheShipmentPacked() {
+        Shipment shipment = packedShipmentWithoutReservation(h.paidOrder(buyer, mouse, 2));
+
+        assertThatThrownBy(() -> h.dispatchShipment.dispatchShipment(operator, shipment.getId()));
+
+        assertThat(shipment.getStatus()).isEqualTo(ShipmentStatus.PACKED);
+    }
+
+    @Test
+    void aFailedDispatchLeavesTheOrderPaid() {
+        Order order = h.paidOrder(buyer, mouse, 2);
+        Shipment shipment = packedShipmentWithoutReservation(order);
+
+        assertThatThrownBy(() -> h.dispatchShipment.dispatchShipment(operator, shipment.getId()));
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
+    }
+
+    @Test
+    void aFailedDispatchDoesNotConsumeTheStockOfTheOtherItems() {
+        PhysicalProduct lamp = h.physicalProduct(seller, "50.00");
+        h.stock(lamp, warehouse, 5);
+        h.addItemToCart.addItemToCart(buyer, lamp.getId(), null, 1);
+        Shipment shipment = packedShipmentWithoutReservation(h.paidOrder(buyer, mouse, 2));
+
+        assertThatThrownBy(() -> h.dispatchShipment.dispatchShipment(operator, shipment.getId()));
+
+        assertThat(h.inventoryOf(lamp, warehouse).getReservedQuantity()).isEqualTo(1);
+    }
+
+    @Test
+    void aFailedDispatchRecordsNoMovement() {
+        Shipment shipment = packedShipmentWithoutReservation(h.paidOrder(buyer, mouse, 2));
+        int movements = h.inventoryOf(mouse, warehouse).getMovements().size();
+
+        assertThatThrownBy(() -> h.dispatchShipment.dispatchShipment(operator, shipment.getId()));
+
+        assertThat(h.inventoryOf(mouse, warehouse).getMovements()).hasSize(movements);
+    }
+
+    @Test
+    void aShipmentThatIsNotPackedIsRejectedForItsStatusEvenWithoutReservedStock() {
+        Shipment shipment = createdShipment(h.paidOrder(buyer, mouse, 2));
+        h.releaseInventoryReservation.releaseInventoryReservation(operator, mouse.getId(), warehouse.getId(), 2);
+
+        assertThatThrownBy(() -> h.dispatchShipment.dispatchShipment(operator, shipment.getId()))
+                .isInstanceOf(InvalidStatusTransitionException.class);
     }
 
     @Test

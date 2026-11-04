@@ -44,6 +44,12 @@ class ProductServicesTest {
         }
 
         @Test
+        void aProductWithAZeroPriceIsNotRegistered() {
+            assertThatThrownBy(() -> h.registerProduct.registerProduct(seller, ProductType.PHYSICAL, "Mouse", "Mouse",
+                    new BigDecimal("0.00"), List.of())).isInstanceOf(InvalidProductException.class);
+        }
+
+        @Test
         void sellerRegistersADigitalProduct() {
             assertThat(registered(ProductType.DIGITAL)).isInstanceOf(DigitalProduct.class);
         }
@@ -71,6 +77,12 @@ class ProductServicesTest {
     class UpdateAndLifecycle {
 
         private final Product product = registered(ProductType.PHYSICAL);
+
+        @Test
+        void aProductCannotBeUpdatedToAZeroPrice() {
+            assertThatThrownBy(() -> h.updateProduct.updateProduct(seller, product.getId(), "Mouse Pro", "Better mouse",
+                    new BigDecimal("0.00"), List.of())).isInstanceOf(InvalidProductException.class);
+        }
 
         @Test
         void sellerUpdatesItsProductAndIsAudited() {

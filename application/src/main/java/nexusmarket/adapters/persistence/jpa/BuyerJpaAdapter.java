@@ -6,6 +6,7 @@ import nexusmarket.adapters.persistence.jpa.repositories.SpringDataJpaUserReposi
 import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.ports.out.BuyerRepositoryPort;
 import nexusmarket.domain.valueobjects.SystemRole;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Repository;
  * buyer_additional_addresses collection table.
  */
 @Repository
+@Profile("!memory")
 public class BuyerJpaAdapter implements BuyerRepositoryPort {
 
     private final SpringDataJpaUserRepository userRepository;

@@ -100,6 +100,27 @@ class ProductTest {
     }
 
     @Test
+    void zeroPriceIsRejected() {
+        assertThatThrownBy(() -> new PhysicalProduct("p-1", "Mouse", "Mouse", new BigDecimal("0.00"), seller, List.of(),
+                ProductStatus.DRAFT)).isInstanceOf(InvalidProductException.class);
+    }
+
+    @Test
+    void updatingToAZeroPriceIsRejected() {
+        PhysicalProduct product = new PhysicalProduct("p-1", "Mouse", "Mouse", BigDecimal.ONE, seller, List.of(),
+                ProductStatus.DRAFT);
+
+        assertThatThrownBy(() -> product.updateInfo("Mouse", "Mouse", BigDecimal.ZERO, List.of()))
+                .isInstanceOf(InvalidProductException.class);
+    }
+
+    @Test
+    void aSmallPositivePriceIsAccepted() {
+        assertThat(new PhysicalProduct("p-1", "Mouse", "Mouse", new BigDecimal("0.01"), seller, List.of(),
+                ProductStatus.DRAFT).getPrice()).isEqualByComparingTo("0.01");
+    }
+
+    @Test
     void negativePriceIsRejected() {
         assertThatThrownBy(() -> new PhysicalProduct("p-1", "Mouse", "Mouse", new BigDecimal("-0.01"), seller, List.of(),
                 ProductStatus.DRAFT)).isInstanceOf(InvalidProductException.class);

@@ -2,6 +2,7 @@ package nexusmarket.adapters.rest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,6 +53,7 @@ class RequestValidationWebTest extends RolePortsWebTestBase {
                 Arguments.of("/api/v1/buyer/cart/items", "{\"productId\": \"p-1\", \"quantity\": 0}", "quantity"),
                 Arguments.of("/api/v1/buyer/cart/items", "{\"quantity\": 1}", "productId"),
                 Arguments.of("/api/v1/seller/products", productWith("PHYSICAL", "-1.00"), "price"),
+                Arguments.of("/api/v1/seller/products", productWith("PHYSICAL", "0.00"), "price"),
                 Arguments.of("/api/v1/seller/products", productWith("PHYSICAL", "1.999"), "price"),
                 Arguments.of("/api/v1/seller/products", productWith("", "1.00"), "type"),
                 Arguments.of("/api/v1/seller/inventories",
@@ -150,6 +152,14 @@ class RequestValidationWebTest extends RolePortsWebTestBase {
                 .andExpect(status().isBadRequest());
 
         verifyNoRolePortWasCalled();
+    }
+
+    @Test
+    void zeroPriceInAnUpdateAnswers400WithTheField() throws Exception {
+        mockMvc.perform(put("/api/v1/seller/products/p-1").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\": \"Mouse\", \"description\": \"Mouse\", \"price\": 0.00, \"variants\": []}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[?(@.field == 'price')]").exists());
     }
 
     @Test

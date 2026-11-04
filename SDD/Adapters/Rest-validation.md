@@ -29,7 +29,7 @@ A failure stops processing; an invalid request never reaches the role port.
 | Path identifiers (`{productId}`, …) | Free text; an unknown id returns 404 from the service. |
 | `newPassword` | Required; 8-72 characters. `currentPassword` required, at most 72. |
 | `quantity` | `@Positive` (cart items, initial stock, inbound). |
-| `price` | Required; `@PositiveOrZero`; at most 17 integer digits and 2 decimals (`@Digits`), matching the `price` column. |
+| `price` | Required; `@Positive`, so 0 is rejected; at most 17 integer digits and 2 decimals (`@Digits`), matching the `price` column. |
 | Product `name` / `description` | Required; at most 200 / 2000 characters. |
 | `reason` (return) | Required; at most 1000 characters. |
 | Variant `type` / `value` | Both required when a variant is sent; at most 60 / 120 characters. In a `DELETE` query, `variantType` and `variantValue` go together (only one → 400 from the `Variant` value object). |
@@ -56,6 +56,6 @@ Sizes match the column lengths of the MySQL tables (see [Persistence-adapters.md
 
 ## 5. Spring Implementation Requirements
 
-- `@Valid` on every `@RequestBody`; constraints `@NotBlank`, `@NotNull`, `@Email`, `@Size`, `@Positive`, `@PositiveOrZero` where applicable.
+- `@Valid` on every `@RequestBody`; constraints `@NotBlank`, `@NotNull`, `@Email`, `@Size`, `@Positive` where applicable.
 - Validation errors are converted by `GlobalExceptionHandler` (see [Global-exception-handler.md](Global-exception-handler.md)) into 400 with one `errors` entry per invalid field.
 - Messages are in English (`spring.web.locale: en`, fixed resolver).

@@ -8,12 +8,14 @@ import nexusmarket.adapters.persistence.jpa.repositories.SpringDataJpaRefundRepo
 import nexusmarket.domain.models.Refund;
 import nexusmarket.domain.models.ReturnRequest;
 import nexusmarket.domain.ports.out.RefundRepositoryPort;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 /**
  * Output persistence adapter for Refund backed by Spring Data JPA (MySQL).
  */
 @Repository
+@Profile("!memory")
 public class RefundJpaAdapter implements RefundRepositoryPort {
 
     private final SpringDataJpaRefundRepository refundRepository;

@@ -5,6 +5,8 @@ import nexusmarket.adapters.persistence.jpa.mappers.UserJpaMapper;
 import nexusmarket.adapters.persistence.jpa.repositories.SpringDataJpaUserRepository;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.ports.out.UserRepositoryPort;
+import nexusmarket.domain.valueobjects.SystemRole;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Repository;
  * role column.
  */
 @Repository
+@Profile("!memory")
 public class UserJpaAdapter implements UserRepositoryPort {
 
     private final SpringDataJpaUserRepository userRepository;
@@ -57,5 +60,10 @@ public class UserJpaAdapter implements UserRepositoryPort {
     @Override
     public boolean existsByIdentificationNumber(String identificationNumber) {
         return identificationNumber != null && userRepository.existsByIdentificationNumber(identificationNumber);
+    }
+
+    @Override
+    public boolean existsByRole(SystemRole role) {
+        return role != null && userRepository.existsByRole(role.getCode());
     }
 }

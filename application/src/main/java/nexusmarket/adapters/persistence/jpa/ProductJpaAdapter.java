@@ -10,12 +10,14 @@ import nexusmarket.domain.models.Product;
 import nexusmarket.domain.models.Seller;
 import nexusmarket.domain.ports.out.ProductRepositoryPort;
 import nexusmarket.domain.valueobjects.ProductStatus;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 /**
  * Output persistence adapter for Product (physical and digital) backed by Spring Data JPA (MySQL).
  */
 @Repository
+@Profile("!memory")
 public class ProductJpaAdapter implements ProductRepositoryPort {
 
     private final SpringDataJpaProductRepository productRepository;

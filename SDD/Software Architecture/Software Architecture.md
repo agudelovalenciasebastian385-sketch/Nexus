@@ -24,10 +24,11 @@ This approach promotes maintainability, scalability, testability, and technology
 | REST input adapters: `AuthRestController`, `PublicRestController`, `GlobalExceptionHandler` | Implemented (step 4A) |
 | REST input adapters: `BuyerRestController`, `SellerRestController` | Implemented (step 4B) |
 | REST input adapters: `LogisticsOperatorRestController`, `AdministratorRestController`, `SupervisorRestController` | Implemented (step 4C) |
-| Automated tests: 2371 unit and 13 integration, with three JaCoCo reports | Implemented (step 5), see [Testing Strategy](../Testing/Testing-strategy.md) |
+| Automated tests: 2493 unit and 13 integration, with three JaCoCo reports | Implemented (step 5), see [Testing Strategy](../Testing/Testing-strategy.md) |
 | Docker image, Compose service of the application and health endpoint | Implemented (step 6), see [SETUP.md](../../SETUP.md) |
 | C4 model: 4 levels, one document per layer and the main flows | Implemented (step 6), see [C4](../C4/README.md) |
 | API documentation: Swagger UI and OpenAPI specification (springdoc-openapi) | Implemented (step 7), see [REST Security and CORS](../Adapters/Rest-security-cors.md) |
+| Memory profile: runs without MySQL, MongoDB or Docker | Implemented (step 7), see [Memory profile](#memory-profile) |
 
 Every output port has an implementation, so the Spring context starts against the MySQL and MongoDB containers of `docker-compose.yml`. The REST API is specified in [Api-rest-endpoints.md](../Adapters/Api-rest-endpoints.md).
 
@@ -93,12 +94,13 @@ application/src/main/java/
     │   ├── useCases/                 6 role port implementations
     │   ├── persistence/
     │   │   ├── jpa/                  MySQL: entities, mappers, repositories, JpaAggregateLoader, 12 *JpaAdapter
-    │   │   └── mongodb/              MongoDB: AuditLogDocument, mapper, repository, AuditLogMongoAdapter
+    │   │   ├── mongodb/              MongoDB: AuditLogDocument, mapper, repository, AuditLogMongoAdapter
+    │   │   └── memory/               Memory profile: 13 *MemoryAdapter, MemoryStore, MemoryTransactionManager, MemoryRequestSerializationFilter
     │   ├── security/                 SecurityConfig, JwtAuthenticationFilter, JwtProvider, BCryptPasswordServiceAdapter, dtos/, mappers/
     │   └── payment/                  SimulatedPaymentGatewayAdapter
     │
     ├── infrastructure/
-    │   └── seed/                     DatabaseSeeder (initial Administrator)
+    │   └── seed/                     DatabaseSeeder (initial Administrator), MemoryDemoDataSeeder (sample data of the memory profile)
     │
     └── domain/
         ├── models/                   entities, authentication result and read-only reports (28 classes)
@@ -169,6 +171,19 @@ The application always runs in `America/Bogota`, so a date means the same thing 
 The JVM, the URL and Hibernate must use the same zone, so that the `DATETIME` columns hold the same Colombian wall-clock time that the API returns. MongoDB stores instants in UTC: Spring Data converts them from and to the zone of the JVM, so a tool such as Mongo Express shows them 5 hours ahead, while the API returns Colombian time. JWT dates use `Instant` and do not depend on the zone.
 
 A jar started directly with `java -jar` needs the same `-Duser.timezone` argument.
+
+### Memory profile
+
+`mvnw spring-boot:run -Dspring-boot.run.profiles=memory` runs the application without MySQL, MongoDB or Docker. The memory adapters replace the JPA and MongoDB adapters, which are active only outside this profile, and `application-memory.yml` excludes their auto-configuration. Neither the domain nor the use cases change, which is the point of the output ports.
+
+| Concern | Solution |
+| --- | --- |
+| `@Transactional` without a database | `MemoryTransactionManager` accepts the transactions and fires the after-commit synchronizations of the audit trail. It cannot undo changes |
+| Simultaneous requests | `MemoryRequestSerializationFilter` attends the API requests one at a time, because every request shares the same objects |
+| Initial Administrator | `DatabaseSeeder` uses `UserRepositoryPort.existsByRole`, so it works in both profiles |
+| Sample data | `MemoryDemoDataSeeder`, turned off with `app.seed.demo.enabled` |
+
+The data is lost on stopping, there is no rollback and it does not scale, so this profile is for demonstrations and tests. See [Persistence Adapters](../Adapters/Persistence-adapters.md#9-memory-adapters-adapterspersistencememory) and [SETUP.md](../../SETUP.md).
 
 ### Test profile
 
@@ -376,6 +391,7 @@ Every output port is implemented:
 
 - **MySQL (Spring Data JPA)** — `adapters/persistence/jpa`: flat entities, one mapper per entity, one Spring Data repository per table and one adapter per repository port; `JpaAggregateLoader` rebuilds cross-table references. See [Persistence Adapters](../Adapters/Persistence-adapters.md).
 - **MongoDB (Spring Data MongoDB)** — `adapters/persistence/mongodb`: `AuditLogDocument` in the `audit_logs` collection. See [Persistence Adapters](../Adapters/Persistence-adapters.md).
+- **Memory** — `adapters/persistence/memory`: the 13 persistence ports without a database, only with the `memory` profile. See [Memory profile](#memory-profile).
 - **Security** — `adapters/security`: `JwtProvider` (`JwtServicePort`, minimal token `sub`/`jti`/`ver`/`iat`/`exp`) and `BCryptPasswordServiceAdapter` (`PasswordServicePort`). See [Security Adapters](../Adapters/Security-adapters.md).
 - **Payment** — `adapters/payment`: `SimulatedPaymentGatewayAdapter` returns `PaymentResult.APPROVED` up to a configurable order total and `PaymentResult.REJECTED` above it.
 
@@ -399,7 +415,7 @@ The domain is tested without infrastructure, as constraint 10 requires. The full
 
 | Group | Tests | Command | Needs Docker |
 | --- | --- | --- | --- |
-| Domain, services, adapters and web (`*Test`) | 2371 | `./mvnw test` | No |
+| Domain, services, adapters, web and memory profile (`*Test`) | 2493 | `./mvnw test` | No |
 | Integration (`*IT`) | 13 | `./mvnw verify` | Yes |
 
 - Service tests use in-memory repositories that return the same instance they store, so only the `*IT` classes detect a forgotten `update()`.

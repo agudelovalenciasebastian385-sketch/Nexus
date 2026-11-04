@@ -14,6 +14,7 @@ import nexusmarket.domain.models.Buyer;
 import nexusmarket.domain.models.Order;
 import nexusmarket.domain.models.OrderItem;
 import nexusmarket.domain.ports.out.OrderRepositoryPort;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * shipments or delivering the same order twice at the same time therefore cannot both commit.
  */
 @Repository
+@Profile("!memory")
 public class OrderJpaAdapter implements OrderRepositoryPort {
 
     private final SpringDataJpaOrderRepository orderRepository;

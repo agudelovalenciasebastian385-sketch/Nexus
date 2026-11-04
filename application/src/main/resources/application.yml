@@ -36,6 +36,15 @@ spring:
 server:
   port: 8080
 
+# API documentation, open without a token in SecurityConfig. Swagger UI keeps the token when reloading.
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    persist-authorization: true
+    operations-sorter: alpha
+
 # Only the health endpoint is exposed (open in SecurityConfig), without details.
 management:
   endpoints:

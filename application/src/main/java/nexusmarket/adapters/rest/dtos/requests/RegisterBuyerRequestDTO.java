@@ -1,5 +1,6 @@
 package nexusmarket.adapters.rest.dtos.requests;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -26,10 +27,12 @@ public class RegisterBuyerRequestDTO {
     @NotBlank
     @Email
     @Size(max = 150)
+    @Schema(example = "user@example.com")
     private String email;
 
     @NotBlank
     @Size(min = 8, max = 72)
+    @Schema(example = "Secret123*")
     private String password;
 
     @NotNull

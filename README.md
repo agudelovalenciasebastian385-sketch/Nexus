@@ -29,6 +29,7 @@ Además, cualquier visitante puede consultar el catálogo público sin iniciar s
 | JWT | JJWT 0.12.6 con HS256 |
 | Validación | Jakarta Bean Validation |
 | Salud | Spring Boot Actuator (solo `/actuator/health`) |
+| Documentación del API | springdoc-openapi 3.1.1: Swagger UI y especificación OpenAPI |
 | Pruebas | JUnit 5, AssertJ, Mockito (solo en pruebas web), MockMvc y JaCoCo |
 | Despliegue | Docker y Docker Compose |
 
@@ -99,10 +100,10 @@ NexusMarket/
 
 | Grupo | Pruebas | Comando | Necesita Docker |
 | --- | ---: | --- | --- |
-| Unitarias: dominio, servicios, adaptadores y web | 1386 | `mvnw.cmd test` | No |
+| Unitarias: dominio, servicios, adaptadores y web | 2371 | `mvnw.cmd test` | No |
 | Integración | 13 | `mvnw.cmd verify` | Sí |
 
-Los 108 endpoints tienen prueba de su camino exitoso, y una prueba guardiana falla si aparece un endpoint sin ella.
+Los 108 endpoints tienen prueba de su camino exitoso, y una prueba guardiana falla si aparece un endpoint sin ella. Otra prueba compara la especificación OpenAPI con esos mismos endpoints.
 
 Cobertura del reporte combinado (`application/target/site/jacoco-merged`):
 
@@ -122,6 +123,8 @@ curl.exe -s http://localhost:8080/actuator/health
 ```
 
 Los prerrequisitos, las pruebas, la prueba de humo, cómo ejecutarlo fuera de Docker y la solución de problemas están en [`SETUP.md`](SETUP.md).
+
+Con la aplicación corriendo, la documentación interactiva está en [Swagger UI](http://localhost:8080/swagger-ui.html) ([cómo autorizarse](SETUP.md#12-swagger-ui)).
 
 La carpeta [`postman/`](postman/) trae una colección con el flujo completo ejecutable y los 108 endpoints por rol ([cómo usarla](SETUP.md#11-colección-de-postman)).
 

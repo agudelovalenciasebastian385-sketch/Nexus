@@ -1,5 +1,6 @@
 package nexusmarket.adapters.rest.dtos.requests;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -12,7 +13,9 @@ import lombok.Data;
 @Data
 public class InventoryAdjustmentRequestDTO {
 
+    @Schema(example = "1")
     private int quantity;
 
+    @Schema(example = "AVAILABLE")
     private String condition;
 }

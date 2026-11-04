@@ -1,5 +1,6 @@
 package nexusmarket.adapters.rest.dtos.requests;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
@@ -15,5 +16,6 @@ public class UpdateCartItemQuantityRequestDTO {
     private VariantRequestDTO variant;
 
     @Positive
+    @Schema(example = "1")
     private int quantity;
 }

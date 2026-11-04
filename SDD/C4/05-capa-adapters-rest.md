@@ -65,6 +65,10 @@ classDiagram
 
 Las respuestas nunca incluyen contraseñas, hashes ni versiones de token. Los DTO de petición declaran las validaciones de Jakarta, descritas en [Rest-validation.md](../Adapters/Rest-validation.md).
 
+## Documentación del API
+
+springdoc-openapi genera Swagger UI (`/swagger-ui.html`) y la especificación (`/v3/api-docs`) desde los controladores. Cada controlador declara `@Tag`, y cada operación `@Operation` y `@ApiErrors`. `OpenApiConfig`, en `adapters/rest/openapi`, aporta la información general, el esquema `bearerAuth`, las respuestas de error y la descripción de los parámetros.
+
 ## Errores
 
 `GlobalExceptionHandler` convierte cada excepción en un `ErrorResponseDTO`, con `timestamp`, `status`, `error`, `message`, `path` y, solo en errores de validación, `errors`.

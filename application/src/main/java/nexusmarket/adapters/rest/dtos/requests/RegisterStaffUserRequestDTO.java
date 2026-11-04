@@ -1,5 +1,6 @@
 package nexusmarket.adapters.rest.dtos.requests;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,6 +14,7 @@ import lombok.Data;
 public class RegisterStaffUserRequestDTO {
 
     @NotBlank
+    @Schema(example = "SUPERVISOR")
     private String role;
 
     @NotBlank
@@ -26,10 +28,12 @@ public class RegisterStaffUserRequestDTO {
     @NotBlank
     @Email
     @Size(max = 150)
+    @Schema(example = "user@example.com")
     private String email;
 
     @NotBlank
     @Size(min = 8, max = 72)
+    @Schema(example = "Secret123*")
     private String password;
 
     /** Trims surrounding spaces so @Email accepts " ana@nexusmarket.com "; the domain lower-cases it. */

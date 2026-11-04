@@ -94,7 +94,7 @@ ALLOW = {"enum", "final", "services", "adapters", "useCases", "application", "sr
          "ERROR", "WARN",  # log levels
          "America", "Bogota", "TZ",  # time zone
          "UP", "DOWN", "management",  # actuator health
-         "argLine", "pom.xml", "postman",  # Maven and the API collection
+         "argLine", "pom.xml", "postman", "springdoc", "bearerAuth",  # Maven, the API collection and OpenAPI
          "C4Context", "C4Container", "C4Component", "classDiagram", "sequenceDiagram", "minlag",  # Mermaid
          "README.md", "SETUP.md", "curl", "mongosh", "ping", "localhost", "user.getId",
          "serverTimezone", "noRollbackFor",

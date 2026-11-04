@@ -1,5 +1,8 @@
 package nexusmarket.adapters.rest.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
@@ -18,6 +21,7 @@ import nexusmarket.adapters.rest.mappers.OrderRestMapper;
 import nexusmarket.adapters.rest.mappers.ReportRestMapper;
 import nexusmarket.adapters.rest.mappers.UserRestMapper;
 import nexusmarket.adapters.rest.mappers.WarehouseRestMapper;
+import nexusmarket.adapters.rest.openapi.ApiErrors;
 import nexusmarket.domain.models.User;
 import nexusmarket.domain.ports.in.LogisticsOperatorPort;
 import nexusmarket.domain.valueobjects.InventoryCondition;
@@ -39,6 +43,7 @@ import org.springframework.web.bind.annotation.RestController;
  * movements of any product and warehouse, shipments and the inventory report. The account takes no id:
  * an operator only consults itself. Transactions are opened by LogisticsOperatorUseCaseImpl.
  */
+@Tag(name = "Logistics operator")
 @RestController
 @RequestMapping("/api/v1/logistics")
 public class LogisticsOperatorRestController {
@@ -51,11 +56,15 @@ public class LogisticsOperatorRestController {
 
     // ------------------------------------------------------------------ account
 
+    @Operation(summary = "Get the own account")
     @GetMapping("/account")
     public ResponseEntity<UserResponseDTO> consultAccount(@AuthenticationPrincipal(expression = "user") User user) {
         return ResponseEntity.ok(UserRestMapper.toResponse(logisticsOperatorPort.consultUser(user, user.getId())));
     }
 
+    @Operation(summary = "Change the own password")
+    @ApiResponse(responseCode = "204", description = "Done, without content.")
+    @ApiErrors(400)
     @PutMapping("/account/password")
     public ResponseEntity<Void> changePassword(@AuthenticationPrincipal(expression = "user") User user,
                                                @Valid @RequestBody ChangePasswordRequestDTO request) {
@@ -65,12 +74,15 @@ public class LogisticsOperatorRestController {
 
     // ------------------------------------------------------------------ warehouses
 
+    @Operation(summary = "List the warehouses")
     @GetMapping("/warehouses")
     public ResponseEntity<List<WarehouseResponseDTO>> consultWarehouses(
             @AuthenticationPrincipal(expression = "user") User user) {
         return ResponseEntity.ok(WarehouseRestMapper.toResponse(logisticsOperatorPort.consultWarehouses(user)));
     }
 
+    @Operation(summary = "Get a warehouse")
+    @ApiErrors(404)
     @GetMapping("/warehouses/{warehouseId}")
     public ResponseEntity<WarehouseResponseDTO> consultWarehouse(@AuthenticationPrincipal(expression = "user") User user,
                                                                  @PathVariable String warehouseId) {
@@ -79,6 +91,9 @@ public class LogisticsOperatorRestController {
 
     // ------------------------------------------------------------------ inventory
 
+    @Operation(summary = "Register the initial stock of a product in a warehouse")
+    @ApiResponse(responseCode = "201", description = "Created.", useReturnTypeSchema = true)
+    @ApiErrors({400, 404, 409})
     @PostMapping("/inventories")
     public ResponseEntity<InventoryResponseDTO> registerInitialStock(@AuthenticationPrincipal(expression = "user") User user,
                                                                      @Valid @RequestBody InitialStockRequestDTO request) {
@@ -86,6 +101,9 @@ public class LogisticsOperatorRestController {
                 request.getWarehouseId(), request.getQuantity()));
     }
 
+    @Operation(summary = "Register a stock inbound")
+    @ApiResponse(responseCode = "201", description = "Created.", useReturnTypeSchema = true)
+    @ApiErrors({400, 404, 409})
     @PostMapping("/inventories/{productId}/{warehouseId}/inbounds")
     public ResponseEntity<InventoryResponseDTO> registerInbound(@AuthenticationPrincipal(expression = "user") User user,
                                                                 @PathVariable String productId,
@@ -95,6 +113,9 @@ public class LogisticsOperatorRestController {
                 request.getQuantity()));
     }
 
+    @Operation(summary = "Register a stock adjustment")
+    @ApiResponse(responseCode = "201", description = "Created.", useReturnTypeSchema = true)
+    @ApiErrors({400, 404, 409})
     @PostMapping("/inventories/{productId}/{warehouseId}/adjustments")
     public ResponseEntity<InventoryResponseDTO> registerAdjustment(@AuthenticationPrincipal(expression = "user") User user,
                                                                    @PathVariable String productId,
@@ -107,6 +128,9 @@ public class LogisticsOperatorRestController {
                 request.getQuantity(), condition));
     }
 
+    @Operation(summary = "Reserve stock")
+    @ApiResponse(responseCode = "201", description = "Created.", useReturnTypeSchema = true)
+    @ApiErrors({400, 404, 409})
     @PostMapping("/inventories/{productId}/{warehouseId}/reservations")
     public ResponseEntity<InventoryResponseDTO> reserve(@AuthenticationPrincipal(expression = "user") User user,
                                                         @PathVariable String productId,
@@ -115,6 +139,9 @@ public class LogisticsOperatorRestController {
         return created(logisticsOperatorPort.reserveInventory(user, productId, warehouseId, request.getQuantity()));
     }
 
+    @Operation(summary = "Release reserved stock")
+    @ApiResponse(responseCode = "201", description = "Created.", useReturnTypeSchema = true)
+    @ApiErrors({400, 404, 409})
     @PostMapping("/inventories/{productId}/{warehouseId}/reservation-releases")
     public ResponseEntity<InventoryResponseDTO> releaseReservation(@AuthenticationPrincipal(expression = "user") User user,
                                                                    @PathVariable String productId,
@@ -124,6 +151,8 @@ public class LogisticsOperatorRestController {
                 request.getQuantity()));
     }
 
+    @Operation(summary = "List the stock of a product")
+    @ApiErrors(404)
     @GetMapping("/products/{productId}/inventories")
     public ResponseEntity<List<InventoryResponseDTO>> consultProductInventory(
             @AuthenticationPrincipal(expression = "user") User user, @PathVariable String productId) {
@@ -131,6 +160,8 @@ public class LogisticsOperatorRestController {
                 logisticsOperatorPort.consultProductInventory(user, productId)));
     }
 
+    @Operation(summary = "List the stock of a warehouse")
+    @ApiErrors(404)
     @GetMapping("/warehouses/{warehouseId}/inventories")
     public ResponseEntity<List<InventoryResponseDTO>> consultWarehouseInventory(
             @AuthenticationPrincipal(expression = "user") User user, @PathVariable String warehouseId) {
@@ -140,12 +171,17 @@ public class LogisticsOperatorRestController {
 
     // ------------------------------------------------------------------ orders and shipments
 
+    @Operation(summary = "Get an order")
+    @ApiErrors(404)
     @GetMapping("/orders/{orderId}")
     public ResponseEntity<OrderResponseDTO> consultOrder(@AuthenticationPrincipal(expression = "user") User user,
                                                          @PathVariable String orderId) {
         return ResponseEntity.ok(OrderRestMapper.toResponse(logisticsOperatorPort.consultOrder(user, orderId)));
     }
 
+    @Operation(summary = "Create the shipments of a paid order")
+    @ApiResponse(responseCode = "201", description = "Created.", useReturnTypeSchema = true)
+    @ApiErrors({400, 404, 409})
     @PostMapping("/orders/{orderId}/shipments")
     public ResponseEntity<List<ShipmentResponseDTO>> createShipments(@AuthenticationPrincipal(expression = "user") User user,
                                                                      @PathVariable String orderId) {
@@ -153,18 +189,24 @@ public class LogisticsOperatorRestController {
                 logisticsOperatorPort.createShipments(user, orderId)));
     }
 
+    @Operation(summary = "Pack a shipment")
+    @ApiErrors({404, 409})
     @PatchMapping("/shipments/{shipmentId}/pack")
     public ResponseEntity<ShipmentResponseDTO> packShipment(@AuthenticationPrincipal(expression = "user") User user,
                                                             @PathVariable String shipmentId) {
         return ResponseEntity.ok(OrderRestMapper.toResponse(logisticsOperatorPort.packShipment(user, shipmentId)));
     }
 
+    @Operation(summary = "Dispatch a packed shipment")
+    @ApiErrors({404, 409})
     @PatchMapping("/shipments/{shipmentId}/dispatch")
     public ResponseEntity<ShipmentResponseDTO> dispatchShipment(@AuthenticationPrincipal(expression = "user") User user,
                                                                 @PathVariable String shipmentId) {
         return ResponseEntity.ok(OrderRestMapper.toResponse(logisticsOperatorPort.dispatchShipment(user, shipmentId)));
     }
 
+    @Operation(summary = "Confirm the delivery of a shipment")
+    @ApiErrors({404, 409})
     @PatchMapping("/shipments/{shipmentId}/deliver")
     public ResponseEntity<ShipmentResponseDTO> confirmDelivery(@AuthenticationPrincipal(expression = "user") User user,
                                                                @PathVariable String shipmentId) {
@@ -173,6 +215,8 @@ public class LogisticsOperatorRestController {
 
     // ------------------------------------------------------------------ report
 
+    @Operation(summary = "Get the inventory report")
+    @ApiErrors(400)
     @GetMapping("/reports/inventory")
     public ResponseEntity<InventoryReportResponseDTO> consultInventoryReport(
             @AuthenticationPrincipal(expression = "user") User user,

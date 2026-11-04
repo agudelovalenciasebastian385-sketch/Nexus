@@ -1,5 +1,6 @@
 package nexusmarket.adapters.rest.dtos.requests;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -11,5 +12,6 @@ import lombok.Data;
 public class ChangeCommercialStatusRequestDTO {
 
     @NotBlank
+    @Schema(example = "ENABLED")
     private String commercialStatus;
 }

@@ -1,5 +1,6 @@
 package nexusmarket.adapters.rest.dtos.requests;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
@@ -17,5 +18,6 @@ public class InitialStockRequestDTO {
     private String warehouseId;
 
     @Positive
+    @Schema(example = "1")
     private int quantity;
 }

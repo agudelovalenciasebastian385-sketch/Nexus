@@ -48,6 +48,7 @@ classDiagram
 | `POST /api/v1/auth/register/**` | abierta |
 | `GET /api/v1/public/**` | abierta |
 | `GET /actuator/health` | abierta; ningún otro endpoint del actuator está expuesto |
+| `/swagger-ui.html`, `/swagger-ui/**`, `/v3/api-docs`, `/v3/api-docs/**` | abiertas; documentación del API |
 | `OPTIONS /**` | abierta, para CORS |
 | `/api/v1/auth/logout` | autenticada, cualquier rol |
 | `/api/v1/buyer/**` | `hasRole("BUYER")` |

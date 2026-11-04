@@ -24,9 +24,10 @@ This approach promotes maintainability, scalability, testability, and technology
 | REST input adapters: `AuthRestController`, `PublicRestController`, `GlobalExceptionHandler` | Implemented (step 4A) |
 | REST input adapters: `BuyerRestController`, `SellerRestController` | Implemented (step 4B) |
 | REST input adapters: `LogisticsOperatorRestController`, `AdministratorRestController`, `SupervisorRestController` | Implemented (step 4C) |
-| Automated tests: 1386 unit and 13 integration, with three JaCoCo reports | Implemented (step 5), see [Testing Strategy](../Testing/Testing-strategy.md) |
+| Automated tests: 2371 unit and 13 integration, with three JaCoCo reports | Implemented (step 5), see [Testing Strategy](../Testing/Testing-strategy.md) |
 | Docker image, Compose service of the application and health endpoint | Implemented (step 6), see [SETUP.md](../../SETUP.md) |
 | C4 model: 4 levels, one document per layer and the main flows | Implemented (step 6), see [C4](../C4/README.md) |
+| API documentation: Swagger UI and OpenAPI specification (springdoc-openapi) | Implemented (step 7), see [REST Security and CORS](../Adapters/Rest-security-cors.md) |
 
 Every output port has an implementation, so the Spring context starts against the MySQL and MongoDB containers of `docker-compose.yml`. The REST API is specified in [Api-rest-endpoints.md](../Adapters/Api-rest-endpoints.md).
 
@@ -87,7 +88,8 @@ application/src/main/java/
     │   │   ├── controllers/          one controller per role port + AuthRestController
     │   │   ├── dtos/                 requests/ (Jakarta validation), responses/ (ErrorResponseDTO, ...)
     │   │   ├── mappers/              request DTO -> domain values, Domain Model -> response DTO
-    │   │   └── exception/            GlobalExceptionHandler
+    │   │   ├── exception/            GlobalExceptionHandler
+    │   │   └── openapi/              OpenApiConfig, ApiErrors (Swagger UI and /v3/api-docs)
     │   ├── useCases/                 6 role port implementations
     │   ├── persistence/
     │   │   ├── jpa/                  MySQL: entities, mappers, repositories, JpaAggregateLoader, 12 *JpaAdapter
@@ -130,6 +132,7 @@ Configuration lives in `application/src/main/resources/application.yml`:
 | --- | --- |
 | `spring.datasource` | MySQL `jdbc:mysql://localhost:3306/nexusmarket?createDatabaseIfNotExist=true&...`, user `root` / `root` (overridable with `MYSQL_URL`, `MYSQL_USERNAME`, `MYSQL_PASSWORD`). |
 | `spring.jpa` | `ddl-auto: update` (Hibernate creates and updates the tables), `open-in-view: false`, `hibernate.jdbc.time_zone` (see [Time zone](#time-zone)). |
+| `springdoc` | Paths of the OpenAPI specification and Swagger UI, and how Swagger UI behaves. |
 | `management` | Exposes only `/actuator/health`, without details (see [REST Security and CORS](../Adapters/Rest-security-cors.md)). |
 | `spring.mongodb.uri` | `mongodb://localhost:27017/nexusmarket` (Spring Boot 4 prefix; overridable with `MONGODB_URI`). |
 | `app.security.jwt` | JWT secret and expiration (see [Security Adapters](../Adapters/Security-adapters.md)). |
@@ -365,6 +368,8 @@ Package `nexusmarket.adapters.rest` exposes the role ports to external clients (
 - **Mappers:** request DTO → domain values, Domain Model → response DTO.
 - **Errors:** `GlobalExceptionHandler` maps every exception to the standard error body (see [Global Exception Handler](../Adapters/Global-exception-handler.md)).
 
+**API documentation.** springdoc-openapi generates the specification from the controllers. Each controller declares `@Tag`, and each operation `@Operation`, its 201 or 204 with `@ApiResponse` when that is the success code, and its errors with `@ApiErrors`. `OpenApiConfig` holds the general information and the Bearer scheme, adds 401 and 403 to the protected operations, and describes the parameters. Only the adapters use these annotations; the domain does not know them.
+
 ## Output Adapters (implemented)
 
 Every output port is implemented:
@@ -394,7 +399,7 @@ The domain is tested without infrastructure, as constraint 10 requires. The full
 
 | Group | Tests | Command | Needs Docker |
 | --- | --- | --- | --- |
-| Domain, services, adapters and web (`*Test`) | 1386 | `./mvnw test` | No |
+| Domain, services, adapters and web (`*Test`) | 2371 | `./mvnw test` | No |
 | Integration (`*IT`) | 13 | `./mvnw verify` | Yes |
 
 - Service tests use in-memory repositories that return the same instance they store, so only the `*IT` classes detect a forgotten `update()`.

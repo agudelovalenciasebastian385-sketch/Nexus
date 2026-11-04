@@ -1,5 +1,6 @@
 package nexusmarket.adapters.rest.dtos.requests;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,5 +14,6 @@ import lombok.EqualsAndHashCode;
 public class RegisterProductRequestDTO extends UpdateProductRequestDTO {
 
     @NotBlank
+    @Schema(example = "PHYSICAL")
     private String type;
 }

@@ -70,7 +70,7 @@ cd application
 .\mvnw.cmd test
 ```
 
-Ejecuta las **1386 pruebas unitarias**, sin Docker. Resultado esperado: `BUILD SUCCESS`.
+Ejecuta las **2371 pruebas unitarias**, sin Docker. Resultado esperado: `BUILD SUCCESS`.
 
 ```powershell
 .\mvnw.cmd verify
@@ -239,7 +239,31 @@ docker run --rm --network container:nexusmarket-app -v "${PWD}\postman:/etc/newm
 
 Resultado esperado: `requests 41` y `assertions 72`, con 0 fallos.
 
-## 12. Solución de problemas
+## 12. Swagger UI
+
+Documentación interactiva de los 108 endpoints, abierta sin token:
+
+| Qué | Dirección |
+| --- | --- |
+| Swagger UI | <http://localhost:8080/swagger-ui.html> |
+| Especificación OpenAPI en JSON | <http://localhost:8080/v3/api-docs> |
+
+Los endpoints están agrupados por rol, y cada uno muestra sus parámetros y sus respuestas de error. El candado marca los que necesitan token.
+
+Para probar una ruta protegida con el administrador:
+
+1. Abre **Authentication**, luego `POST /api/v1/auth/login`, y pulsa **Try it out**.
+2. Reemplaza el cuerpo de ejemplo por las credenciales del administrador inicial y pulsa **Execute**:
+   ```json
+   {"email": "admin@nexusmarket.com", "password": "Admin123*"}
+   ```
+3. Copia el valor de `token` de la respuesta, sin las comillas.
+4. Pulsa **Authorize**, arriba a la derecha, pega el token, **sin** escribir `Bearer` delante, y pulsa **Authorize** y luego **Close**.
+5. Abre **Administrator**, luego `GET /api/v1/admin/warehouses`, y pulsa **Try it out** y **Execute**. Debe responder **200**.
+
+Los valores de ejemplo de los esquemas, como `user@example.com`, son genéricos: las credenciales reales no se publican en la especificación. El token se conserva al recargar la página, hasta que venza o cierres la sesión con **Authorize** y **Logout**.
+
+## 13. Solución de problemas
 
 | Síntoma | Causa probable | Solución |
 | --- | --- | --- |
